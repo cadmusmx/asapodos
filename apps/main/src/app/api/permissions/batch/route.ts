@@ -127,7 +127,8 @@ export const POST = withPermission(
         appUser: auth.email ?? null,
         idOrigin,
         oldData: { idUsuario: result.target, viewCode: r.viewCode, mask: r.old },
-        newData: { idUsuario: result.target, viewCode: r.viewCode, mask: r.new }
+        newData: { idUsuario: result.target, viewCode: r.viewCode, mask: r.new },
+        changedAt: new Date()
       }).catch(() => { });
     }
 
