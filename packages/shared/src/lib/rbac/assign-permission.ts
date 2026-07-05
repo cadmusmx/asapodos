@@ -199,7 +199,7 @@ async function applyOneChange(
 
   // I3) canonicidad (función pura -> falla barato, antes de leer al target)
   if (!isCanonical(mask)) {
-    throw new ValidationError('Máscara de permisos no válida', 'INVALID_MASK', { mask });
+    throw new ValidationError('Máscara de permisos no válida', 'INVALID_MASK', { viewCode, mask });
   }
 
   // I4) target en vivo. SIN RLS -> filtro TenantID. No revelamos "no existe" vs "otro tenant".
@@ -219,9 +219,7 @@ async function applyOneChange(
     target.IdDepartamento != null &&
     actor.idDepartamento === target.IdDepartamento;
   if (!actor.privileged && !sameDept) {
-    throw new ForbiddenError('Fuera de tu alcance de administración', 'PERMISSION_DENIED', {
-      targetIdUsuario,
-    });
+    throw new ForbiddenError('Fuera de tu alcance de administración', 'PERMISSION_DENIED', { viewCode, targetIdUsuario });
   }
 
   // I6) techo del depto del target (0 si no hay fila -> rechaza cualquier mask > 0)
