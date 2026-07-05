@@ -12,6 +12,7 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import Chip from '@mui/material/Chip';
 import Button from '@mui/material/Button';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
@@ -24,7 +25,9 @@ import {
   viewHasAccess,
   isBitEditable,
   toggleBit,
-  isDirty,
+  collectChanges,
+  hasPendingChanges,
+  isProtectedView,
   BIT_LABEL,
   type BitKey,
   type BitState
@@ -38,10 +41,17 @@ type Props = {
   canEdit: boolean;
 };
 
-// Estado visual del chip según el estado del bit y si estamos editando.
+// Respuesta del batch: éxito o error de dominio.
+type BatchOk = {
+  ok: true;
+  target: number;
+  results: Array<{ viewCode: string; old: number | null; new: number }>;
+};
+type BatchDomainError = { ok: false; code: string; failedViewCode?: string; message: string };
+
 const chipVisual = (
   state: BitState
-): { color: 'default' | 'primary' | 'success'; variant: 'filled' | 'outlined'; icon?: React.ReactElement } => {
+): { color: 'default' | 'primary'; variant: 'filled' | 'outlined'; icon?: React.ReactElement } => {
   switch (state) {
     case 'public':
       return { color: 'default', variant: 'filled', icon: <i className='ri-lock-line' /> };
@@ -53,22 +63,43 @@ const chipVisual = (
   }
 };
 
+const codeToMessage = (code: string, failedViewCode?: string): string => {
+  const where = failedViewCode ? ` (${failedViewCode})` : '';
+
+  switch (code) {
+    case 'PROTECTED_VIEW':
+      return `Esa vista no puede editarse${where}.`;
+    case 'INVALID_MASK':
+      return `Combinación de permisos inválida${where}.`;
+    case 'UNKNOWN_VIEW':
+      return `Vista desconocida${where}.`;
+    case 'PERMISSION_DENIED':
+      return `Permiso denegado${where}.`;
+    default:
+      return `No se pudo guardar${where}.`;
+  }
+};
+
 const PermissionsDetail = ({ user, canEdit }: Props) => {
   const [views, setViews] = useState<AssignableView[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Máscara CRUDA editada por vista (viewCode -> mask). Arranca en currentMask.
+  // Máscaras: original (de la última carga/guardado) y editada. viewCode -> mask cruda.
+  const [originals, setOriginals] = useState<Record<string, number>>({});
   const [edited, setEdited] = useState<Record<string, number>>({});
-  // Vistas guardándose (viewCode -> true) para deshabilitar su botón.
-  const [saving, setSaving] = useState<Record<string, boolean>>({});
+
+  const [saving, setSaving] = useState(false);
+  const [failedView, setFailedView] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
       setViews([]);
+      setOriginals({});
       setEdited({});
       setError(null);
+      setFailedView(null);
 
       return;
     }
@@ -78,6 +109,7 @@ const PermissionsDetail = ({ user, canEdit }: Props) => {
     const load = async () => {
       setLoading(true);
       setError(null);
+      setFailedView(null);
 
       try {
         const res = await fetch(`/api/permissions/user/${user.idUsuario}`, { signal: controller.signal });
@@ -87,14 +119,16 @@ const PermissionsDetail = ({ user, canEdit }: Props) => {
         if (!res.ok) throw new Error('No se pudieron cargar los permisos.');
 
         const json: UserPermissionsResponse = await res.json();
+        const base = Object.fromEntries(json.views.map(v => [v.viewCode, v.currentMask]));
 
         setViews(json.views);
-        // Inicializa el estado editable con las máscaras crudas actuales.
-        setEdited(Object.fromEntries(json.views.map(v => [v.viewCode, v.currentMask])));
+        setOriginals(base);
+        setEdited(base);
       } catch (e) {
         if ((e as Error).name === 'AbortError') return;
         setError((e as Error).message);
         setViews([]);
+        setOriginals({});
         setEdited({});
       } finally {
         setLoading(false);
@@ -127,55 +161,83 @@ const PermissionsDetail = ({ user, canEdit }: Props) => {
     return { withAccess, total: views.length };
   }, [views]);
 
+  const dirty = useMemo(() => hasPendingChanges(originals, edited), [originals, edited]);
+
   const handleToggle = (v: AssignableView, bit: BitKey) => {
     const masks = { currentMask: v.currentMask, ceilingMask: v.ceilingMask, publicMask: v.publicMask };
 
-    if (!canEdit || !isBitEditable(bit, masks)) return;
+    if (!canEdit || isProtectedView(v.viewCode) || !isBitEditable(bit, masks)) return;
 
+    setFailedView(null);
     setEdited(prev => ({
       ...prev,
       [v.viewCode]: toggleBit(bit, prev[v.viewCode] ?? v.currentMask, masks)
     }));
   };
 
-  const handleSave = async (v: AssignableView) => {
+  const handleSaveAll = async () => {
     if (!user) return;
 
-    const newMask = edited[v.viewCode] ?? v.currentMask;
+    const changes = collectChanges(originals, edited);
 
-    setSaving(prev => ({ ...prev, [v.viewCode]: true }));
+    if (changes.length === 0) return;
+
+    setSaving(true);
     setError(null);
+    setFailedView(null);
 
     try {
-      const res = await fetch('/api/permissions', {
+      const res = await fetch('/api/permissions/batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetIdUsuario: user.idUsuario, viewCode: v.viewCode, mask: newMask })
+        body: JSON.stringify({ targetIdUsuario: user.idUsuario, changes })
       });
 
-      if (!res.ok) {
-        const msg =
-          res.status === 403
-            ? 'Permiso denegado por el servidor.'
-            : res.status === 400
-              ? 'La combinación de permisos no es válida.'
-              : 'No se pudo guardar el cambio.';
+      const json = (await res.json()) as BatchOk | BatchDomainError;
 
-        throw new Error(msg);
+      if (!res.ok || json.ok === false) {
+        // (a) Error de dominio estructurado: marca la vista ofensora.
+        if (json && 'code' in json) {
+          setFailedView(json.failedViewCode ?? null);
+          setError(codeToMessage(json.code, json.failedViewCode));
+        } else {
+          // (b) Error de forma del HOF: solo message.
+          setError((json as { message?: string })?.message ?? 'No se pudieron guardar los cambios.');
+        }
+
+        // Rollback total en servidor => la UI conserva lo editado para reintentar.
+        return;
       }
 
-      const json: { ok: boolean; old: number; new: number } = await res.json();
+      // Éxito: confirma con lo que devolvió el servidor (fuente de verdad).
+      const applied = json.results;
 
-      // Confirma con lo que el servidor devolvió (fuente de verdad).
-      setViews(prev => prev.map(x => (x.viewCode === v.viewCode ? { ...x, currentMask: json.new } : x)));
-      setEdited(prev => ({ ...prev, [v.viewCode]: json.new }));
-      setToast(`"${v.label}" actualizado.`);
-    } catch (e) {
-      // Revertir el toggle visual al estado guardado.
-      setEdited(prev => ({ ...prev, [v.viewCode]: v.currentMask }));
-      setError((e as Error).message);
+      setViews(prev =>
+        prev.map(x => {
+          const r = applied.find(a => a.viewCode === x.viewCode);
+
+          return r ? { ...x, currentMask: r.new } : x;
+        })
+      );
+      setOriginals(prev => {
+        const next = { ...prev };
+
+        for (const r of applied) next[r.viewCode] = r.new;
+
+        return next;
+      });
+      setEdited(prev => {
+        const next = { ...prev };
+
+        for (const r of applied) next[r.viewCode] = r.new;
+
+        return next;
+      });
+      setToast('Permisos actualizados.');
+    } catch {
+      setError('No se pudo contactar el servidor.');
     } finally {
-      setSaving(prev => ({ ...prev, [v.viewCode]: false }));
+      setSaving(false);
     }
   };
 
@@ -208,6 +270,22 @@ const PermissionsDetail = ({ user, canEdit }: Props) => {
             {/* Paso 5b: aquí irá "Reglas aplicadas: ..." */}
           </>
         }
+        action={
+          canEdit ? (
+            <Tooltip title={dirty ? '' : 'No has realizado cambios'}>
+              <span>
+                <Button
+                  variant='contained'
+                  disabled={!dirty || saving}
+                  onClick={handleSaveAll}
+                  startIcon={saving ? <CircularProgress size={16} color='inherit' /> : undefined}
+                >
+                  Guardar cambios
+                </Button>
+              </span>
+            </Tooltip>
+          ) : undefined
+        }
       />
       <Divider />
 
@@ -232,7 +310,7 @@ const PermissionsDetail = ({ user, canEdit }: Props) => {
           !error &&
           groups.map(([groupName, groupViews]) => (
             <Accordion key={groupName}>
-              <AccordionSummary expandIcon={<i className='ri-arrow-down-s-line' />} >
+              <AccordionSummary expandIcon={<i className='ri-arrow-down-s-line' />}>
                 <Typography className='font-medium capitalize'>{groupName.replace(/_/g, ' ')}</Typography>
               </AccordionSummary>
               <AccordionDetails>
@@ -240,18 +318,28 @@ const PermissionsDetail = ({ user, canEdit }: Props) => {
                   {groupViews.map(v => {
                     const masks = { currentMask: v.currentMask, ceilingMask: v.ceilingMask, publicMask: v.publicMask };
                     const editedMask = edited[v.viewCode] ?? v.currentMask;
-                    // Bits a pintar según la máscara EDITADA (refleja los toggles en vivo).
                     const bits = visibleBits({ ...masks, currentMask: editedMask });
-                    const dirty = isDirty(v.currentMask, editedMask);
-                    const isSaving = saving[v.viewCode] ?? false;
+                    const protectedView = isProtectedView(v.viewCode);
+                    const isFailed = failedView === v.viewCode;
 
                     return (
-                      <div key={v.viewCode} className='flex items-center justify-between gap-4 flex-wrap'>
-                        <Typography color='text.primary'>{v.label}</Typography>
+                      <div
+                        key={v.viewCode}
+                        className={isFailed ? 'flex items-center justify-between gap-4 flex-wrap p-2 rounded' : 'flex items-center justify-between gap-4 flex-wrap'}
+                        style={isFailed ? { outline: '1px solid var(--mui-palette-error-main)' } : undefined}
+                      >
+                        <div className='flex items-center gap-2'>
+                          <Typography color='text.primary'>{v.label}</Typography>
+                          {protectedView && (
+                            <Tooltip title='Se administra por aprovisionamiento; no editable aquí.'>
+                              <Chip size='small' variant='outlined' label='Solo lectura' icon={<i className='ri-lock-line' />} />
+                            </Tooltip>
+                          )}
+                        </div>
                         <div className='flex items-center gap-2'>
                           {bits.map(({ bit, state }) => {
                             const cv = chipVisual(state);
-                            const editable = canEdit && isBitEditable(bit, masks);
+                            const editable = canEdit && !protectedView && isBitEditable(bit, masks);
 
                             return (
                               <Chip
@@ -266,18 +354,6 @@ const PermissionsDetail = ({ user, canEdit }: Props) => {
                               />
                             );
                           })}
-
-                          {canEdit && dirty && (
-                            <Button
-                              size='small'
-                              variant='contained'
-                              disabled={isSaving}
-                              onClick={() => handleSave(v)}
-                              startIcon={isSaving ? <CircularProgress size={14} color='inherit' /> : undefined}
-                            >
-                              Guardar
-                            </Button>
-                          )}
                         </div>
                       </div>
                     );

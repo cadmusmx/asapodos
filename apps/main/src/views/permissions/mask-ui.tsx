@@ -65,8 +65,6 @@ export function effectiveMask(masks: ViewMasks): number {
   return masks.currentMask | masks.publicMask;
 }
 
-// ── Edición (8c) ────────────────────────────────────────────────────────────
-
 /** ¿Un bit es editable? (dentro del techo y NO público). Los públicos van bloqueados-on. */
 export function isBitEditable(bit: BitKey, masks: ViewMasks): boolean {
   const b = BIT_VALUE[bit];
@@ -115,4 +113,48 @@ export function toggleBit(bit: BitKey, currentRaw: number, masks: ViewMasks): nu
 /** ¿La máscara cruda editada difiere de la original? (para mostrar/ocultar Guardar). */
 export function isDirty(originalRaw: number, editedRaw: number): boolean {
   return originalRaw !== editedRaw;
+}
+
+/** Vista cuya escritura está prohibida por el motor (regla b: PROTECTED_VIEW). */
+export const PROTECTED_VIEW_CODES = new Set<string>(['permissions_access']);
+
+export function isProtectedView(viewCode: string): boolean {
+  return PROTECTED_VIEW_CODES.has(viewCode);
+}
+
+/** Un cambio para el endpoint batch. */
+export interface ViewChange {
+  viewCode: string;
+  mask: number;
+}
+
+/**
+ * Recolecta los cambios pendientes: por cada viewCode cuya máscara editada
+ * difiere de la original. Excluye vistas protegidas (no se envían nunca).
+ * `originals` y `edited` son mapas viewCode -> máscara cruda.
+ */
+export function collectChanges(
+  originals: Record<string, number>,
+  edited: Record<string, number>
+): ViewChange[] {
+  const changes: ViewChange[] = [];
+
+  for (const viewCode of Object.keys(edited)) {
+    if (isProtectedView(viewCode)) continue;
+
+    const original = originals[viewCode] ?? 0;
+    const current = edited[viewCode] ?? 0;
+
+    if (original !== current) changes.push({ viewCode, mask: current });
+  }
+
+  return changes;
+}
+
+/** ¿Hay algún cambio pendiente en todo el conjunto? (dirty GLOBAL). */
+export function hasPendingChanges(
+  originals: Record<string, number>,
+  edited: Record<string, number>
+): boolean {
+  return collectChanges(originals, edited).length > 0;
 }
