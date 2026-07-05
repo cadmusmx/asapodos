@@ -231,8 +231,8 @@ const PermissionsDetail = ({ user, canEdit }: Props) => {
         {!loading &&
           !error &&
           groups.map(([groupName, groupViews]) => (
-            <Accordion key={groupName} defaultExpanded>
-              <AccordionSummary expandIcon={<i className='ri-arrow-down-s-line' />}>
+            <Accordion key={groupName}>
+              <AccordionSummary expandIcon={<i className='ri-arrow-down-s-line' />} >
                 <Typography className='font-medium capitalize'>{groupName.replace(/_/g, ' ')}</Typography>
               </AccordionSummary>
               <AccordionDetails>

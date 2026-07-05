@@ -67,6 +67,48 @@ export function assignPermission(input: AssignPermissionInput): Promise<AssignPe
   });
 }
 
+export interface AssignPermissionsBatchInput {
+  tenantId: string;
+  actorIdUsuario: number;
+  targetIdUsuario: number;
+  changes: ChangeInput[];
+}
+
+export interface BatchChangeResult {
+  viewCode: string;
+  old: number | null;
+  new: number;
+}
+
+export interface AssignPermissionsBatchResult {
+  ok: true;
+  target: number;
+  results: BatchChangeResult[];
+}
+
+export function assignPermissionsBatch(
+  input: AssignPermissionsBatchInput
+): Promise<AssignPermissionsBatchResult> {
+  const { actorIdUsuario, targetIdUsuario, changes } = input;
+  const tenantId = input.tenantId.toLowerCase();
+
+  return withTenantContext(tenantId, async tx => {
+    // actor: INVARIANTE del lote -> se resuelve una vez (autoridad + privilegio territorial)
+    const actor = await resolveActorContext(tx, tenantId, actorIdUsuario);
+
+    const results: BatchChangeResult[] = [];
+
+    // SECUENCIAL a propósito: la interactive tx de Prisma no es concurrente (nada de Promise.all sobre el mismo tx).
+    // Cualquier throw se propaga -> $transaction hace rollback -> CERO escrituras (atomicidad real).
+    for (const change of changes) {
+      const r = await applyOneChange(tx, tenantId, actor, targetIdUsuario, change);
+      results.push({ viewCode: r.viewCode, old: r.old, new: r.new });
+    }
+
+    return { ok: true, target: targetIdUsuario, results };
+  });
+}
+
 interface ActorContext {
   idUsuario: number;
   idDepartamento: number | null;
