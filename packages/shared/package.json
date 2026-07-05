@@ -1,0 +1,19 @@
+{
+  "name": "@gaso/shared",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@auth/prisma-adapter": "2.7.4",
+    "@otplib/preset-default": "^12.0.1",
+    "@prisma/client": "6.19.2",
+    "jose": "5.9.6",
+    "next": "15.1.2",
+    "next-auth": "4.24.11"
+  },
+  "devDependencies": {
+    "typescript": "5.5.4"
+  }
+}

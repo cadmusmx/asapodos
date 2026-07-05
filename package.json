@@ -1,0 +1,21 @@
+{
+  "name": "gaso-saas",
+  "version": "1.1.2",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @gaso/main dev",
+    "dev:admin": "pnpm --filter @gaso/admin dev",
+    "build": "pnpm --filter @gaso/main build",
+    "build:admin": "pnpm --filter @gaso/admin build",
+    "lint": "pnpm -r lint",
+    "format": "pnpm -r format"
+  },
+  "resolutions": {
+    "rimraf": "^5.0.7",
+    "@tiptap/core": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=8"
+  }
+}

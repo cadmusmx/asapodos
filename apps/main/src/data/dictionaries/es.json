@@ -1,0 +1,89 @@
+{
+  "navigation": {
+    "dashboards": {
+      "main": "Dashboards",
+      "general": "General",
+      "humanCapital": "Capital Humano",
+      "operatingExpenses": "Gastos de Operación",
+      "fleets": "Flotillas",
+      "projects": "Proyectos",
+      "warehouses": "Almacenes"
+    },
+    "warehouses": {
+      "main": "Almacenes",
+      "inventory": "Inventario",
+      "ericssonInventory": "Inventario Ericsson",
+      "warehouseList": "Listado de Almacenes",
+      "warehouseMap": "Mapa de Almacenes",
+      "inventoryMovements": "Movimientos de Inventario",
+      "materialValidation": "Validación de Material",
+      "materialLogistics": "Logística de Material",
+      "qualityInspection": "Control de Calidad"
+    },
+    "humanCapital": {
+      "main": "Capital Humano",
+      "employees": "Empleados",
+      "timeOff": "Vacaciones"
+    },
+    "rolesAndPermissions": "Roles y Permisos",
+    "quotes": "Cotizaciones",
+    "projects": {
+      "main": "Proyectos",
+      "activeProjects": "Proyectos Activos",
+      "purchaseOrders": "Órdenes de Compra",
+      "expenseBudget": "Presupuesto de Gastos"
+    },
+    "projectManagement": "Gestión de Proyectos",
+    "operatingExpenses": {
+      "main": "Gastos de Operación",
+      "expenseRequests": "Solicitudes de Gastos"
+    },
+    "fleets": {
+      "main": "Flotillas",
+      "vehicles": "Vehículos",
+      "issues": "Hallazgos",
+      "vehicleTracking": "Rastreo de Vehículos",
+      "fuelReceipts": "Comprobantes de Gasolina",
+      "vehicleResponsibility": "Responsivas Vehiculares",
+      "weeklyMileage": "Kilometraje Semanal",
+      "vehicleExpenseControl": "Control de Gastos Vehicular"
+    },
+    "suppliers": {
+      "main": "Proveedores",
+      "contractors": "Contratistas"
+    },
+    "administration": {
+      "main": "Administración",
+      "requests": "Solicitudes",
+      "audit": "Auditoría",
+      "permissions": "Permisos y Accesos"
+    },
+    "workTools": "Herramientas de Trabajo",
+    "ehs": {
+      "main": "EHS",
+      "jsa": "Análisis de Trabajo Seguro (ATS)",
+      "toolChecklist": "Checklist de Herramientas",
+      "siteCheckIn": "Check-In en Sitio"
+    },
+    "purchasing": "Compras",
+    "clients": "Clientes"
+  },
+  "start": {
+    "heroTitle": "Gaso Comunicaciones",
+    "heroSubtitle": "Sistema de Gestión y Control",
+    "activityHeading": "¿Qué actividad vas a realizar hoy?",
+    "humanCapital": "Capital Humano",
+    "warehouses": "Almacenes",
+    "quotes": "Cotizaciones",
+    "projects": "Proyectos",
+    "operatingExpenses": "Gastos de operación",
+    "fleets": "Flotillas",
+    "didYouKnow": "¿Sabías que...?",
+    "tips": [
+      "Puedes generar tus solicitudes de gasto y dar el seguimiento directamente desde el panel principal.",
+      "Gestiona tu flotilla de vehículos y lleva un control detallado de cada unidad en tiempo real.",
+      "Revisa el estado de tus proyectos activos y consulta el presupuesto disponible en cualquier momento.",
+      "Mantén tu inventario actualizado con nuestro sistema de almacenes integrado."
+    ]
+  }
+}

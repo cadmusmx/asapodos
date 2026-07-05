@@ -1,0 +1,89 @@
+{
+  "navigation": {
+    "dashboards": {
+      "main": "Dashboards",
+      "general": "General",
+      "humanCapital": "Human Capital",
+      "operatingExpenses": "Operating Expenses",
+      "fleets": "Fleets",
+      "projects": "Projects",
+      "warehouses": "Warehouses"
+    },
+    "warehouses": {
+      "main": "Warehouses",
+      "inventory": "Inventory",
+      "ericssonInventory": "Ericsson Inventory",
+      "warehouseList": "Warehouse List",
+      "warehouseMap": "Warehouse Map",
+      "inventoryMovements": "Inventory Movements",
+      "materialValidation": "Material Validation",
+      "materialLogistics": "Material Logistics",
+      "qualityInspection": "Quality Inspection"
+    },
+    "humanCapital": {
+      "main": "Human Capital",
+      "employees": "Employees",
+      "timeOff": "Time Off"
+    },
+    "rolesAndPermissions": "Roles & Permissions",
+    "quotes": "Quotes",
+    "projects": {
+      "main": "Projects",
+      "activeProjects": "Active Projects",
+      "purchaseOrders": "Purchase Orders",
+      "expenseBudget": "Expense Budget"
+    },
+    "projectManagement": "Project Management",
+    "operatingExpenses": {
+      "main": "Operating Expenses",
+      "expenseRequests": "Expense Requests"
+    },
+    "fleets": {
+      "main": "Fleets",
+      "vehicles": "Vehicles",
+      "issues": "Issues",
+      "vehicleTracking": "Vehicle Tracking",
+      "fuelReceipts": "Fuel Receipts",
+      "vehicleResponsibility": "Vehicle Responsibility Agreements",
+      "weeklyMileage": "Weekly Mileage",
+      "vehicleExpenseControl": "Vehicle Expense Control"
+    },
+    "suppliers": {
+      "main": "Suppliers",
+      "contractors": "Contractors"
+    },
+    "administration": {
+      "main": "Administration",
+      "requests": "Requests",
+      "audit": "Audit",
+      "permissions": "Permission Access"
+    },
+    "workTools": "Work Tools",
+    "ehs": {
+      "main": "EHS",
+      "jsa": "Job Safety Analysis (JSA)",
+      "toolChecklist": "Tool Checklist",
+      "siteCheckIn": "Site Check-In"
+    },
+    "purchasing": "Purchasing",
+    "clients": "Clients"
+  },
+  "start": {
+    "heroTitle": "Gaso Communications",
+    "heroSubtitle": "Management and Control System",
+    "activityHeading": "What activity will you do today?",
+    "humanCapital": "Human Capital",
+    "warehouses": "Warehouses",
+    "quotes": "Quotes",
+    "projects": "Projects",
+    "operatingExpenses": "Operating Expenses",
+    "fleets": "Fleets",
+    "didYouKnow": "Did you know...?",
+    "tips": [
+      "You can generate expense requests and track them directly from the main dashboard.",
+      "Manage your vehicle fleet and keep detailed control of each unit in real time.",
+      "Review the status of your active projects and check the available budget at any time.",
+      "Keep your inventory up to date with our integrated warehouse management system."
+    ]
+  }
+}

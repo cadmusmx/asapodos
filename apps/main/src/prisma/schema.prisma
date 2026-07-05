@@ -1,0 +1,2291 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Asignacion_Tarea_WO {
+  Id               Int       @default(autoincrement())
+  Id_WO            Int?
+  Id_Tarea         Int?
+  Fecha_Asignacion DateTime? @db.SmallDateTime
+  Estatus          Int?      @db.TinyInt
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Autos_Catalogo_EstatusSolicitudesViaticos {
+  ID            Int     @default(autoincrement())
+  IdEstatus     Int?
+  nombreEstatus String? @db.VarChar(200)
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Autos_Catalogo_TipoSolicitudes {
+  ID              Int     @default(autoincrement())
+  IdTipo          Int?
+  nombreSolicitud String? @db.VarChar(200)
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Autos_Plantilla_Detalle_JSON {
+  ID           Int       @default(autoincrement())
+  IdUsuario    Int?
+  IdPlantilla  Int?
+  jsonDetalle  String?   @db.VarChar(Max)
+  FechaCaptura DateTime? @db.SmallDateTime
+  Estatus      Int?
+  estatusMovil Int?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Autos_Solicitud_Viaticos {
+  ID                      Int       @default(autoincrement())
+  IdUsuario               Int?
+  TipoSolicitud           Int?
+  IdCoordinador           Int?
+  IdEstadoOrigen          Int?
+  IdCiudadOrigen          Int?
+  IdEstadoDestino         Int?
+  IdCiudadDestino         Int?
+  FechaAltaSolicitud      DateTime? @db.SmallDateTime
+  FechaDesde              DateTime? @db.SmallDateTime
+  FechaHasta              DateTime? @db.SmallDateTime
+  SolicitaHospedaje       Boolean?
+  SolicitaGastos          Boolean?
+  FechaRespuestaSolicitud DateTime? @db.SmallDateTime
+  comentarioSolicitud     String?   @db.VarChar(500)
+  EstatusSolicitud        Int?
+  IdUsuarioGerente        Int?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model botonesIconosPlantillasArgos {
+  ID                Int     @default(autoincrement())
+  IdPlantilla       Int?
+  claseBoostrap     String? @db.VarChar(50)
+  iconoFontAwesome  String? @db.VarChar(50)
+  textoBoton        String? @db.VarChar(50)
+  tipoMantenimiento String? @db.VarChar(50)
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_ActividadesAuto {
+  ID        Int      @default(autoincrement())
+  Actividad String?  @db.VarChar(100)
+  Estatus   Boolean?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_Almacenes {
+  IdAlmacen   Int     @default(autoincrement())
+  IdRegion    Int?
+  Ubicacion   String? @db.VarChar(150)
+  Coordenadas String? @db.NChar(100)
+  Metros      String? @db.NChar(20)
+  Responsable String? @db.VarChar(100)
+  Telefono    BigInt?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_Archivos_Empresa {
+  Id        Int      @default(autoincrement())
+  idEmpresa Int?
+  nombre    String?  @db.VarChar(200)
+  ruta      String?  @db.VarChar(500)
+  tipo      String?  @db.VarChar(200)
+  activo    Boolean?
+
+  @@ignore
+}
+
+model Cat_Argos_Hallazgos {
+  Id                Int       @id(map: "PK__Cat_Argo__3214EC07D378A47E") @default(autoincrement())
+  IdWO              Int?
+  IdReporteWO       Int?
+  IdRegion          Int?
+  IdPlantilla       Int?
+  NombreSitio       String?   @db.NVarChar(512)
+  DescripcionWO     String?   @db.NVarChar(150)
+  jsonDetalleWO     String?   @db.Text
+  IdUsuario         Int?
+  NombreUsuario     String?   @db.VarChar(255)
+  FechaDespacho     DateTime?
+  FechaFinalizacion DateTime?
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_Autos {
+  IdAuto      Int     @default(autoincrement())
+  IdMarca     Int?
+  Serial      String? @db.NChar(30)
+  Modelo      Int?
+  Placas      String? @db.NChar(15)
+  Kilometraje Int?
+  IdVersion   Int?
+  Motor       String? @db.NChar(40)
+  Color       String? @db.VarChar(60)
+  IdUsuario   Int?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_Baja {
+  IdBaja     Int     @default(autoincrement())
+  NombreBaja String? @db.VarChar(500)
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_BBH {
+  IdContenedor      Int      @default(autoincrement())
+  Proveedor         String?  @db.VarChar(100)
+  ProveedorHW       String?  @db.VarChar(100)
+  Nombre            String?  @db.VarChar(512)
+  IdRegion          Int?
+  Latitud           Float?   @db.Real
+  Longitud          Float?   @db.Real
+  Direccion         String?  @db.VarChar(512)
+  Tipo              String?  @db.VarChar(80)
+  IdEmpresa         Int?
+  STATUS            Int?     @db.TinyInt
+  UsuariosAsignados String?  @db.VarChar(Max)
+  Cohubicado        Boolean?
+  IDAltan           Int?
+  IdFlm             Int?
+  IdEstado          Int?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_CheckInOut {
+  ID                  Int       @default(autoincrement())
+  IdUsuario           Int?
+  Estado              Int?
+  Ciudad              Int?
+  Actividad           Int?
+  Latitud             Float?
+  Longitud            Float?
+  ComentarioActividad String?   @db.VarChar(200)
+  fechaCheckIn        DateTime? @db.SmallDateTime
+  fechaCheckOut       DateTime? @db.SmallDateTime
+  EstatusCheckIn      Boolean?
+  EstatusCheckOut     Boolean?
+  tipoActividad       Int?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_CheckInOut_Argos {
+  ID                  Int       @default(autoincrement())
+  IdUsuario           Int?
+  Estado              Int?
+  Ciudad              Int?
+  Actividad           Int?
+  Latitud             Float?
+  Longitud            Float?
+  ComentarioActividad String?   @db.VarChar(200)
+  fechaCheckIn        DateTime? @db.SmallDateTime
+  fechaCheckOut       DateTime? @db.SmallDateTime
+  EstatusCheckIn      Boolean?
+  EstatusCheckOut     Boolean?
+  tipoActividad       Int?
+
+  @@ignore
+}
+
+model Cat_Ciudades {
+  IdCiudad Int     @id(map: "PK_Cat_Ciudades") @default(autoincrement())
+  Ciudad   String? @db.NChar(100)
+  Status   Int?    @db.TinyInt
+  IdEstado Int?
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_ClasificacionWO {
+  IdClasificacionWO Int    @default(autoincrement())
+  Nombre            String @db.VarChar(50)
+  Estatus           Int    @db.TinyInt
+
+  @@ignore
+}
+
+model cat_color {
+  idColor     Int     @id(map: "PK__cat_colo__504A3B88096CE40F") @default(autoincrement())
+  nombreColor String? @db.VarChar(200)
+}
+
+model cat_combustible {
+  idCombustible   Int     @id(map: "PK__cat_comb__69F7A82A66FAED84") @default(autoincrement())
+  tipoCombustible String? @db.VarChar(200)
+}
+
+model Cat_Cuadrillas {
+  IdCuadrilla     Int             @id(map: "PK__Cat_Cuad__AD5E797D96B40E0B") @default(autoincrement())
+  Nombre          String?         @db.NVarChar(50)
+  Estatus         String?         @db.NVarChar(10)
+  IdTipoCuadrilla Int?
+  IdRegion        Int?
+  IdRepresentante Int?
+  Auxiliar        String?         @db.NVarChar(50)
+  IdSitio         Int?
+  IdUsuario       Int?
+  Tipo_Cuadrilla  Tipo_Cuadrilla? @relation(fields: [IdTipoCuadrilla], references: [IdTipoCuadrilla], onDelete: NoAction, onUpdate: NoAction, map: "FK_Cat_Cuadrillas_IdTipoCuadrilla")
+}
+
+model Cat_Empresas {
+  IdEmpresa      Int       @id(map: "PK__Cat_Empr__5EF4033E9EFCD2E5") @default(autoincrement())
+  NombreEmpresa  String?   @db.NVarChar(100)
+  Token          String?   @db.NVarChar(255)
+  UsrRegistro    String?   @db.NVarChar(20)
+  FechaRegistro  DateTime?
+  UsrUltimaMod   String?   @db.NVarChar(20)
+  FechaUltimaMod DateTime?
+  Status         Int?      @db.TinyInt
+  Paquete        Int?
+}
+
+model cat_empresasSeguros {
+  idEmpresa             Int                 @id(map: "PK__cat_empr__75D2CED4780F16AB") @default(autoincrement())
+  nombreEmpresasSeguros String?             @db.VarChar(200)
+  GASOAL_Responsiva     GASOAL_Responsiva[]
+}
+
+model Cat_Estados {
+  IdEstado Int     @id(map: "PK_Cat_Estados") @default(autoincrement())
+  Nombre   String? @db.VarChar(100)
+  Status   Int?    @db.TinyInt
+  IdRegion Int?    @db.TinyInt
+  Coords   String? @db.VarChar(100)
+  Rv       Boolean @default(false, map: "DF__Cat_Estados__Rv__7A5D0C71")
+}
+
+model Cat_EstadoWO {
+  IdEstatusWO     Int     @id(map: "PK__Cat_Esta__871CC66DF97A438E") @default(autoincrement())
+  NombreEstatusWO String? @db.NVarChar(30)
+  StatusWO        String? @db.NVarChar(30)
+}
+
+model Cat_EstadoWO_Sub {
+  ID                  Int      @id(map: "PK__Cat_Esta__3214EC27D83B6005")
+  NombreEstatusWOSub  String?  @db.VarChar(50)
+  EstadoWOSubDetalles String?  @db.Text
+  EstadoWOSub         Boolean? @default(true, map: "DF__Cat_Estad__Estat__168449D3")
+}
+
+model cat_estatus {
+  idEstatus     Int     @id(map: "PK__cat_esta__DCBE18B6042051D5") @default(autoincrement())
+  nombreEstatus String? @db.VarChar(200)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_FLM {
+  IdFLM   Int      @default(autoincrement())
+  Nombre  String?  @db.VarChar(50)
+  Estatus Boolean?
+
+  @@ignore
+}
+
+model cat_gps {
+  idGps                Int     @id(map: "PK__tmp_ms_x__3EB67EF4A1DA5007") @default(autoincrement())
+  estatusGps           String? @db.VarChar(200)
+  identificador        Int?
+  modeloGps            String? @db.VarChar(20)
+  numeroTarjetaSim     String? @db.VarChar(20)
+  iconoVehiculo        String? @db.VarChar(20)
+  FechaActivacion      String? @db.VarChar(20)
+  historialRastreoJson String? @db.VarChar(Max)
+  alertasRastreoJson   String? @db.VarChar(Max)
+}
+
+model Cat_Hallazgos {
+  ID               Int      @id(map: "PK_Cat_Hallazgos") @default(autoincrement())
+  IDDetalles       Int
+  IdUsuario        Int
+  NombreUsuario    String   @default("0", map: "DF_Table_1_Estatus") @db.VarChar(255)
+  Usuario          String   @db.VarChar(20)
+  Email            String   @db.VarChar(250)
+  Kilometraje      String   @db.VarChar(15)
+  HallazgosResumen String   @db.Text
+  FechaCaptura     DateTime @db.SmallDateTime
+  Estatus          Int      @default(0, map: "DF_Cat_Hallazgos_Estatus")
+}
+
+model Cat_Historico_RH {
+  IdHistorico   Int       @id(map: "PK__Cat_Hist__9CC7EBF353D295F0") @default(autoincrement())
+  IdRegistro    Int?
+  IdSolicitud   Int?
+  IdUsuario     Int?
+  Fecha         DateTime? @db.SmallDateTime
+  ValorAnterior String?   @db.VarChar(200)
+  ValorNuevo    String?   @db.VarChar(200)
+}
+
+model Cat_Linea {
+  Id                Int                 @id(map: "Cat_Linea_PK") @default(autoincrement()) @db.SmallInt
+  Text              String              @unique(map: "Cat_Linea_UNIQUE") @db.VarChar(150)
+  GASOAL_Responsiva GASOAL_Responsiva[]
+}
+
+model Cat_MarcaAuto {
+  IdMarca           Int                 @id(map: "Cat_MarcaAuto_PK") @default(autoincrement())
+  Descripcion       String?             @db.VarChar(50)
+  GASOAL_Responsiva GASOAL_Responsiva[]
+}
+
+model cat_marcaVehiculo {
+  idMarca     Int     @id(map: "PK__cat_marc__703318127CBC68DE") @default(autoincrement())
+  nombreMarca String? @db.VarChar(200)
+  logoUrl     String? @db.VarChar(255)
+}
+
+model Cat_Modulos {
+  IdModulo       Int              @id(map: "PK__Cat_Modu__D9F15315F11B8140") @default(autoincrement())
+  NombreModulo   String?          @db.NVarChar(30)
+  Status         Int?             @db.TinyInt
+  Variable       String?          @db.VarChar(20)
+  Cat_SubModulos Cat_SubModulos[]
+}
+
+model Cat_Paquetes {
+  IdPaquete         Int                 @id(map: "PK__Cat_Paqu__DE278F8BE6DCE0BD") @default(autoincrement())
+  Descripcion       String?             @db.NVarChar(50)
+  Status            Int?                @db.TinyInt
+  Permisos_Paquetes Permisos_Paquetes[]
+}
+
+model Cat_Perfiles {
+  IdPerfil            Int                   @id(map: "PK__Cat_Perf__C7BD5CC1A210729E") @default(autoincrement())
+  NombrePerfil        String?               @db.NVarChar(50)
+  UsrRegistro         String?               @db.NVarChar(20)
+  FechaRegistro       DateTime?
+  UsrUltMod           String?               @db.NVarChar(20)
+  FechaUltMod         DateTime?
+  Status              Int?                  @db.TinyInt
+  Usuarios_por_Perfil Usuarios_por_Perfil[]
+}
+
+model Cat_Plantillas {
+  IdPlantilla            Int      @id(map: "PK_Cat_Plantillas") @default(autoincrement())
+  Descripcion            String?  @db.VarChar(50)
+  Estructura             String?  @db.Text
+  script                 String?  @db.Text
+  EstructuraImpresion    String?  @db.Text
+  Activo                 Boolean?
+  IdEmpresa              Int?
+  EstructuraImpresionUrl String?  @db.NVarChar(200)
+  PlantillaOrientacion   String?  @default("p", map: "DF__Cat_Plant__Plant__34F3C25A") @db.Char(8)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_Plantillas_Auto {
+  IdPlantilla         Int      @default(autoincrement())
+  Descripcion         String?  @db.VarChar(50)
+  Estructura          String?  @db.Text
+  script              String?  @db.Text
+  EstructuraImpresion String?  @db.Text
+  Activo              Boolean?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_Plantillas_Auto_Web {
+  IdPlantilla         Int      @default(autoincrement())
+  Descripcion         String?  @db.VarChar(50)
+  Estructura          String?  @db.Text
+  script              String?  @db.Text
+  EstructuraImpresion String?  @db.Text
+  Activo              Boolean?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_Plantillas_Respaldo {
+  IdPlantilla         Int      @default(autoincrement())
+  Descripcion         String?  @db.VarChar(50)
+  Estructura          String?  @db.Text
+  script              String?  @db.Text
+  EstructuraImpresion String?  @db.Text
+  Activo              Boolean?
+  IdEmpresa           Int?
+
+  @@ignore
+}
+
+model Cat_Plantillas_Web {
+  IdPlantilla         Int      @id(map: "PK_Cat_Plantillas_Web") @default(autoincrement())
+  Descripcion         String?  @db.VarChar(50)
+  Estructura          String?  @db.Text
+  script              String?  @db.Text
+  EstructuraImpresion String?  @db.Text
+  Activo              Boolean?
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_PlantillasHelix {
+  IdPlantilla         Int      @default(autoincrement())
+  Descripcion         String?  @db.VarChar(50)
+  Estructura          String?  @db.Text
+  script              String?  @db.Text
+  EstructuraImpresion String?  @db.Text
+  Activo              Boolean?
+  IdEmpresa           Int?
+  IdWo_HelixRem       Int?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_PrioridadesSitio {
+  IdPrioridad Int     @default(autoincrement())
+  Descripcion String? @db.VarChar(50)
+  Status      Int?    @db.TinyInt
+
+  @@ignore
+}
+
+model cat_propietario {
+  idPropietario     Int     @id(map: "PK__cat_prop__EB82759577DEE083") @default(autoincrement())
+  nombrePropietario String? @db.VarChar(200)
+}
+
+model Cat_Puestos {
+  IdPuesto Int     @id(map: "PK__Cat_Pues__ADAC6B9CA7D08425") @default(autoincrement())
+  Nombre   String? @db.NVarChar(50)
+  Status   Int?    @db.TinyInt
+}
+
+model Cat_Regiones {
+  IdReg         Int     @id(map: "PK__Cat_Regi__2A4A4C1083A155B2") @default(autoincrement())
+  NombreReg     String? @db.NVarChar(5)
+  Descripcion   String? @db.NVarChar(50)
+  Status        Int?    @db.TinyInt
+  AdyacentesReg String? @db.Text
+}
+
+model Cat_RVTipoVehiculo {
+  Id                Int                 @id(map: "Cat_RVTipoVehiculo_PK") @default(autoincrement()) @db.SmallInt
+  Text              String              @unique(map: "Cat_RVTipoVehiculo_UNIQUE") @db.VarChar(150)
+  GASOAL_Responsiva GASOAL_Responsiva[]
+}
+
+model cat_sexo {
+  idSexo     Int     @id(map: "PK__cat_sexo__C5AFCD4D25B873D3") @default(autoincrement())
+  nombreSexo String? @db.VarChar(200)
+}
+
+model Cat_Sitios {
+  IdSitio           Int       @id(map: "PK__Cat_Siti__B10A76EDC0815500") @default(autoincrement())
+  Alias             String?   @db.NVarChar(100)
+  IdRegion          Int?
+  IdPrioridad       Int?
+  IdTipoSitio       Int?
+  Latitud           Float?    @db.Real
+  Longitud          Float?    @db.Real
+  Status            Int?      @db.TinyInt
+  IdeNode           Int?
+  Vendor            String?   @db.VarChar(30)
+  Regional          String?   @db.VarChar(80)
+  IdEstado          Int?
+  IdCiudad          Int?
+  Municipio         String?   @db.VarChar(100)
+  CdAncla           String?   @db.VarChar(50)
+  PuebloMagico      String?   @db.VarChar(100)
+  PobTotal          Float?
+  BTS               String?   @db.VarChar(20)
+  RanSolution       String?   @db.VarChar(20)
+  TxSolution        String?   @db.VarChar(20)
+  RanTxScene        String?   @db.VarChar(30)
+  TxProvider        String?   @db.VarChar(20)
+  IdTorrera         String?   @db.NVarChar(50)
+  TowerCo           String?   @db.VarChar(30)
+  FechaIntegracion  DateTime? @db.DateTime
+  SSVMaster         DateTime? @db.DateTime
+  FechaOperativo    DateTime? @db.DateTime
+  TransInbal        DateTime? @db.DateTime
+  TransPac          DateTime? @db.DateTime
+  TransFac          DateTime? @db.DateTime
+  IdEmpresa         Int?
+  UsuariosAsignados String?   @db.NVarChar(Max)
+  ExtraNote         String?   @db.VarChar(50)
+  IdCFE             String?   @db.VarChar(50)
+}
+
+model Cat_SubEstadoWO {
+  IdSubEstadoWO     Int      @id(map: "PK__Cat_SubE__1A0070D4907EDDE0")
+  NombreSubEstadoWO String?  @db.NVarChar(30)
+  StatusWO          Boolean?
+}
+
+model Cat_SubModulos {
+  IdSubModulo     Int          @id(map: "PK__Cat_SubM__A49BAFCB7233B3CD") @default(autoincrement())
+  IdModulo        Int?
+  IdSec           Int?
+  NombreSubModulo String?      @db.NVarChar(50)
+  Status          Int?         @db.TinyInt
+  Cat_Modulos     Cat_Modulos? @relation(fields: [IdModulo], references: [IdModulo], onDelete: NoAction, onUpdate: NoAction, map: "FK_Cat_SubModulos_IdModulo")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_Tareas {
+  Id                  Int      @default(autoincrement())
+  Descripcion         String?  @db.VarChar(50)
+  Estructura          String?  @db.Text
+  Script              String?  @db.Text
+  EstructuraImpresion String?  @db.Text
+  Activo              Boolean?
+  IdEmpresa           Int?
+  IdEtapa             String?  @db.VarChar(4)
+
+  @@ignore
+}
+
+model Cat_TipoResponsiva {
+  Id                Int                 @id(map: "Cat_TipoResponsiva_PK") @default(autoincrement()) @db.SmallInt
+  Tipo              String              @unique(map: "Cat_TipoResponsiva_UNIQUE") @db.VarChar(200)
+  GASOAL_Responsiva GASOAL_Responsiva[]
+}
+
+model Cat_TipoSitio {
+  IdTipoSitio Int     @id(map: "PK__Cat_Tipo__4FDB63B6B3AEBFFB") @default(autoincrement())
+  Descripcion String? @db.NVarChar(30)
+  Status      Int?    @db.TinyInt
+}
+
+model cat_tipoVehiculo {
+  idTipoVehiculo Int     @id(map: "PK__cat_tipo__429A3B81CE181A64") @default(autoincrement())
+  tipoVehiculo   String? @db.VarChar(200)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_url_googleDrive_Empresa {
+  ID                          Int     @default(autoincrement())
+  IdEmpresa                   Int?
+  urlGoogleScriptBorrarImagen String? @db.VarChar(Max)
+  urlGoogleScriptSubirImagen  String? @db.VarChar(Max)
+  urlGoogleScriptTraerImagen  String? @db.VarChar(Max)
+  carpetaIdGoogleDrive        String? @db.VarChar(500)
+
+  @@ignore
+}
+
+model Cat_Usuarios {
+  IdUsuario           Int                   @id(map: "PK__Cat_Usua__5B65BF979F09B6C9") @default(autoincrement())
+  NombreUsuario       String?               @db.VarChar(255)
+  FechaRegistro       DateTime?             @db.Date
+  NumCelular          BigInt?
+  IdPuesto            Int?
+  Email               String?               @db.VarChar(250)
+  Usuario             String?               @db.VarChar(20)
+  Password            String?               @db.VarChar(120)
+  IdEmpresa           Int?
+  namedb              String?               @db.NVarChar(20)
+  IdPerfil            Int?
+  IdCuadrilla         Int?
+  Estatus             String?               @db.VarChar(4)
+  Coords              String?               @db.NChar(100)
+  tokenMovil          String?               @db.VarChar(Max)
+  channelF            String?               @db.NVarChar(Max)
+  UsuarioPadre        Int?
+  TokenResetPass      String?               @db.NChar(60)
+  IdRegion            Int?
+  solicitaUbicacion   Boolean?
+  IdFLM               Int?
+  KomodoFlag          Boolean?
+  Usuarios_por_Perfil Usuarios_por_Perfil[]
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_VersionAuto {
+  IdVersion   Int     @default(autoincrement())
+  Descripcion String? @db.VarChar(50)
+  IdMarca     Int?
+
+  @@ignore
+}
+
+model cat_vigencia {
+  idVigencia      Int     @id(map: "PK__cat_vige__C0E57438B9D2E1E1") @default(autoincrement())
+  estatusVigencia String? @db.VarChar(200)
+}
+
+model Cat_VMEFisico {
+  Clave                  String                   @id(map: "Cat_DevEntEFisico_PK") @db.Char(1)
+  Estado                 String                   @db.VarChar(50)
+  GASOAL_VMPiezasEstadoF GASOAL_VMPiezasEstadoF[]
+}
+
+model Cat_VMMotivo {
+  Id                    Int                     @id(map: "Cat_DevEntMotivo_PK") @default(autoincrement()) @db.SmallInt
+  Motivo                String                  @unique(map: "Cat_DevEntMotivo_UNIQUE") @db.VarChar(50)
+  GASOAL_VMPiezasMotivo GASOAL_VMPiezasMotivo[]
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Cat_WO_Delete_Movil {
+  ID        Int  @default(autoincrement())
+  IdWO      Int?
+  IdUsuario Int?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Catalogo_Estatus_Tareas {
+  ID          Int     @default(autoincrement())
+  Estatus     Int?    @db.TinyInt
+  Descripcion String? @db.VarChar(100)
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Catalogo_Tareas {
+  ID           Int      @default(autoincrement())
+  Nombre_Tarea String?  @db.VarChar(100)
+  Activa       Boolean?
+
+  @@ignore
+}
+
+model CatSts_Historico {
+  IdRegistro Int    @id(map: "PK__CatSts_H__FFA45A99C3B98DC5") @default(autoincrement())
+  Nombre     String @db.VarChar(50)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Control_Logueo {
+  ID              Int       @default(autoincrement())
+  IdUsuario       Int?
+  Fecha           DateTime? @db.SmallDateTime
+  TipoDispositivo String?   @db.NVarChar(50)
+  Estatus         Int?
+  codigoUnico     Float?
+
+  @@ignore
+}
+
+model Dash_Cat_Estatus {
+  IdEstatus     Int    @id(map: "PK__Dash_Cat__B32BA1C7BD0F1368") @default(autoincrement())
+  NombreEstatus String @db.VarChar(100)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Desgloce_Tarea {
+  ID          Int      @default(autoincrement())
+  Id_Tarea    Int?
+  Descripcion String?  @db.VarChar(500)
+  abreMapa    Boolean?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model EstatusDocumento {
+  IdEstatusDoc     Int     @default(autoincrement())
+  EstatusDocumento String? @db.NVarChar(255)
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model EstatusFactura {
+  IdEstatusFactura Int     @default(autoincrement())
+  EstatusFactura   String? @db.NVarChar(255)
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASO_Almacen_Recepcion {
+  Id_Almacen Int     @default(autoincrement())
+  almacen    String? @db.VarChar(200)
+
+  @@ignore
+}
+
+model GASOAL_Almacenes {
+  Id                   Int     @id(map: "PK__GASOAL_A__3214EC07EFF195CA") @default(autoincrement())
+  Almacenes_Gaso       String  @db.VarChar(100)
+  Almacenes_Gaso_Otros String? @db.VarChar(100)
+}
+
+model GASOAL_Bines {
+  Id              Int             @id(map: "PK__GASOAL_B__3214EC072D805A07") @default(autoincrement())
+  Nombre          String          @db.VarChar(10)
+  PasilloId       Int
+  Activo          Boolean?        @default(true, map: "DF__GASOAL_Bi__Activ__3FA65AF7")
+  GASOAL_Pasillos GASOAL_Pasillos @relation(fields: [PasilloId], references: [Id], onUpdate: NoAction, map: "FK__GASOAL_Bi__Pasil__409A7F30")
+}
+
+model GASOAL_Cat_Carrier {
+  Id     Int    @id(map: "PK__GASOAL_C__3214EC07A008FBDD") @default(autoincrement())
+  Nombre String @unique(map: "UQ__GASOAL_C__75E3EFCF20B070F5") @db.VarChar(50)
+}
+
+model GASOAL_Cat_EstatusPallet {
+  IdEstatusPallet        Int                      @id(map: "PK__GASOAL_C__1A32DB599DB9DD60") @default(autoincrement())
+  Clave                  String                   @unique(map: "UQ__GASOAL_C__E8181E1166A836EC") @db.VarChar(50)
+  Nombre                 String                   @db.NVarChar(100)
+  EsFinal                Boolean                  @default(false, map: "DF__GASOAL_Ca__EsFin__628582E0")
+  Activo                 Boolean                  @default(true, map: "DF__GASOAL_Ca__Activ__6379A719")
+  Orden                  Int                      @default(1, map: "DF__GASOAL_Ca__Orden__646DCB52")
+  GASOAL_MovimientosLote GASOAL_MovimientosLote[]
+}
+
+model GASOAL_Cat_TipoMaterial {
+  Id           Int            @id(map: "PK__GASOAL_C__3214EC07AE23D6F6") @default(autoincrement())
+  Nombre       String         @unique(map: "UQ__GASOAL_C__75E3EFCF04241B66") @db.VarChar(50)
+  Activo       Boolean        @default(true, map: "DF_GASOAL_Cat_TipoMaterial_Activo")
+  Orden        Int            @default(0, map: "DF_GASOAL_Cat_TipoMaterial_Orden")
+  GASOAL_Palet GASOAL_Palet[]
+}
+
+model GASOAL_CatalogoAlmacenes {
+  Id                Int      @id(map: "PK__GASOAL_C__3214EC078380F9D5") @default(autoincrement())
+  Almacen           String   @db.VarChar(100)
+  Region            String   @db.VarChar(100)
+  Ciudad            String   @db.VarChar(100)
+  Capacidad         Int?
+  Direccion         String?  @db.VarChar(255)
+  Estado_Almacen    String?  @db.VarChar(50)
+  Responsable       String?  @db.VarChar(100)
+  Coordinador       String?  @db.VarChar(100)
+  Capacidad_Ocupada Int?
+  Telefono          String?  @db.VarChar(50)
+  Latitud           Decimal? @db.Decimal(10, 6)
+  Longitud          Decimal? @db.Decimal(10, 6)
+  EsEricsson        Int?
+}
+
+model GASOAL_CatMaterialEricsson {
+  Id        Int       @id(map: "PK__GASOAL_C__3214EC07A9E3B177") @default(autoincrement())
+  Nombre    String    @unique(map: "UX_GASOAL_CatMaterialEricsson_Nombre") @db.NVarChar(100)
+  Activo    Boolean   @default(true, map: "DF_GASOAL_CatMaterialEricsson_Activo")
+  Orden     Int       @default(0, map: "DF_GASOAL_CatMaterialEricsson_Orden")
+  CreatedAt DateTime  @default(dbgenerated("sysdatetime()"), map: "DF_GASOAL_CatMaterialEricsson_CreatedAt")
+  UpdatedAt DateTime?
+}
+
+model GASOAL_CatProyectosEricsson {
+  Id        Int       @id(map: "PK__GASOAL_C__3214EC07250C480E") @default(autoincrement())
+  Nombre    String    @unique(map: "UX_GASOAL_CatProyectosEricsson_Nombre") @db.NVarChar(100)
+  Activo    Boolean   @default(true, map: "DF_GASOAL_CatProyectosEricsson_Activo")
+  Orden     Int       @default(0, map: "DF_GASOAL_CatProyectosEricsson_Orden")
+  CreatedAt DateTime  @default(dbgenerated("sysdatetime()"), map: "DF_GASOAL_CatProyectosEricsson_CreatedAt")
+  UpdatedAt DateTime?
+}
+
+model GASOAL_Definicion_Equipo {
+  ID                    Int     @id(map: "PK__GASOAL_D__3214EC27723EAB15") @default(autoincrement())
+  TipoDefinicion_Equipo String? @db.NVarChar(100)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOAL_Estado_Fisico {
+  Id_Estado   Int     @default(autoincrement())
+  tipo_Estado String? @db.NVarChar(50)
+
+  @@ignore
+}
+
+model GASOAL_Gasolina {
+  Id                  Int       @id(map: "GASOAL_Gasolina_PK") @default(autoincrement())
+  IdUsuario           Int
+  FechaCaptura        DateTime  @db.DateTime
+  NoEconomico         String    @db.VarChar(25)
+  Monto               Float
+  Uso                 String    @db.VarChar(50)
+  Generador           Boolean
+  Status              Int       @default(0, map: "DF__GASOAL_Ga__Estad__5748DA5E")
+  Folio               String?   @db.VarChar(25)
+  IdRegion            Int?      @db.SmallInt
+  Litros              Float?
+  Kilometraje         Int?
+  Ticket              String?   @db.VarChar(100)
+  Sitio               String?   @db.VarChar(100)
+  KilometrajeFoto     String?   @db.VarChar(100)
+  TicketFoto          String?   @db.VarChar(100)
+  FechaEdicion        DateTime? @db.DateTime
+  TableroAFoto        String?   @db.VarChar(100)
+  TableroDFoto        String?   @db.VarChar(100)
+  PlantaAFoto         String?   @db.VarChar(100)
+  PlantaDFoto         String?   @db.VarChar(100)
+  BombaFoto           String?   @db.VarChar(100)
+  TicketBombaFoto     String?   @db.VarChar(100)
+  MontoGenerador      Float?
+  TicketGeneradorFoto String?   @db.VarChar(100)
+  Rendimiento         Float?
+  MotivoRechazo       String?   @db.VarChar(250)
+}
+
+model GASOAL_Historial_Capacidad {
+  Id                 Int       @id(map: "PK__GASOAL_H__3214EC07299CEEEB") @default(autoincrement())
+  Almacen            String?   @db.VarChar(100)
+  FechaActualizacion DateTime? @default(now(), map: "DF__GASOAL_Hi__Fecha__59662CFA") @db.DateTime
+  Capacidad_Ocupada  Int?
+}
+
+model GASOAL_Historial_RecepcionMercanciaAlmacen {
+  HistorialId           Int       @id(map: "PK__GASOAL_H__9752068FD5776D39") @default(autoincrement())
+  IdPieza               Int
+  Proyecto_Origen       String    @db.VarChar(100)
+  Region                String    @db.VarChar(50)
+  Sitio                 String    @db.VarChar(50)
+  Serie                 String    @db.VarChar(50)
+  Fecha_ingreso_almacen DateTime  @db.DateTime
+  Fecha_salida_almacen  DateTime? @db.DateTime
+  Ver_historial         String?   @db.VarChar(50)
+  FechaMovimiento       DateTime  @default(now(), map: "DF__GASOAL_Hi__Fecha__2D87AABC") @db.DateTime
+  Ubicacion_Actual      String?   @db.VarChar(100)
+  Estatus_almacen       String?   @db.VarChar(100)
+  pasillo               String?   @db.VarChar(10)
+  bin                   String?   @db.VarChar(20)
+  Lote                  String?   @db.VarChar(50)
+}
+
+model GASOAL_Historico {
+  IdHistorico   Int       @id(map: "PK__GASOAL_H__9CC7EBF36373B20D") @default(autoincrement())
+  IdRegistro    Int
+  TipoAccion    String?   @db.VarChar(50)
+  IdSolicitud   Int
+  IdUsuario     Int?
+  Fecha         DateTime? @default(now(), map: "DF__GASOAL_Hi__Fecha__2FFA0313") @db.SmallDateTime
+  ValorAnterior String?   @db.NVarChar(Max)
+  ValorNuevo    String?   @db.NVarChar(Max)
+}
+
+model GASOAL_InventarioEricsson_Items {
+  id_item                           Int       @id(map: "PK__GASOAL_I__87C9438B1181BF88") @default(autoincrement())
+  bodega                            String?   @db.NVarChar(50)
+  fecha_recibo_en_cross_dock        DateTime? @db.Date
+  folio_recibo_lsp                  String?   @db.NVarChar(80)
+  codigo                            String?   @db.NVarChar(80)
+  descripcion                       String?   @db.NVarChar(300)
+  cantidad                          Int?
+  serial_number                     String?   @db.NVarChar(120)
+  id                                String?   @db.NVarChar(80)
+  nombre_sitio                      String?   @db.NVarChar(200)
+  region                            String?   @db.NVarChar(80)
+  proceso                           String?   @db.NVarChar(80)
+  asp_que_entrego                   String?   @db.NVarChar(150)
+  nombre_de_quien_entrego           String?   @db.NVarChar(150)
+  fecha_de_entrega_a_maqueta        DateTime? @db.Date
+  fecha_de_recepcion_de_maqueta     DateTime? @db.Date
+  resultado_de_prueba_en_maqueta    String?   @db.NVarChar(200)
+  fecha_de_entrega_asp              DateTime? @db.Date
+  asp_que_recibe                    String?   @db.NVarChar(150)
+  nombre_de_quien_recibe            String?   @db.NVarChar(150)
+  id_sitio_receptor                 String?   @db.NVarChar(80)
+  cantidad_entregada                Int?
+  nombre_sitio_receptor             String?   @db.NVarChar(200)
+  region_de_sitio_receptor          String?   @db.NVarChar(120)
+  iii                               String?   @db.NVarChar(80)
+  numero_de_pallet                  String?   @db.NVarChar(80)
+  peso_por_pallet_kg                Decimal?  @db.Decimal(10, 2)
+  largo_del_pallet_cms              Decimal?  @db.Decimal(10, 2)
+  ancho_del_pallet_cm               Decimal?  @db.Decimal(10, 2)
+  alto_delpallet_cm                 Decimal?  @db.Decimal(10, 2)
+  fecha_solicitud_eco               DateTime? @db.Date
+  ericsson_service_order_number_eco String?   @db.NVarChar(120)
+  fecha_aprobacion_eco              DateTime? @db.Date
+  proveedor                         String?   @db.NVarChar(150)
+  fecha_recoleccion                 DateTime? @db.Date
+  fecha_de_recepcion_de_certificado DateTime? @db.Date
+  salida                            String?   @db.NVarChar(80)
+  existencia_real                   String?   @db.NVarChar(80)
+  promedio_en_almacen               String?   @db.NVarChar(80)
+  created_at                        DateTime  @default(dbgenerated("sysutcdatetime()"), map: "DF__GASOAL_In__creat__16F94B1F")
+  created_by                        String?   @db.NVarChar(120)
+  is_active                         Boolean   @default(true, map: "DF__GASOAL_In__is_ac__17ED6F58")
+  updated_at                        DateTime?
+  updated_by                        String?   @db.NVarChar(120)
+
+  @@index([ericsson_service_order_number_eco], map: "IX_Ericsson_ECO")
+  @@index([fecha_recibo_en_cross_dock, bodega, region, proceso], map: "IX_Ericsson_Filtros")
+  @@index([proceso, region], map: "IX_Ericsson_ProcesoRegion")
+  @@index([serial_number], map: "IX_Ericsson_Serial")
+}
+
+model GASOAL_LoteItems {
+  Id            Int          @id(map: "PK__GASOAL_L__3214EC071136548D") @default(autoincrement())
+  LoteId        Int
+  ArticuloId    Int
+  EstadoItem    String       @default("PENDIENTE", map: "DF__GASOAL_Lo__Estad__013F142A") @db.VarChar(20)
+  CreadoEn      DateTime     @default(dbgenerated("sysdatetime()"), map: "DF__GASOAL_Lo__Cread__02333863")
+  ActualizadoEn DateTime?
+  GASOAL_Lotes  GASOAL_Lotes @relation(fields: [LoteId], references: [Id], onUpdate: NoAction, map: "FK__GASOAL_Lo__LoteI__004AEFF1")
+
+  @@index([ArticuloId], map: "IX_LoteItems_Art")
+  @@index([LoteId], map: "IX_LoteItems_LoteId")
+}
+
+model GASOAL_Lotes {
+  Id                                       Int                                        @id(map: "PK__GASOAL_L__3214EC073E5D533C") @default(autoincrement())
+  NumeroLote                               String                                     @unique(map: "UQ__GASOAL_L__24B1765CD11BF544") @db.VarChar(50)
+  AlmacenDestino                           String                                     @db.VarChar(100)
+  FechaCreacion                            DateTime?                                  @default(now(), map: "DF__GASOAL_Lo__Fecha__53AD53A4") @db.DateTime
+  Observaciones                            String?                                    @db.VarChar(255)
+  Estado                                   String                                     @default("EN_CURSO", map: "DF__GASOAL_Lo__Estad__7C7A5F0D") @db.VarChar(20)
+  UsuarioCreador                           String?                                    @db.NVarChar(100)
+  FechaInicio                              DateTime                                   @default(dbgenerated("sysdatetime()"), map: "DF__GASOAL_Lo__Fecha__7D6E8346")
+  FechaCierre                              DateTime?
+  TipoLote                                 String?                                    @db.VarChar(50)
+  DetalleJsonLote                          String?                                    @db.NVarChar(Max)
+  GASOAL_LoteItems                         GASOAL_LoteItems[]
+  GASOAL_Reporte_RecepcionMercanciaAlmacen GASOAL_Reporte_RecepcionMercanciaAlmacen[]
+}
+
+model GASOAL_MovimientosDocumentos {
+  IdDocumento Int      @id(map: "PK__GASOAL_M__E5207347A0AA9F1E") @default(autoincrement())
+  MovId       Int
+  Sitio       String   @db.NVarChar(200)
+  Documento   String?  @db.NVarChar(300)
+  Url         String   @db.NVarChar(900)
+  Mime        String?  @db.NVarChar(150)
+  SizeBytes   BigInt?
+  UploadedBy  Int?
+  CreatedAt   DateTime @default(dbgenerated("sysutcdatetime()"), map: "DF__GASOAL_Mo__Creat__2B0043CC")
+
+  @@index([MovId, Sitio], map: "IX_GASOAL_MovDocs_MovId_Sitio")
+}
+
+model GASOAL_MovimientosLote {
+  id                       BigInt                    @id(map: "PK__GASOAL_M__3213E83F2D5DAD9A") @default(autoincrement())
+  folio                    String                    @db.VarChar(40)
+  tipo                     String                    @db.VarChar(30)
+  origen                   String?                   @db.VarChar(120)
+  destino                  String?                   @db.VarChar(120)
+  fecha                    DateTime                  @db.Date
+  cantidad                 Int                       @default(0, map: "DF__GASOAL_Mo__canti__509BDCCF")
+  Observaciones            String?                   @db.NVarChar(Max)
+  IdEstatusPallet          Int?
+  Carrier                  String?                   @db.VarChar(50)
+  Estatus                  String                    @default("ARRIBO", map: "DF_Mov_Estatus") @db.VarChar(20)
+  FechaSalida              DateTime?
+  DestinoSalida            String?                   @db.VarChar(200)
+  NombreASP                String?                   @db.VarChar(200)
+  Placas                   String?                   @db.VarChar(50)
+  ObsSalida                String?                   @db.NVarChar(Max)
+  JsonPalets               String?                   @db.NVarChar(Max)
+  GASOAL_Cat_EstatusPallet GASOAL_Cat_EstatusPallet? @relation(fields: [IdEstatusPallet], references: [IdEstatusPallet], onDelete: NoAction, onUpdate: NoAction, map: "FK_MovLote_EstatusPallet")
+
+  @@index([folio, fecha(sort: Desc), id(sort: Desc)], map: "IX_MovLote_Folio_Fecha")
+  @@index([tipo, fecha(sort: Desc), id(sort: Desc)], map: "IX_MovLote_Tipo_Fecha")
+}
+
+model GASOAL_MovimientosLote_Documentos {
+  Id         Int      @id(map: "PK__GASOAL_M__3214EC07EAE82143") @default(autoincrement())
+  MovId      Int
+  Folio      String?  @db.NVarChar(200)
+  S3Key      String   @db.NVarChar(500)
+  FileName   String   @db.NVarChar(260)
+  MimeType   String?  @db.NVarChar(120)
+  SizeBytes  BigInt?
+  UploadedBy Int?
+  UploadedAt DateTime @default(dbgenerated("sysutcdatetime()"), map: "DF_MovDocs_UploadedAt")
+  IsActive   Boolean  @default(true, map: "DF_MovDocs_IsActive")
+
+  @@index([Folio], map: "IX_MovDocs_Folio")
+  @@index([MovId], map: "IX_MovDocs_MovId")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOAL_Nombre_Hardware {
+  Id_Hardware    Int     @default(autoincrement())
+  nombre_Harware String? @db.VarChar(200)
+
+  @@ignore
+}
+
+model GASOAL_Origen {
+  ID      Int     @id(map: "PK__GASOAL_O__3214EC27B3943DC1") @default(autoincrement())
+  Puertos String? @db.NVarChar(100)
+}
+
+model GASOAL_Origenes {
+  ID     Int     @id(map: "PK__GASOAL_O__3214EC2766ED5FF0") @default(autoincrement())
+  Origen String? @db.NVarChar(100)
+}
+
+model GASOAL_Palet {
+  Id                      Int                      @id(map: "PK__GASOAL_P__3214EC07392BF046") @default(autoincrement())
+  IdSitio                 String                   @db.VarChar(50)
+  FolioPalet              String                   @db.VarChar(50)
+  Despiece                Boolean                  @default(false, map: "DF_GASOAL_Palet_Despiece")
+  JsonPalet               String?                  @db.NVarChar(Max)
+  FolioEntrada            String?                  @db.VarChar(50)
+  FolioSalida             String?                  @db.VarChar(50)
+  TipoMaterialId          Int?
+  GASOAL_Cat_TipoMaterial GASOAL_Cat_TipoMaterial? @relation(fields: [TipoMaterialId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_GASOAL_Palet_TipoMaterial")
+
+  @@unique([IdSitio, FolioPalet], map: "UX_GASOAL_Palet_IdSitio_FolioPalet")
+  @@index([TipoMaterialId], map: "IX_GASOAL_Palet_TipoMaterialId")
+  @@index([IdSitio, Id(sort: Desc)], map: "IX_Palet_IdSitio")
+}
+
+model GASOAL_Pasillos {
+  Id           Int            @id(map: "PK__GASOAL_P__3214EC071E499E0D") @default(autoincrement())
+  Nombre       String         @unique(map: "UQ__GASOAL_P__75E3EFCFD0FB614A") @db.VarChar(10)
+  Activo       Boolean?       @default(true, map: "DF__GASOAL_Pa__Activ__3CC9EE4C")
+  GASOAL_Bines GASOAL_Bines[]
+}
+
+model GASOAL_ProcesosEricsson {
+  Id      Int    @id(map: "PK__GASOAL_P__3214EC0738D77E96") @default(autoincrement())
+  Proceso String @unique(map: "UX_GASOAL_ProcesosEricsson_Proceso") @db.NVarChar(80)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOAL_Proyecto_Origen {
+  Id_Proyecto   Int     @default(autoincrement())
+  tipo_Proyecto String? @db.VarChar(50)
+
+  @@ignore
+}
+
+model GASOAL_Puertos {
+  ID      Int     @id(map: "PK__GASOAL_P__3214EC271E36C2F8") @default(autoincrement())
+  Puertos String? @db.NVarChar(100)
+}
+
+model GASOAL_Region {
+  ID       Int     @id(map: "PK__GASOAL_R__3214EC27A3AF5280") @default(autoincrement())
+  Regiones String? @db.NVarChar(100)
+}
+
+model GASOAL_Reporte_RecepcionMercanciaAlmacen {
+  Id                    Int           @id(map: "PK__GASOAL_R__3214EC0799E46730") @default(autoincrement())
+  definicion_equipo     String?       @db.VarChar(100)
+  proyecto_origen       String?       @db.VarChar(100)
+  region                String?       @db.VarChar(50)
+  id_sitio_origen       String?       @db.VarChar(50)
+  nombre_sitio          String?       @db.VarChar(100)
+  asp                   String?       @db.VarChar(100)
+  descripcion_equipo    String?       @db.VarChar(255)
+  numero_serie          String?       @db.VarChar(100)
+  tipo_antena_codigo_ej String?       @db.VarChar(100)
+  codigo_sap_telcel     String?       @db.VarChar(50)
+  tipo_hw               String?       @db.VarChar(100)
+  puertos               String?       @db.VarChar(20)
+  condicion             String?       @db.VarChar(50)
+  fecha_ingreso_almacen DateTime?     @db.Date
+  cantidad_re           Int?
+  origen                String?       @db.VarChar(100)
+  ubicacion_actual      String?       @db.VarChar(255)
+  estatus_almacen       String?       @db.VarChar(100)
+  carta_surtida         String?       @db.VarChar(50)
+  fecha_salida          DateTime?     @db.Date
+  observaciones         String?       @db.VarChar(255)
+  cantidad_surtida      Int?          @default(0, map: "DF__GASOAL_Re__canti__25E688F4")
+  latitud               String?       @db.VarChar(50)
+  longitud              String?       @db.VarChar(50)
+  Almacenes_Gaso_Otros  String?       @db.VarChar(255)
+  Almacenes_Gaso        String?       @db.VarChar(100)
+  Folio                 String?       @db.VarChar(10)
+  PasilloId             Int?
+  BinId                 Int?
+  LoteId                Int?
+  folio_envio_cliente   String?       @db.VarChar(50)
+  folio_envio_proveedor String?       @db.VarChar(100)
+  Lote                  String?       @db.VarChar(100)
+  folio_lsp             String?       @db.NVarChar(100)
+  codigo                String?       @db.NVarChar(100)
+  fecha_recibido        DateTime?     @db.Date
+  nombre_entrega        String?       @db.NVarChar(150)
+  proceso               String?       @db.NVarChar(20)
+  LoteJson              String?       @db.NVarChar(Max)
+  GASOAL_Lotes          GASOAL_Lotes? @relation(fields: [LoteId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Lote_Articulo")
+}
+
+model GASOAL_Responsiva {
+  Id                  Int                  @id(map: "GASOAL_Responsiva_PK") @default(autoincrement())
+  IdUsuario           Int
+  FechaHora           DateTime             @db.DateTime
+  Ine                 String?              @db.VarChar(50)
+  Licencia            String?              @db.VarChar(50)
+  LicenciaVigencia    DateTime?            @db.DateTime
+  NoEconomico         String?              @db.VarChar(25)
+  Placa               String?              @db.VarChar(25)
+  IdEstado            Int?                 @db.TinyInt
+  NumSerie            String?              @db.VarChar(50)
+  Modelo              Int?                 @db.SmallInt
+  Color               String?              @db.VarChar(25)
+  Ubicacion           String?              @db.VarChar(50)
+  KmActual            Int?
+  SegEmpresa          String?              @db.VarChar(75)
+  SegPoliza           String?              @db.VarChar(50)
+  SegVigencia         DateTime?            @db.DateTime
+  Comentarios         String?              @db.VarChar(250)
+  FotosDoc            String?              @db.VarChar(490)
+  FotosVeh            String?              @db.VarChar(1750)
+  FotosDet            String?              @db.VarChar(630)
+  FirmaEntrega        String?              @db.VarChar(Max)
+  FirmaAsignado       String?              @db.VarChar(Max)
+  FechaCaptura        DateTime?            @db.DateTime
+  FechaEdicion        DateTime?            @db.DateTime
+  Status              Int                  @default(0, map: "DF__GASOAL_Re__Estad__6A5BAED2") @db.SmallInt
+  IdTipo              Int                  @default(1, map: "DF__GASOAL_Re__IdTip__58FC18A6") @db.SmallInt
+  IdEmpresaSeg        Int?
+  IdMarca             Int?
+  IdLinea             Int?                 @db.SmallInt
+  IdTipoVeh           Int?                 @db.SmallInt
+  Traccion            String?              @db.VarChar(50)
+  IdResponsable       Int?
+  cat_empresasSeguros cat_empresasSeguros? @relation(fields: [IdEmpresaSeg], references: [idEmpresa], onDelete: NoAction, onUpdate: NoAction, map: "GASOAL_Responsiva_cat_empresasSeguros_FK")
+  Cat_Linea           Cat_Linea?           @relation(fields: [IdLinea], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "GASOAL_Responsiva_Cat_Linea_FK")
+  Cat_MarcaAuto       Cat_MarcaAuto?       @relation(fields: [IdMarca], references: [IdMarca], onDelete: NoAction, onUpdate: NoAction, map: "GASOAL_Responsiva_Cat_MarcaAuto_FK")
+  Cat_RVTipoVehiculo  Cat_RVTipoVehiculo?  @relation(fields: [IdTipoVeh], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "GASOAL_Responsiva_Cat_RVTipoVehiculo_FK")
+  Cat_TipoResponsiva  Cat_TipoResponsiva   @relation(fields: [IdTipo], references: [Id], onUpdate: NoAction, map: "GASOAL_Responsiva_Cat_TipoResponsiva_FK")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOAL_Tipo_HW {
+  Id_hw   Int     @default(autoincrement())
+  tipo_hw String? @db.VarChar(50)
+
+  @@ignore
+}
+
+model GASOAL_VMAlmacenes {
+  Id                 Int                  @id(map: "GASOAL_VMAlmacenes_PK") @default(autoincrement())
+  Nombre             String               @unique(map: "GASOAL_VMAlmacenes_UNIQUE") @db.VarChar(150)
+  GASOAL_VMaterialES GASOAL_VMaterialES[]
+}
+
+model GASOAL_VMPiezasEstadoF {
+  Id            Int                @id(map: "GASOAL_VMEPiezasEstadoF_PK") @default(autoincrement())
+  IdVM          Int
+  Clave         String             @db.Char(1)
+  Piezas        String             @db.VarChar(300)
+  Cat_VMEFisico Cat_VMEFisico      @relation(fields: [Clave], references: [Clave], map: "GASOAL_VMEPiezasEstadoF_Cat_DevEntEFisico_FK")
+  GASOAL_VMES   GASOAL_VMaterialES @relation(fields: [IdVM], references: [Id], onDelete: Cascade, map: "GASOAL_VMPiezasEstadoF_GASOAL_VMES_FK")
+}
+
+model GASOAL_VMPiezasMotivo {
+  Id           Int                @id(map: "GASOAL_VMEPiezasMotivo_PK") @default(autoincrement())
+  IdVM         Int
+  Clave        Int                @db.SmallInt
+  Piezas       String             @db.VarChar(300)
+  Cat_VMMotivo Cat_VMMotivo       @relation(fields: [Clave], references: [Id], onUpdate: NoAction, map: "GASOAL_VMEPiezasMotivo_Cat_DevEntMotivo_FK")
+  GASOAL_VMES  GASOAL_VMaterialES @relation(fields: [IdVM], references: [Id], onDelete: Cascade, map: "GASOAL_VMPiezasMotivo_GASOAL_VMES_FK")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOAUTOS_Bitacora_Asignacion_Cambio_Auto {
+  Id               Int       @default(autoincrement())
+  IdUsuario        Int?
+  IdAuto           Int?
+  tipoMovimiento   String?   @db.VarChar(20)
+  fechaMovimiento  DateTime? @db.SmallDateTime
+  IdUsuarioRealiza Int?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOAUTOS_Cat_Autos {
+  IdAuto                   Int       @default(autoincrement())
+  placa                    String?   @db.VarChar(10)
+  noEconomico              String?   @db.VarChar(20)
+  serialVehiculo           String?   @db.VarChar(20)
+  serialMotor              String?   @db.VarChar(20)
+  modelo                   String?   @db.VarChar(50)
+  marca                    String?   @db.VarChar(50)
+  Kilometraje              String?   @default("0", map: "DF__tmp_ms_xx__Kilom__31583BA0") @db.VarChar(50)
+  idEstadoPlaca            Int?
+  linea                    String?   @db.VarChar(50)
+  color                    String?   @db.VarChar(50)
+  conductores              String?   @db.VarChar(255)
+  poliza                   String?   @db.VarChar(50)
+  empresa                  Int?
+  fechaVencimientoPoliza   DateTime? @db.Date
+  estatus                  Int?
+  departamento             Int?
+  ubicacion                String?   @db.VarChar(50)
+  region                   Int?
+  propietario              Int?
+  fechaVencimientoTarjeta  DateTime? @db.Date
+  vigencia                 Int?
+  tipoVehiculo             Int?
+  gps                      Int?
+  fechaVerificacion        DateTime? @db.Date
+  fechaProximaVerificacion DateTime? @db.Date
+  combustible              String?   @db.VarChar(10)
+  notas                    String?   @db.VarChar(Max)
+  IdUsuario                Int?
+  EstatusConductor         Int?
+  puertas                  Int?
+  traccion                 String?   @db.NVarChar(50)
+  telefono                 String?   @db.NVarChar(50)
+  correo                   String?   @db.NVarChar(150)
+
+  @@ignore
+}
+
+model GASOAUTOS_Cat_Autos_Files {
+  IdAuto             Int     @id(map: "PK__GASOAUTO__2C8AA82CCD1B25A5")
+  PolizaSeguro       String? @db.VarChar(500)
+  TarjetaCirculacion String? @db.VarChar(500)
+  ResponsivaVehiculo String? @db.VarChar(500)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOAUTOS_Cat_Autos_PRUEBA {
+  IdAuto                    Int       @default(autoincrement())
+  placa                     String?   @db.VarChar(10)
+  noEconomico               String?   @db.VarChar(20)
+  serialVehiculo            String?   @db.VarChar(20)
+  serialMotor               String?   @db.VarChar(20)
+  modelo                    String?   @db.VarChar(50)
+  marca                     String?   @db.VarChar(50)
+  Kilometraje               String?   @db.VarChar(50)
+  idEstadoPlaca             Int?
+  linea                     String?   @db.VarChar(50)
+  color                     String?   @db.VarChar(50)
+  conductores               String?   @db.VarChar(255)
+  poliza                    String?   @db.VarChar(50)
+  empresa                   Int?
+  fechaVencimientoPoliza_   DateTime? @map("fechaVencimientoPoliza ") @db.Date
+  estatus                   Int?
+  departamento              Int?
+  ubicacion                 String?   @db.VarChar(50)
+  region                    Int?
+  propietario               String?   @db.NVarChar(100)
+  fechaVencimientoTarjeta_  DateTime? @map("fechaVencimientoTarjeta ") @db.Date
+  vigencia_                 Int?      @map("vigencia ")
+  tipoVehiculo_             Int?      @map("tipoVehiculo ")
+  gps                       Int?
+  fechaVerificacion_        DateTime? @map("fechaVerificacion ") @db.Date
+  fechaProximaVerificacion_ DateTime? @map("fechaProximaVerificacion ") @db.Date
+  combustible_              String?   @map("combustible ") @db.VarChar(10)
+  notas                     String?   @db.VarChar(Max)
+  IdUsuario                 Int?
+  EstatusConductor          Int?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOAUTOS_Cat_Hallazgos {
+  ID               Int      @default(autoincrement())
+  IDDetalles       Int
+  IdUsuario        Int
+  NombreUsuario    String   @default("0", map: "DF_GASOAUTOS_Cat_Hallazgos_NombreUsuario") @db.VarChar(255)
+  Usuario          String   @db.VarChar(20)
+  Email            String   @db.VarChar(250)
+  Kilometraje      String   @db.VarChar(15)
+  HallazgosResumen String   @db.Text
+  FechaCaptura     DateTime @db.SmallDateTime
+  Estatus          Int      @default(0, map: "DF_GASOAUTOS_Cat_Hallazgos_Estatus")
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOAUTOS_Cat_Usuarios {
+  IdUsuario  Int       @default(autoincrement())
+  Nombre     String?   @db.VarChar(200)
+  Correo     String?   @db.VarChar(200)
+  Estatus    String?   @db.VarChar(1)
+  Usuario    String?   @db.VarChar(20)
+  Password   String?   @db.VarChar(20)
+  Fecha_Alta DateTime? @db.SmallDateTime
+  Fecha_Baja DateTime? @db.SmallDateTime
+  Activo     Int?      @db.TinyInt
+  IsAdmin    Int?      @default(0, map: "DEFAULT_GASOAUTOS_Cat_Usuarios_IsAdmin")
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOAUTOS_Json_Autos_Plantilla_Detalle {
+  IdRespuesta    Int       @default(autoincrement())
+  IdUsuario      Int?
+  jsonRespuestas String?   @db.VarChar(Max)
+  fechaRegistro  DateTime? @db.SmallDateTime
+  status         Int?
+  IdAuto         Int?
+
+  @@ignore
+}
+
+model GASOAUTOS_Kmsemanal {
+  Id              Int       @id(map: "PK_GASOAUTOS_Kmsemanal") @default(autoincrement())
+  NoEconomico     Int?
+  Placas          String?   @db.VarChar(100)
+  KmUnidad        Int?
+  Region          Int?
+  KilometrajeFoto String?   @db.VarChar(150)
+  IdUsuario       Int?
+  TarjetaFoto     String?   @db.VarChar(150)
+  FechaCaptura    DateTime? @default(now(), map: "DF__GASOAUTOS__Fecha__388F4914") @db.DateTime
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOAUTOS_Relacion_Usuario_Auto {
+  ID              Int       @default(autoincrement())
+  IdUsuario       Int?
+  IdAuto          Int?
+  fechaAsignacion DateTime? @db.SmallDateTime
+  estatus         Int?
+
+  @@ignore
+}
+
+model GASOCO_Cat_Clientes {
+  IdCliente              Int     @id(map: "PK_GASOCO_Cat_Clientes") @default(autoincrement())
+  ClienteNombre          String? @db.NVarChar(25)
+  ClienteRazonSocial     String? @db.NVarChar(50)
+  ClienteRFC             String? @db.NVarChar(15)
+  ClienteDomicilio       String? @db.Text
+  ClienteNumeroProveedor String? @db.NVarChar(20)
+  ClienteContacto        String? @default("[{}]", map: "DEFAULT_GASOCO_Cat_Clientes_ClienteContacto") @db.Text
+}
+
+model GASOCO_Cat_ContactoEmer {
+  IdContacto         Int     @id(map: "PK__GASOCO_C__A4D6BBFA4B39083F") @default(autoincrement())
+  Nombre             String? @db.VarChar(500)
+  IdParentesco       Int?
+  TelefonoEmergencia String? @db.VarChar(500)
+  IdUsuario          Int?
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOCO_Cat_Contratistas {
+  IdContratista        Int     @default(autoincrement())
+  NombreContratista    String? @db.NVarChar(100)
+  NombreEmpresa        String? @db.NVarChar(255)
+  IdProyecto           Int?
+  NombreProyecto       String? @db.NVarChar(255)
+  IdRegion             Int?
+  NombreRegion         String? @db.NVarChar(255)
+  IdBanco              Int?
+  NombreBanco          String? @db.NVarChar(255)
+  Contacto             String? @db.NVarChar(255)
+  TelefonoContratista  String? @db.NVarChar(255)
+  CorreoContratista    String? @db.NVarChar(255)
+  IdCliente            Int?
+  NombreCliente        String? @db.NVarChar(255)
+  CuentaClabe          String? @db.NVarChar(255)
+  CaratulaContratista  String? @db.NVarChar(500)
+  SUAContratista       String? @db.NVarChar(255)
+  RFCContratista       String? @db.NVarChar(255)
+  ConstanciaSituacion  String? @db.NVarChar(255)
+  INERepresentante     String? @db.NVarChar(255)
+  ComprobanteDomicilio String? @db.NVarChar(255)
+  ActaConstitutiva     String? @db.NVarChar(255)
+  ContratoMarco        String? @db.NVarChar(255)
+  CVEmpresa            String? @db.NVarChar(255)
+  OtroContratista      String? @db.NVarChar(255)
+  Estatus              String? @db.NVarChar(50)
+
+  @@ignore
+}
+
+model GASOCO_Cat_Cotizaciones {
+  Id                             Int       @id(map: "PK_GASOCO_Cat_Cotizaciones") @default(autoincrement())
+  CotizacionPre                  String?   @default("G", map: "DEFAULT_GASOCO_Cat_Cotizaciones_CotizacionPre") @db.Char(10)
+  CotizacionIdInterno            String?   @db.NVarChar(Max)
+  CotizacionNombre               String?   @db.NVarChar(Max)
+  CotizacionDescripcion          String?   @db.Text
+  CotizacionDetalle              String?   @db.Text
+  CotizacionEstatus              Int?      @default(0, map: "DEFAULT_GASOCO_Cat_Cotizaciones_CotizacionEstatus")
+  CotizacionConteoActualizacion  Int?      @default(0, map: "DEFAULT_GASOCO_Cat_Cotizaciones_CotizacionEtiquetaActualizacion")
+  CotizacionLogActualizacion     String?   @default("[]", map: "DEFAULT_GASOCO_Cat_Cotizaciones_CotizacionAutorizacion") @db.Text
+  CotizacionMontoTotal           Float?    @db.Money
+  ClienteId                      Int?
+  ClienteNombre                  String?   @db.NVarChar(100)
+  ClienteResponsableId           String?   @db.NVarChar(25)
+  ClienteResponsable             String?   @db.NVarChar(100)
+  CotizacionPO                   String?   @db.Text
+  CotizacionFechaCreacion        DateTime?
+  CotizacionFechaActualicacion   DateTime? @default(now(), map: "DEFAULT_GASOCO_Cat_Cotizaciones_CotizacionFechaActualicacion")
+  CotizacionIdUsuarioResponsable Int?
+  CotizacionTerminosCondiciones  String?   @default("{}", map: "DEFAULT_GASOCO_Cat_Cotizaciones_CotizacionTerminosCondiciones") @db.Text
+  TenantID                       String    @default(dbgenerated("00000000-0000-0000-0000-000000000000"), map: "DF__GASOCO_Ca__Tenan__6621099A") @db.UniqueIdentifier
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOCO_Cat_Estatus {
+  IdEstatus     Int     @default(autoincrement())
+  nombreEstatus String? @db.VarChar(100)
+
+  @@ignore
+}
+
+model GASOCO_Cat_Parentesco {
+  IdParentesco     Int     @id(map: "PK__GASOCO_C__B8A279C272E0D633") @default(autoincrement())
+  NombreParentesco String? @db.VarChar(250)
+}
+
+model GASOCO_Cat_Perfiles {
+  Id          Int     @id(map: "PK_GASOCO_Cat_Perfiles") @default(autoincrement())
+  Descripcion String? @db.NVarChar(50)
+}
+
+model GASOCO_Cat_Permisos {
+  Id     Int     @id(map: "PK__GASOCO_C__3214EC07378E2F32") @default(autoincrement())
+  Nombre String? @db.VarChar(200)
+}
+
+model GASOCO_Cat_Proyectos {
+  Id                           Int       @id(map: "PK_GASOCO_Cat_Proyectos") @default(autoincrement())
+  ProyectoPre                  String?   @default("GP", map: "DEFAULT_GASOCO_Cat_Proyectos_ProyectoPre") @db.Char(10)
+  ProyectoIdInterno            String?   @db.NVarChar(255)
+  ProyectoNombre               String?   @db.NVarChar(255)
+  ClienteId                    Int?
+  ClienteNombre                String?   @db.NVarChar(Max)
+  ProyectoDescripcion          String?   @db.Text
+  ProyectoFechaInicio          DateTime?
+  ProyectoFechaFin             DateTime?
+  ProyectoNumeroOrdenCompra    Int?
+  ProyectoMonto                String?   @default("{}", map: "DEFAULT_GASOCO_Cat_Proyectos_ProyectoMonto") @db.Text
+  OrdenCompra                  String?   @db.Text
+  ProyectoResponsableClienteId String?   @db.NVarChar(15)
+  ProyectoResponsableCliente   String?   @db.NVarChar(50)
+  ProyectoResponsableGaso      String?   @db.NVarChar(50)
+  ProyectoResponsableIdGaso    Int?
+  CotizacionIdInterno          String?   @db.NVarChar(Max)
+  ProyectoPresupuesto          Float?    @db.Money
+  ProyectoUbicacion            String?   @db.NVarChar(Max)
+  ProyectoDetalle              String?   @db.NVarChar(Max)
+  ProyectoEstatus              Int?      @default(1, map: "DEFAULT_GASOCO_Cat_Proyectos_ProyectoEstatus")
+  ProyectoFechaCreacion        DateTime?
+  ProyectoFechaActualizacion   DateTime? @default(now(), map: "DEFAULT_GASOCO_Cat_Proyectos_ProyectoFechaActualizacion")
+  ProyectoMargenPorcentual     Int?
+  IdRegion                     Int?
+  DiasFinalizado               Int?
+  FechaEntrega                 DateTime? @db.SmallDateTime
+  FechaFactura                 DateTime? @db.SmallDateTime
+  DiasEntrega                  Int?
+  Facturado                    Boolean?
+  AccionesFactura              String?   @db.VarChar(50)
+  ProyectoFechaTermino         DateTime? @db.SmallDateTime
+  facturaxml                   String?   @db.NVarChar(500)
+  facturapdf                   String?   @db.NVarChar(500)
+  DocumentoEvidencia           String?   @db.NVarChar(500)
+  FechaEvidencia               DateTime? @db.SmallDateTime
+  TieneCotizacion              Int?
+  ProyectoDepartamento         String?   @db.VarChar(100)
+  ProyectoCoordinador          String?   @db.VarChar(100)
+  RFx                          String?   @db.VarChar(255)
+  RN                           String?   @db.VarChar(255)
+  PO                           String?   @db.VarChar(255)
+  CN                           String?   @db.VarChar(255)
+  GR                           String?   @db.VarChar(255)
+  fechaRFX                     DateTime? @db.SmallDateTime
+  fechaRN                      DateTime? @db.SmallDateTime
+  fechaPO                      DateTime? @db.SmallDateTime
+  fechaCN                      DateTime? @db.SmallDateTime
+  fechaGR                      DateTime? @db.SmallDateTime
+  totalfacturado               Decimal?  @db.Decimal(18, 2)
+  foliofacturaPR               Int?
+  TenantID                     String    @default(dbgenerated("00000000-0000-0000-0000-000000000000"), map: "DF__GASOCO_Ca__Tenan__652CE561") @db.UniqueIdentifier
+}
+
+model GASOCO_Cat_Roles {
+  IdRol          Int     @id(map: "PK__GASOCO_C__2A49584C81DA8AD7") @default(autoincrement())
+  IdDepartamento Int?
+  IdPuesto       Int?
+  IdEstatus      Int?
+  Descripcion    String? @db.VarChar(200)
+}
+
+model GASOCO_Cat_SolGastos {
+  Id                           Int       @id(map: "PK__GASOCO_C__3214EC076351D75A") @default(autoincrement())
+  NombreSolicitante            String    @db.VarChar(500)
+  Descripcion                  String?   @db.VarChar(500)
+  Correo                       String?   @db.VarChar(200)
+  IdSitio                      Int?
+  IdRegion                     Int?
+  NombreBeneficiario           String?   @db.VarChar(500)
+  IdCliente                    Int?
+  Cuenta                       String?   @db.VarChar(50)
+  IdProyecto                   Int?
+  IdBanco                      Int?
+  NumPersonas                  Int?
+  FechaInicio                  DateTime? @db.SmallDateTime
+  FechaFin                     DateTime? @db.SmallDateTime
+  CantidadDias                 Int?
+  IdTipoSolicitud              Int?
+  MontoSolicitado              Decimal?  @db.Decimal(18, 2)
+  IdDepartamento               Int?
+  TipoPago                     Boolean?  @default(false, map: "DF__GASOCO_Ca__TipoP__2838E5BA")
+  NumEcoVehiculo_terr          String?   @db.VarChar(100)
+  KilometrosARecorrer_terr     Decimal?  @db.Decimal(18, 2)
+  DescripcionTraslado_terr     String?   @db.VarChar(Max)
+  CantidadSolicitada_terr      Decimal?  @db.Decimal(18, 2)
+  MontoSolicitado_Combustible  Decimal?  @db.Decimal(18, 2)
+  SitioSuministrar_Combustible String?   @db.VarChar(200)
+  MaterialesAComprar_mat       String?   @db.VarChar(500)
+  MontoMaterialAComprar_mat    Decimal?  @db.Decimal(18, 2)
+  EquipoAComprar_equipo        Decimal?  @db.Decimal(18, 2)
+  MontoEquipoAComprar_equipo   Decimal?  @db.Decimal(18, 2)
+  FechaSolicitud               DateTime? @default(now(), map: "DF__GASOCO_Ca__Fecha__292D09F3") @db.SmallDateTime
+  Archivo                      Bytes?
+  NombreArchivo                String?   @db.NVarChar(255)
+  TipoArchivo                  String?   @db.NVarChar(50)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOCO_Cat_Talleres {
+  IdTaller     Int    @default(autoincrement())
+  NombreTaller String @db.VarChar(100)
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOCO_Cat_TipoSangre {
+  Id          Int     @default(autoincrement())
+  Descripcion String? @db.NVarChar(50)
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOCO_Cat_UnidadCot {
+  IdUnidadCot     Int     @default(autoincrement())
+  NombreUnidadCot String? @db.VarChar(500)
+
+  @@ignore
+}
+
+model GASOCO_Cat_Usuarios {
+  IdUsuario              Int       @id(map: "PK_GASOCO_Cat_Usuarios") @default(autoincrement())
+  Nombre                 String    @db.NVarChar(255)
+  NumCelular             BigInt?
+  Email                  String    @db.NVarChar(255)
+  Usuario                String    @db.NVarChar(125)
+  Password               String    @db.NVarChar(14)
+  FechaAlta              DateTime  @default(now(), map: "DF_GASOCO_Cat_Usuarios_FechaAlta")
+  IdPerfil               Int?
+  Estatus                String    @default("A", map: "DEFAULT_GASOCO_Cat_Usuarios_Estatus") @db.Char(1)
+  isAdmin                Int?      @default(0, map: "DF__GASOCO_Ca__isAdm__507BE13E")
+  IdArea                 Int?
+  IdSuperior             Int?
+  IdBaseCiudad           Int?
+  Sueldo                 Decimal?  @db.Decimal(10, 2)
+  ContactosPersonales    String?   @db.VarChar(1000)
+  TieneLecencia          Int?
+  FechaCaducidadLicencia DateTime? @db.DateTime
+  FechaDC3               DateTime? @db.DateTime
+  FechaNacimiento        DateTime? @db.DateTime
+  IdTipoSangre           Int?
+  IdRegion               Int?
+  IdDepartamento         Int?
+  IdPuesto               Int?
+  IdBaja                 Int?
+  CorreoPersonal         String?   @db.VarChar(255)
+  ContactoEmergencia     String?   @db.VarChar(200)
+  NumCelularSecundario   String?   @db.VarChar(200)
+  CURP                   String?   @db.VarChar(250)
+  RFC                    String?   @db.VarChar(250)
+  NSS                    String?   @db.VarChar(250)
+  idSexo                 Int?
+  TokenFirebase          String?   @db.VarChar(Max)
+  IdEmpresa              Int       @default(1, map: "DF__GASOCO_Ca__IdEmp__665613C4") @db.SmallInt
+  TenantID               String    @default(dbgenerated("00000000-0000-0000-0000-000000000000"), map: "DF__GASOCO_Ca__Tenan__60683044") @db.UniqueIdentifier
+}
+
+model GASOCO_Cat_Usuarios_Files {
+  IdUsuario            Int     @id(map: "PK__GASOCO_C__5B65BF972C14353C")
+  Ine                  String? @db.VarChar(200)
+  Curp                 String? @db.VarChar(200)
+  ActaNacimiento       String? @db.VarChar(200)
+  NSS                  String? @db.VarChar(200)
+  CSFiscal             String? @db.VarChar(200)
+  ComprobanteDomicilio String? @db.VarChar(200)
+  UGEstudios           String? @db.VarChar(200)
+  ECBancaria           String? @db.VarChar(200)
+  LicenciaConducir     String? @db.VarChar(200)
+  FotoDigital          String? @db.VarChar(200)
+  CertificadoMedico    String? @db.VarChar(200)
+  FotoPerfil           String? @db.VarChar(500)
+  BAjaIMSS             String? @db.VarChar(500)
+  Otro                 String? @db.VarChar(200)
+  AcuerdoConfidencial  String? @db.VarChar(500)
+  TenantID             String  @default(dbgenerated("00000000-0000-0000-0000-000000000000"), map: "DF__GASOCO_Ca__Tenan__625078B6") @db.UniqueIdentifier
+}
+
+model GASOCO_CtlVeh_Historico {
+  Id            Int       @id(map: "PK__GASOCO_C__3214EC079E796FA0") @default(autoincrement())
+  IdRegistro    Int
+  TipoAccion    String?   @db.VarChar(50)
+  IdSolicitud   Int
+  IdUsuario     Int?
+  Fecha         DateTime? @default(now(), map: "DF__GASOCO_Ct__Fecha__49B9D516") @db.SmallDateTime
+  ValorAnterior String?   @db.NVarChar(Max)
+  ValorNuevo    String?   @db.NVarChar(Max)
+}
+
+model GASOCO_RH_Area {
+  IdArea     Int    @id(map: "PK__GASOCO_R__2FC141AADA953C1B") @default(autoincrement())
+  NombreArea String @db.VarChar(255)
+}
+
+model GASOCO_RH_Departamento {
+  IdDepartamento     Int    @id(map: "PK__GASOCO_R__787A433D5C49DE54") @default(autoincrement())
+  NombreDepartamento String @db.VarChar(200)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOCO_RH_Puesto {
+  IdPuesto     Int    @default(autoincrement())
+  NombrePuesto String @db.VarChar(255)
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOGASTOVEH {
+  IdGastoVeh            Int       @default(autoincrement())
+  noEconomico           Int?
+  A_oVehicular          Int?      @map("AñoVehicular")
+  MesVehicular          String?   @db.VarChar(200)
+  Dato2                 String?   @db.VarChar(200)
+  Placa                 String?   @db.VarChar(200)
+  IdRegion              Int?
+  IdProyecto            Int?
+  IdBanco               Int?
+  NumeroSerie           String?   @db.VarChar(200)
+  Modelo                String?   @db.VarChar(200)
+  TipoOperacion         String?   @db.VarChar(200)
+  Fecha                 DateTime? @db.SmallDateTime
+  KmActual              Int?
+  KmIngreso             Int?
+  KmProximo             Int?
+  ProximoServicio       String?   @db.VarChar(200)
+  Resposable            String?   @db.VarChar(200)
+  Costo                 Int?
+  Cuenta                String?   @db.VarChar(200)
+  FechaCompromiso       DateTime? @db.SmallDateTime
+  MttoFrenos            String?   @db.VarChar(500)
+  cambiosFluidos        String?   @db.VarChar(500)
+  IdTaller              Int?
+  CanalPago             String?   @db.VarChar(500)
+  Deposita              String?   @db.VarChar(500)
+  Aprobador             String?   @db.VarChar(500)
+  Descripcion           String?   @db.VarChar(500)
+  IdSolicitud           Int?
+  ConceptoSolicitud     String?   @db.VarChar(500)
+  IdResposable          Int?
+  Proyecto              String?   @db.VarChar(200)
+  EstatusSolicitud      Int?
+  ArchivoFac            String?   @db.VarChar(500)
+  IdAprobador           Int?
+  ArchivoComprobante    String?   @db.VarChar(500)
+  CostoSolicitado       Int?
+  EstatusComprobante    Int?
+  folioVeh              Int?
+  DiferenciaCosto       Int?
+  telefonoBeneficiario  String?   @db.VarChar(100)
+  telefonoTaller        String?   @db.VarChar(100)
+  MontoDevolucion       Decimal?  @db.Decimal(18, 2)
+  MontoNoDeducible      Decimal?  @db.Decimal(18, 2)
+  MontoDeducible        Decimal?  @db.Decimal(18, 2)
+  IdDeposita            Int?
+  EstatusFactura        Int?      @default(0, map: "DF__GASOGASTO__Estat__0A096455")
+  comentarioRechazoPago String?   @db.VarChar(500)
+  Historico             String?   @db.VarChar(Max)
+  MontoFacturado        Int?
+  TenantID              String    @default(dbgenerated("00000000-0000-0000-0000-000000000000"), map: "DF__GASOGASTO__Tenan__6809520C") @db.UniqueIdentifier
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOGASTOVEH_Backup {
+  IdGastoVeh            Int       @default(autoincrement())
+  noEconomico           Int?
+  A_oVehicular          Int?      @map("AñoVehicular")
+  MesVehicular          String?   @db.VarChar(200)
+  Dato2                 String?   @db.VarChar(200)
+  Placa                 String?   @db.VarChar(200)
+  IdRegion              Int?
+  IdProyecto            Int?
+  IdBanco               Int?
+  NumeroSerie           String?   @db.VarChar(200)
+  Modelo                String?   @db.VarChar(200)
+  TipoOperacion         String?   @db.VarChar(200)
+  Fecha                 DateTime? @db.SmallDateTime
+  KmActual              Int?
+  KmIngreso             Int?
+  KmProximo             Int?
+  ProximoServicio       String?   @db.VarChar(200)
+  Resposable            String?   @db.VarChar(200)
+  Costo                 Int?
+  Cuenta                String?   @db.VarChar(200)
+  FechaCompromiso       DateTime? @db.SmallDateTime
+  MttoFrenos            String?   @db.VarChar(500)
+  cambiosFluidos        String?   @db.VarChar(500)
+  IdTaller              Int?
+  CanalPago             String?   @db.VarChar(500)
+  Deposita              String?   @db.VarChar(500)
+  Aprobador             String?   @db.VarChar(500)
+  Descripcion           String?   @db.VarChar(500)
+  IdSolicitud           Int?
+  ConceptoSolicitud     String?   @db.VarChar(500)
+  IdResposable          Int?
+  Proyecto              String?   @db.VarChar(200)
+  EstatusSolicitud      Int?
+  ArchivoFac            String?   @db.VarChar(500)
+  IdAprobador           Int?
+  ArchivoComprobante    String?   @db.VarChar(500)
+  CostoSolicitado       Int?
+  EstatusComprobante    Int?
+  folioVeh              Int?
+  DiferenciaCosto       Int?
+  telefonoBeneficiario  String?   @db.VarChar(100)
+  telefonoTaller        String?   @db.VarChar(100)
+  MontoDevolucion       Decimal?  @db.Decimal(18, 2)
+  MontoNoDeducible      Decimal?  @db.Decimal(18, 2)
+  MontoDeducible        Decimal?  @db.Decimal(18, 2)
+  IdDeposita            Int?
+  EstatusFactura        Int
+  comentarioRechazoPago String?   @db.VarChar(500)
+  Historico             String?   @db.VarChar(Max)
+
+  @@ignore
+}
+
+model GASOGASTOVEH_Cat_Responsable {
+  IdResposable     Int     @id(map: "GASOGASTOVEH_Cat_Responsable_PK") @default(autoincrement())
+  NombreResposable String? @db.VarChar(500)
+  IdUsuario        Int?
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model GASOGASTOVEH_Cat_Solicitud {
+  IdSolicitud     Int     @default(autoincrement())
+  NombreSolicitud String? @db.VarChar(500)
+
+  @@ignore
+}
+
+model GASOGE_Cat_Status {
+  IdEstatus     Int    @id(map: "PK__GASOGE_C__B32BA1C71D8C2F9D") @default(autoincrement())
+  NombreEstatus String @db.VarChar(200)
+}
+
+model GASOGE_Gestion_Documentos {
+  Id            Int       @id(map: "PK__GASOGE_G__3214EC07A5B87AF5") @default(autoincrement())
+  IdProyecto    Int
+  IdEtapa       Int
+  rutaEvidencia String?   @db.NVarChar(300)
+  nombreArchivo String?   @db.NVarChar(150)
+  fechaSubida   DateTime? @default(now(), map: "DF__GASOGE_Ge__fecha__78DED853") @db.DateTime
+}
+
+model GASOGE_Gestion_Proyectos {
+  Id            Int       @id(map: "PK_GASOGE_Gestion_Proyectos") @default(autoincrement())
+  Nombre        String?   @db.NVarChar(50)
+  Descripcion   String?   @db.NVarChar(Max)
+  FechaInicio   DateTime?
+  FechaFin      DateTime?
+  IdCliente     Int?
+  IdRegion      Int?
+  Etapas        String?   @db.Text
+  Ubicacion     String?   @db.NVarChar(Max)
+  Duracion      Int?
+  Estatus       Int?
+  IdCoordinador Int?
+  Comentarios   String?   @db.VarChar(Max)
+  IdEstatus     Int?
+}
+
+model GASOSOL_Aprobadores {
+  IdAprobador     Int    @id(map: "PK__GASOSOL___0ADB88E3B4BFD2BC") @default(autoincrement())
+  NombreAprobador String @db.VarChar(255)
+}
+
+model GASOSOL_BancoGastos {
+  IdBanco     Int    @id(map: "PK__GASOCO_C__2D3F553E4FBB53F0") @default(autoincrement())
+  NombreBanco String @db.VarChar(200)
+}
+
+model GASOSOL_DescripcionServGastos {
+  IdDescripcionServ     Int    @id(map: "PK__GASOCO_C__BDF1A141732A4B1B") @default(autoincrement())
+  NombreDescripcionServ String @db.VarChar(200)
+}
+
+model GASOSOL_SolGastos {
+  Id                    Int       @id(map: "PK_GASOSOL_SolGastos") @default(autoincrement())
+  IdSolicitante         Int?
+  IdDescripcion         Int?
+  Correo                String?   @db.VarChar(200)
+  Sitio                 String?   @db.VarChar(500)
+  IdRegion              Int?
+  IdBeneficiario        Int?
+  IdAprobador           Int?
+  IdCliente             Int?
+  CuentaTransferencia   String?   @db.VarChar(50)
+  IdProyecto            Int?
+  IdBanco               Int?
+  NumPersonas           Int?
+  FechaInicio           DateTime? @db.SmallDateTime
+  FechaFin              DateTime? @db.SmallDateTime
+  CantidadDias          Int?
+  IdTipoSolicitud       Int?
+  MontoSolicitado       Decimal?  @db.Decimal(18, 2)
+  IdDepartamento        Int?
+  TipoPago              Int?
+  FechaDeposito         DateTime? @db.SmallDateTime
+  FechaSolicitud        DateTime? @db.SmallDateTime
+  ArchivoURL            String?   @db.VarChar(500)
+  ConceptoSolicitud     String?   @db.VarChar(Max)
+  EstatusSolicitud      Int?
+  TotalMontoSolicitado  Decimal?  @db.Decimal(18, 2)
+  ArchivoFac            String?   @db.VarChar(500)
+  NombreBeneficiario    String?   @db.VarChar(500)
+  MontoGastado          Float?
+  EstatusFactura        Int?
+  cantidadFactura       Int?
+  archivoFacturaGasto   String?   @db.VarChar(500)
+  comentarioRechazoPago String?   @db.VarChar(500)
+  IdContratista         Int?
+  MontoNoDeducible      Float?
+  TenantID              String    @default(dbgenerated("00000000-0000-0000-0000-000000000000"), map: "DF__GASOSOL_S__Tenan__67152DD3") @db.UniqueIdentifier
+}
+
+model GASOSOL_TipoSolGastos {
+  IdTipoSolicitud Int    @id(map: "PK__GASOCO_C__D42020776FB48DA8") @default(autoincrement())
+  NombreSolicitud String @db.VarChar(200)
+}
+
+model GASOVac_CatTipoSol {
+  IdTipo      Int     @id(map: "PK__GASOVac___9E3A29A5E8774272") @default(autoincrement())
+  Descripcion String? @db.VarChar(500)
+}
+
+model GASOVac_Sol {
+  IdSol           Int      @id(map: "PK__GASOVac___2B037394BC054CCC") @default(autoincrement())
+  IdEmpleado      Int
+  fechaIncio      DateTime @db.SmallDateTime
+  fechafin        DateTime @db.SmallDateTime
+  diasSolicitados Int?
+  diasDisponibles Int?
+  IdEstatus       Int?
+  ArchivoSol      String?  @db.VarChar(Max)
+  IdTipo          Int
+  Comentarios     String?  @db.VarChar(Max)
+  IdAprobador     Int?
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Log_Cancelaciones {
+  ID                Int       @default(autoincrement())
+  IdUsuario         Int?
+  IdWO              Int?
+  motivoCancelacion String?   @db.VarChar(200)
+  FechaCancelacion  DateTime? @db.SmallDateTime
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Log_Registro_WO_Plantilla {
+  idUsuario               Int?
+  idWO                    Int?
+  tipoMovimiento          String?   @db.VarChar(Max)
+  fechaHoraInicio         DateTime? @db.SmallDateTime
+  fechaHoraUltimoRegistro DateTime? @db.SmallDateTime
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Log_WO {
+  IdLogWO         Int      @default(autoincrement())
+  IdWO            Int
+  FechaMovimiento DateTime @db.DateTime
+  IdEstadoWO      Int
+
+  @@ignore
+}
+
+model Permisos_Paquetes {
+  Consecutivo  Int           @id(map: "PK__Permisos__AB810F67AAD0340C") @default(autoincrement())
+  IdPaquete    Int?
+  IdModulo     Int?
+  IdSec        String?       @db.NVarChar(10)
+  Cat_Paquetes Cat_Paquetes? @relation(fields: [IdPaquete], references: [IdPaquete], onDelete: NoAction, onUpdate: NoAction, map: "FK_Cat_Paquetes_IdPaquete")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Rel_Reg_Gerente {
+  IdRelRegGerente Int  @default(autoincrement())
+  IdRegion        Int?
+  IdGerente       Int?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Rel_Sit_Usu {
+  IdRel_Sit_Usu Int @default(autoincrement())
+  IdSitio       Int
+  IdUsuario     Int
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Respuestas_Tareas_WO {
+  ID                Int       @default(autoincrement())
+  IdWO              Int?
+  Id_Desgloce_Tarea Int?
+  Id_Tarea          Int?
+  Estatus           Int?      @db.TinyInt
+  fechaInicia       DateTime? @db.SmallDateTime
+  latitudIniciar    Float?
+  longitudIniciar   Float?
+  fechaFinaliza     DateTime? @db.SmallDateTime
+  latitudFinalizar  Float?
+  longitudFinalizar Float?
+  fechaAsignacion   DateTime? @db.SmallDateTime
+  Descripcion       String?   @db.VarChar(500)
+  Material          String?   @db.VarChar(500)
+  numeroTareas      Int?
+
+  @@ignore
+}
+
+model sitios_Asignacion_Tarea_Segura {
+  ID_Asignacion            Int       @id(map: "PK__sitios_A__0D8D5A86AC7CE3D1") @default(autoincrement())
+  IdSitio                  Int?
+  IdUsuario                Int?
+  fechaRegistro            DateTime? @db.SmallDateTime
+  tema                     String?   @db.VarChar(200)
+  meta                     String?   @db.VarChar(200)
+  calificacionCompetencia  String?   @db.VarChar(200)
+  aptoTrabajo              String?   @db.VarChar(1)
+  conduccionVehiculos      String?   @db.VarChar(1)
+  trabajoAltura            String?   @db.VarChar(1)
+  aislamientoEnergia       String?   @db.VarChar(1)
+  dispositivosProteccion   String?   @db.VarChar(1)
+  equipoProteccionPersonal String?   @db.VarChar(1)
+  proyectoId               String?   @db.VarChar(200)
+  region                   String?   @db.VarChar(200)
+  localizacion             String?   @db.VarChar(200)
+  tarea                    String?   @db.VarChar(200)
+  disciplina               String?   @db.VarChar(200)
+  compania                 String?   @db.VarChar(200)
+  fecha                    String?   @db.VarChar(200)
+  IISSTIIMAS               String?   @db.VarChar(200)
+  etapa                    String?   @db.VarChar(200)
+  impactos                 String?   @db.VarChar(200)
+  controles                String?   @db.VarChar(200)
+  condicionesClimaticas    String?   @db.VarChar(200)
+  posturasForzadas         String?   @db.VarChar(200)
+  ordenLimpieza            String?   @db.VarChar(200)
+  eppEspecifico            String?   @db.VarChar(200)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Solicitudes_Acceso {
+  IdSolAcceso     Int       @default(autoincrement())
+  IdSitio         Int?
+  FechaSolicitud  DateTime? @db.DateTime
+  IdUsuario       Int?
+  Motivo          String?   @db.VarChar(300)
+  IdUsAprob       Int?
+  FechaAprobacion DateTime? @db.DateTime
+  Estatus         String?   @db.VarChar(2)
+
+  @@ignore
+}
+
+model Solicitudes_Acceso_Detalle {
+  Id_Detalle_Solicitud Int       @id(map: "PK_Cat_Solicitudes_Acceso_Detalle") @default(autoincrement())
+  Id_Sitio             String?   @db.VarChar(50)
+  descripcionActividad String?   @db.VarChar(Max)
+  fechaInicio          DateTime? @db.SmallDateTime
+  fechaFin             DateTime? @db.SmallDateTime
+  Herramienta          String?   @db.NVarChar(Max)
+  RFQ                  String?   @db.VarChar(Max)
+  Material             String?   @db.VarChar(Max)
+  HoraInicio           String?   @db.VarChar(Max)
+  HoraFin              String?   @db.VarChar(Max)
+  Equipo               String?   @db.VarChar(Max)
+  CRQ                  String?   @db.VarChar(Max)
+  ComentariosSolicitud String?   @db.VarChar(Max)
+}
+
+model sysdiagrams {
+  name         String @db.NVarChar(128)
+  principal_id Int
+  diagram_id   Int    @id(map: "PK__sysdiagr__C2B05B613A261DA3") @default(autoincrement())
+  version      Int?
+  definition   Bytes?
+
+  @@unique([principal_id, name], map: "UK_principal_name")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Tareas_Usuarios_WO {
+  ID         Int  @default(autoincrement())
+  IdWO       Int
+  Id_Tarea   Int
+  Id_Usuario Int?
+
+  @@ignore
+}
+
+model Tipo_Cuadrilla {
+  IdTipoCuadrilla Int              @id(map: "PK__Tipo_Cua__0214E9E9E5FE6838") @default(autoincrement())
+  Descripcion     String?          @db.NVarChar(50)
+  Status          Int?             @db.TinyInt
+  Cat_Cuadrillas  Cat_Cuadrillas[]
+}
+
+model Usuarios_por_Perfil {
+  Consecutivo   Int           @id(map: "PK__Usuarios__AB810F67772E581A") @default(autoincrement())
+  IdPerfil      Int?
+  NombrePerfil  String?       @db.NVarChar(50)
+  IdUsuario     Int?
+  UsrRegistro   String?       @db.NVarChar(20)
+  FechaRegistro DateTime?
+  UsrUltMod     String?       @db.NVarChar(20)
+  FechaUltMod   DateTime?
+  Cat_Perfiles  Cat_Perfiles? @relation(fields: [IdPerfil], references: [IdPerfil], onDelete: NoAction, onUpdate: NoAction, map: "FK_Cat_Perfiles_IdPerfil")
+  Cat_Usuarios  Cat_Usuarios? @relation(fields: [IdUsuario], references: [IdUsuario], onDelete: NoAction, onUpdate: NoAction, map: "FK_Cat_Usuarios_IdUsuario")
+}
+
+model Wo_Helix {
+  IdWo_Helix          Int       @id(map: "PK_Wo_Helix") @default(autoincrement())
+  Inc_Id              String    @db.NVarChar(50)
+  tas_id              String    @db.NVarChar(50)
+  timestampsiteaccess DateTime?
+  siteid              Int?
+  workflow_type       String?   @db.NVarChar(10)
+  region              Int?
+  severity            String?   @db.NVarChar(10)
+  faultfirstoccurtime DateTime?
+  title               String?   @db.NVarChar(500)
+  description         String?   @db.NVarChar(500)
+  service             String?   @db.NVarChar(50)
+  coordinate_nokia_   String?   @map("coordinate_nokia ") @db.NVarChar(50)
+  alarmid             Int?
+  alarmname           String?   @db.NVarChar(50)
+  site_priority       String?   @db.NVarChar(50)
+  service_impact_     String?   @map("service_impact ") @db.NVarChar(5)
+  Descripcion         String?   @db.VarChar(500)
+  site_name_          String?   @map("site_name ") @db.VarChar(500)
+  site_address_       String?   @map("site_address ") @db.VarChar(500)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model WO_Helix_JsonDetalle {
+  Id          Int      @default(autoincrement())
+  Type        Boolean?
+  Uuid        Int?
+  IdPlantilla Int?
+  Json        String?  @default("{ \"type\": \"\", \"uuid\": \"\", \"e00\": { \"e01\": { \"datetime\": \"\", \"status\": \"\", \"photo\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"comment\": \"\" }, \"e02\": { \"datetime\": \"\", \"photo\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"eta\": \"\", \"comment\": \"\" }, \"e03\": { \"datetime\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"comment\": \"\"}, \"e04\": { \"datetime\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"photo\": \"\", \"comment\": \"\" }, \"e05\": { \"datetime\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"photo\": \"\", \"comment\": \"\" }, \"e06\": { \"datetime\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"photo\": \"\", \"comment\": \"\" }, \"e07\": { \"datetime\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"photo\": \"\", \"comment\": \"\" }, \"e08\": { \"datetime\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"photo\": \"\", \"comment\": \"\" }, \"e09\": { \"datetime\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"photo\": \"\", \"comment\": \"\" } }, \"form\": { \"header\":{}, \"data\":[] } }", map: "DF_WO_Helix_JsonDetalle_Json") @db.VarChar(Max)
+  Estatus     Boolean?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model WO_Helix_JsonDetalle_bak {
+  Id          Int      @default(autoincrement())
+  Type        Boolean?
+  Uuid        Int?
+  IdPlantilla Int?
+  Json        String?  @db.VarChar(Max)
+  Estatus     Boolean?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model Wo_Helix_Rem {
+  IdWo_HelixRem           Int       @default(autoincrement())
+  tas_id                  Int?
+  FechaDespacho           DateTime?
+  FechaLimiteConfirmacion DateTime?
+  IdPrioridad             Int?
+  Estatus                 Int?
+  ReporteAceptado         Boolean?
+  IdUsuario               Int?
+  LimiteConfirmacion      DateTime?
+  LimiteRestauracion      DateTime?
+  LimiteResolucion        DateTime?
+  TotalTareas             Int?
+  TareasFinalizadas       Int?
+  TareasxFinalizar        Int?
+  FechaAsignacion         DateTime?
+  IdCuadrilla             Int?
+  IdCriticidad            Int?
+  IdClasificacionWO       Int?
+  IdReg                   Int?
+  IdEstado                Int?
+  IdWo_Helix              Int?
+  IdTipoWO                Int?
+  Descripcion             String?   @db.VarChar(500)
+  IdWO                    Int?
+  IdUsuarioAprover        Int?
+  FechaAprover            DateTime?
+  IcoPlantilla            Int?
+  IcoTarea                Int?
+  IcoInfo                 Int?
+  IcoHistorial            Int?
+  IcoComentarios          Int?
+  IcoDescarga             Int?
+  IcoConfirmada           Int?
+  AsignacionHistorial     String?   @default("[]", map: "DF_Wo_Helix_Rem_AsignacionHistorial") @db.VarChar(Max)
+
+  @@ignore
+}
+
+model WorkOrders_Plantilla_Detalle {
+  ID          Int     @id(map: "PK_WorkOrder_Plantilla_Detalle") @default(autoincrement())
+  IdWO        Int?
+  IdPlantilla Int?
+  nombreCampo String? @db.VarChar(Max)
+  valorCampo  String? @db.VarChar(Max)
+}
+
+model WorkOrders_Plantilla_Detalle_JSON {
+  ID          Int      @id(map: "PK_WorkOrders_Plantilla_Detalle_JSON") @default(autoincrement())
+  Uuid        Int?
+  IdPlantilla Int?
+  Json        String?  @db.VarChar(Max)
+  Estatus     Boolean? @default(false, map: "DEFAULT_WorkOrders_Plantilla_Detalle_JSON_EstatusSync")
+
+  @@index([IdPlantilla], map: "report_json")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model WorkOrders_Tarea_Detalle_JSON {
+  Id          Int      @default(autoincrement())
+  IdWO        Int?
+  IdTarea     Int?
+  jsonDetalle String?  @db.VarChar(Max)
+  EstatusSync Boolean? @default(false, map: "DEFAULT_WorkOrders_Tarea_Detalle_JSON_EstatusSync")
+
+  @@ignore
+}
+
+model WorkOrders_Tickets {
+  IdWO                    Int       @id(map: "PK__WorkOrde__B7707409AECD0ECF") @default(autoincrement())
+  Descripcion             String?   @db.NVarChar(150)
+  IdTipoWO                Int?      @db.TinyInt
+  FechaDespacho           DateTime?
+  FechaLimiteConfirmacion DateTime?
+  IdPrioridad             Int?
+  IdCriticidad            Int?
+  LimiteConfirmacion      DateTime?
+  LimiteRestauracion      DateTime?
+  LimiteResolucion        DateTime?
+  TotalTareas             Int?
+  TareasFinalizadas       Int?
+  TareasxFinalizar        Int?
+  Status                  Int?      @db.TinyInt
+  FechaAsignacion         DateTime?
+  IdCuadrilla             Int?
+  IdUsuario               Int?
+  IdReg                   Int?
+  IdEstado                Int?
+  Avance                  Int?
+  Alarma                  String?   @db.VarChar(100)
+  IcoTarea                Int?      @db.TinyInt
+  IcoInfo                 Int?      @db.TinyInt
+  IcoHistorial            Int?      @db.TinyInt
+  IcoComentarios          Int?      @db.TinyInt
+  IcoDescarga             Int?      @db.TinyInt
+  IcoConfirmada           Int?      @db.TinyInt
+  IdPlantilla             Int?
+  IdSubEstadoWO           Int?
+  IdClasificacionWO       Int?
+  IcoPlantilla            Int?      @db.TinyInt
+  IdSitio                 Int?
+  FechaCreacion           DateTime?
+  IdContenedor            Int?
+  fechaAceptanWO          DateTime?
+  ReporteAceptado         Boolean?
+  FechaFinalizado         DateTime?
+  IdUsuarioAprover        Int?
+  FechaAprover            DateTime?
+  KomodoFlag              Boolean?
+}
+
+model Cat_VMCondicion {
+  Id                 Int                  @id(map: "Cat_CondicionDevEnt_PK") @default(autoincrement()) @db.SmallInt
+  Condicion          String               @unique(map: "Cat_CondicionDevEnt_UNIQUE") @db.VarChar(50)
+  GASOAL_VMaterialES GASOAL_VMaterialES[]
+}
+
+model Cat_VMTipo {
+  Id                 Int                  @id(map: "Cat_TipoDevEnt_PK") @default(autoincrement()) @db.SmallInt
+  Tipo               String               @unique(map: "Cat_TipoDevEnt_UNIQUE") @db.VarChar(30)
+  GASOAL_VMaterialES GASOAL_VMaterialES[]
+}
+
+model GASOAL_VMaterialES {
+  Id                       Int                      @id(map: "GASOAL_VMaterialEntrada_PK") @default(autoincrement())
+  IdUsuario                Int
+  Folio                    String                   @unique(map: "GASOAL_VMaterialEntrada_UNIQUE") @db.VarChar(30)
+  Responsable              String                   @db.VarChar(150)
+  IdTipo                   Int                      @db.SmallInt
+  IdCondicion              Int                      @db.SmallInt
+  NombrePS                 String?                  @db.VarChar(150)
+  IdProyecto               String?                  @db.VarChar(100)
+  CuentaCliente            String?                  @db.VarChar(100)
+  Fecha                    DateTime                 @db.DateTime
+  AspNombre                String?                  @db.VarChar(100)
+  AspFirma                 String?                  @db.VarChar(Max)
+  NombreContacto           String?                  @db.VarChar(100)
+  Tecnologia               String?                  @db.VarChar(100)
+  IdRegion                 Int                      @db.SmallInt
+  TotalPiezas              Int                      @default(0, map: "DF__GASOAL_VM__Total__15460CD7")
+  PlacasTransporte         String                   @db.VarChar(100)
+  MaterialEnTransporteFoto String                   @db.VarChar(100)
+  MaterialDescargadoFoto   String?                  @db.VarChar(100)
+  TransporteFoto           String                   @db.VarChar(100)
+  PlacasFoto               String                   @db.VarChar(100)
+  Notas                    String?                  @db.VarChar(350)
+  Qr                       String?                  @db.VarChar(100)
+  FechaCaptura             DateTime                 @default(now(), map: "DefaultFechaCaptura_GASOAL_VMaterialEntrada") @db.DateTime
+  Status                   Int                      @default(0, map: "DF__GASOAL_VM__Statu__39836D4D") @db.SmallInt
+  FechaEdicion             DateTime?                @db.DateTime
+  ES                       Boolean                  @default(true, map: "DF__GASOAL_VMate__ES__46DD686B")
+  NumTarimas               Int                      @default(0, map: "DF__GASOAL_VM__NumTa__54376389")
+  Tarimas                  String?                  @db.VarChar(Max)
+  Cancelada                Boolean                  @default(false, map: "DF__GASOAL_VM__Cance__5807F46D")
+  IdAlmacenDestino         Int                      @default(1, map: "DF__GASOAL_VM__IdAlm__5DC0CDC3")
+  Cat_VMCondicion          Cat_VMCondicion          @relation(fields: [IdCondicion], references: [Id], onUpdate: NoAction, map: "GASOAL_VMaterialEntrada_Cat_DevEntCondicion_FK")
+  Cat_VMTipo               Cat_VMTipo               @relation(fields: [IdTipo], references: [Id], onUpdate: NoAction, map: "GASOAL_VMaterialEntrada_Cat_DevEntTipo_FK")
+  GASOAL_VMAlmacenes       GASOAL_VMAlmacenes       @relation(fields: [IdAlmacenDestino], references: [Id], onUpdate: NoAction, map: "GASOAL_VMaterialES_GASOAL_VMAlmacenes_FK")
+  GASOAL_VMPiezasEstadoF   GASOAL_VMPiezasEstadoF[]
+  GASOAL_VMPiezasMotivo    GASOAL_VMPiezasMotivo[]
+}

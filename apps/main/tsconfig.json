@@ -1,0 +1,100 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@gaso/shared": [
+        "../../packages/shared/src"
+      ],
+      "@gaso/shared/*": [
+        "../../packages/shared/src/*"
+      ],
+      "@/lib/prisma": [
+        "../../packages/shared/src/lib/prisma"
+      ],
+      "@/lib/prisma-helpers": [
+        "../../packages/shared/src/lib/prisma-helpers"
+      ],
+      "@/lib/tenant-context": [
+        "../../packages/shared/src/lib/tenant-context"
+      ],
+      "@/lib/audit/catalog": [
+        "../../packages/shared/src/lib/audit/catalog"
+      ],
+      "@/lib/audit/transaction-log": [
+        "../../packages/shared/src/lib/audit/transaction-log"
+      ],
+      "@/lib/auth/require-admin": [
+        "../../packages/shared/src/lib/auth/require-admin"
+      ],
+      "@/libs/auth": [
+        "../../packages/shared/src/lib/auth/nextauth-config"
+      ],
+      "@/types/me": [
+        "../../packages/shared/src/types/me"
+      ],
+      "@/types/tenant-settings": [
+        "../../packages/shared/src/types/tenant-settings"
+      ],
+      "@/lib/audit/diff": [
+        "../../packages/shared/src/lib/audit/diff"
+      ],
+      "@core/*": [
+        "./src/@core/*"
+      ],
+      "@layouts/*": [
+        "./src/@layouts/*"
+      ],
+      "@menu/*": [
+        "./src/@menu/*"
+      ],
+      "@assets/*": [
+        "./src/assets/*"
+      ],
+      "@components/*": [
+        "./src/components/*"
+      ],
+      "@configs/*": [
+        "./src/configs/*"
+      ],
+      "@views/*": [
+        "./src/views/*"
+      ]
+    }
+  },
+  "include": [
+    "next.config.ts",
+    "tailwind.config.ts",
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
