@@ -6,8 +6,10 @@ import {
   withPermission, PERM, PERM_NONE, isCanonical, describeMask,
   writeTransactionLog,
   PERM_ALL,
-  ErpModuleKey,
   getEnabledMenuGroups,
+} from '@gaso/shared';
+import type {
+  ErpModuleKey
 } from '@gaso/shared';
 
 import { withTenantContext } from '@/lib/tenant-context';
@@ -200,6 +202,7 @@ export const POST = withPermission(
         const planRejected = body.grants
           .filter(g => {
             const mg = menuGroupByView.get(g.viewCode);
+
             return !mg || !enabled.has(mg as ErpModuleKey);
           })
           .map(g => g.viewCode);

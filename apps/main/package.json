@@ -121,10 +121,6 @@
     "tsx": "4.19.2",
     "typescript": "5.5.4"
   },
-  "resolutions": {
-    "rimraf": "^5.0.7",
-    "@tiptap/core": "^2.0.0"
-  },
   "overrides": {
     "rimraf": "^5.0.7"
   },

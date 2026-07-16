@@ -59,10 +59,12 @@ export async function requireViewAccess(
     return { ok: true, userId: session.user.id, tenantId, mask };
   } catch (e) {
     if (e instanceof UnauthorizedError) return { ok: false, reason: 'UNAUTHENTICATED' };
+
     if (e instanceof ForbiddenError) {
       // Distinguir "por plan" de "por permiso" (el code viaja en el error del core).
       return { ok: false, reason: e.code === 'PLAN_RESTRICTED' ? 'PLAN_RESTRICTED' : 'FORBIDDEN' };
     }
+
     throw e; // errores no-RBAC (incl. @read_only del pool) se propagan
   }
 }

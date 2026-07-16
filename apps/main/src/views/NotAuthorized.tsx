@@ -33,6 +33,7 @@ const NotAuthorized = ({ mode, reason }: { mode: Mode; reason?: string }) => {
   const miscBackground = useImageVariant(mode, lightImg, darkImg)
 
   const title = isPlan ? 'Módulo no incluido en tu plan 🔒' : 'No tienes autorización 🔐'
+
   const description = isPlan
     ? 'Tu plan actual no incluye este módulo. Contacta a administración para habilitarlo.'
     : 'No tienes permiso para acceder a esta página. Contacta a tu administrador.'

@@ -114,8 +114,8 @@ export const erpNavigationModules: ErpNavigationModule[] = [
     icon: 'ri-government-line',
     items: [
       { key: 'adm-requests', labelKey: 'administration.requests', href: '/administration/requests', icon: 'ri-file-list-line', viewCode: 'requests' },
-      { key: 'adm-audit', labelKey: 'administration.audit', href: '/administration/audit', icon: 'ri-file-list-line', viewCode: 'audit' },
-      { key: 'adm-permissions', labelKey: 'administration.permissions', href: '/administration/permissions', icon: 'ri-file-list-line', viewCode: 'permissions_access' }
+      { key: 'adm-audit', labelKey: 'administration.audit', href: '/administration/audit', icon: 'ri-file-history-line', viewCode: 'audit' },
+      { key: 'adm-permissions', labelKey: 'administration.permissions', href: '/administration/permissions', icon: 'ri-lock-unlock-line', viewCode: 'permissions_access' }
     ]
   }
 ]

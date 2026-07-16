@@ -1,4 +1,4 @@
-import { describeMask, ForbiddenError, isCanonical, PERM, resolveUserViews, ValidationError, withTenantContext, getEnabledMenuGroups } from '@gaso/shared';
+import { ForbiddenError, isCanonical, PERM, resolveUserViews, ValidationError, withTenantContext, getEnabledMenuGroups } from '@gaso/shared';
 import type { ErpModuleKey } from '@gaso/shared';
 
 import type { Prisma } from '@prisma/client';
