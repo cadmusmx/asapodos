@@ -1,4 +1,4 @@
-// Tipos compartidos por la UI de administración de permisos (Paso 8).
+// Tipos compartidos por la UI de administración de permisos.
 
 /** Fila del maestro: usuario administrable (GET /api/permissions/users). */
 export interface AssignableUser {
@@ -6,6 +6,10 @@ export interface AssignableUser {
   nombre: string;
   idDepartamento: number | null;
   departamento: string | null;
+  idPuesto: number | null;
+  puesto: string | null;
+  idPerfil: number | null;
+  perfil: string | null;
 }
 
 /** Departamento filtrable (GET /api/permissions/departments). */
@@ -35,10 +39,13 @@ export interface AssignableView {
   viewCode: string;
   label: string;
   menuGroup: string | null;
+
   /** CRUDO: solo UserViews (lo asignado manualmente). 0 si nada. */
   currentMask: number;
+
   /** Techo del depto: máximo asignable. */
   ceilingMask: number;
+
   /** Piso público (0 = privada): bits "gratis" no quitables. */
   publicMask: number;
 }

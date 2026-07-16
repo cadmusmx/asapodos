@@ -32,7 +32,7 @@ export const PERM_ALL: number = PERM.R | PERM.W | PERM.U | PERM.D;
 
 /**
  * Las 9 máscaras canónicas. Espejo EXACTO del CHECK de
- * Security.DepartmentViews / Security.UserViews. Si cambias una, cambia el CHECK.
+ * Security.UserViews. Si cambias una, cambia el CHECK.
  */
 export const CANONICAL_MASKS: readonly number[] = Object.freeze([0, 1, 3, 5, 7, 9, 11, 13, 15]);
 

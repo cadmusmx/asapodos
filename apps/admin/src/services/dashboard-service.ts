@@ -1,5 +1,4 @@
 import { prisma } from '@gaso/shared'
-import type { AuditEntryWithTenantName } from './audit-service'
 
 export interface TenantStats {
   total: number
@@ -35,14 +34,26 @@ export async function getTenantStats(): Promise<TenantStats> {
   }
 }
 
-export async function getRecentActivity(limit = 10): Promise<AuditEntryWithTenantName[]> {
-  try {
-    const query = `SELECT TOP(${limit}) l.AuditID, l.TenantID, l.UserID, l.TableName, l.Action, l.OldData, l.NewData, l.ChangedAt, l.AppUser, l.IdOrigin, t.CompanyName AS TenantName FROM Audit.TransactionLog l LEFT JOIN Security.Tenants t ON l.TenantID = t.TenantID WHERE t.TenantID IS NOT NULL ORDER BY l.ChangedAt DESC`
-    const entries = await prisma.$queryRawUnsafe<AuditEntryWithTenantName[]>(query)
+export interface RecentTenant {
+  TenantID: string
+  CompanyName: string
+  Status: string
+  SubscriptionPlan: string | null
+  CreatedAt: Date | null
+}
 
-    return Array.isArray(entries) ? entries : []
+export async function getRecentTenants(limit = 8): Promise<RecentTenant[]> {
+  try {
+    const tenants = await prisma.$queryRawUnsafe<RecentTenant[]>(`
+      SELECT TOP(${limit}) t.TenantID, t.CompanyName, t.Status, p.Name as SubscriptionPlan, t.CreatedAt
+      FROM Security.Tenants t
+      LEFT JOIN Security.TenantSubscriptions s ON s.TenantId = t.TenantId AND s.Status IN ('TRIAL', 'ACTIVE')
+      LEFT JOIN Security.Plans p ON p.PlanId = s.PlanId
+      ORDER BY t.CreatedAt DESC
+    `)
+    return Array.isArray(tenants) ? tenants : []
   } catch (error) {
-    console.error('[getRecentActivity] Error:', error)
+    console.error('[getRecentTenants] Error:', error)
     return []
   }
 }

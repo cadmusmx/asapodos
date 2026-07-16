@@ -16,7 +16,7 @@ import {
   setTenantContext
 } from '@gaso/shared'
 
-const ADMIN_DOMAIN = process.env.ADMIN_TENANT ?? 'gasohub.com'
+const ADMIN_TENANT = process.env.ADMIN_TENANT ?? 'gasohub.com'
 
 export async function POST(req: Request) {
   try {
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       SELECT
         TenantID
       FROM Security.Tenants
-      WHERE LOWER(Dominio) = LOWER(${ADMIN_DOMAIN})
+      WHERE LOWER(Dominio) = LOWER(${ADMIN_TENANT})
     `
 
     if (!adminTenant[0]?.TenantID) {

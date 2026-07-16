@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { requirePlatformRole } from '@gaso/shared'
 import { listTenants, createTenant, type TenantStatus } from '@/services/tenant-service'
+import { prisma } from '@gaso/shared'
 
 export async function GET(req: NextRequest) {
   const guard = await requirePlatformRole('super_admin')
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { companyName, dominio, subscriptionPlan, maxUsers, region } = body
+    const { companyName, dominio, planId, maxUsers, region } = body
 
     if (!companyName || !dominio) {
       return NextResponse.json(
@@ -42,8 +43,7 @@ export async function POST(req: NextRequest) {
     const result = await createTenant({
       companyName,
       dominio,
-      subscriptionPlan,
-      maxUsers: maxUsers ? Number(maxUsers) : undefined,
+      subscriptionPlan: undefined,
       region,
       adminUserId: guard.userId,
       adminEmail: String(guard.platformRole)
@@ -53,7 +53,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: ['Failed to create tenant'] }, { status: 500 })
     }
 
-    return NextResponse.json({ tenantId: result.tenantId }, { status: 201 })
+    const tenantId = result.tenantId!
+
+    if (planId) {
+      await prisma.$executeRaw`
+        INSERT INTO Security.TenantSubscriptions (TenantId, PlanId, Status, StartedAt, AutoRenew)
+        VALUES (${tenantId}, ${Number(planId)}, 'ACTIVE', SYSUTCDATETIME(), 1)
+      `
+    }
+
+    return NextResponse.json({ tenantId }, { status: 201 })
   } catch (error) {
     console.error('[ADMIN_CREATE_TENANT_ERROR]', error)
     return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })

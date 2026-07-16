@@ -4,13 +4,11 @@ import type {
   TenantBrandingSettings,
   TenantLimitSettings,
   TenantModuleKey,
-  TenantModuleSettings,
   TenantSettings
 } from '@/types/tenant-settings'
 
 export type TenantSettingsRow = {
   BrandingJson: string | null
-  ModulesJson: string | null
   LimitsJson: string | null
 }
 
@@ -58,21 +56,9 @@ const normalizeBranding = (value: Record<string, unknown>): TenantBrandingSettin
   primaryColor: readNullableString(value.primaryColor)
 })
 
-const normalizeModules = (value: Record<string, unknown>): TenantModuleSettings => {
-  return tenantModuleKeys.reduce<TenantModuleSettings>((settings, moduleKey) => {
-    const moduleValue = value[moduleKey]
-
-    settings[moduleKey] =
-      typeof moduleValue === 'boolean'
-        ? moduleValue
-        : defaultTenantSettings.modules[moduleKey]
-
-    return settings
-  }, { ...defaultTenantSettings.modules })
-}
-
 const normalizeLimits = (value: Record<string, unknown>): TenantLimitSettings => ({
   maxUsers: readNullableNumber(value.maxUsers),
+  maxBranches: readNullableNumber(value.maxBranches),
   maxStorageMb: readNullableNumber(value.maxStorageMb),
   maxProjects: readNullableNumber(value.maxProjects)
 })
@@ -82,13 +68,11 @@ export const normalizeTenantSettingsFromRow = (row?: TenantSettingsRow | null): 
 
   return {
     branding: normalizeBranding(parseJsonRecord(row.BrandingJson)),
-    modules: normalizeModules(parseJsonRecord(row.ModulesJson)),
     limits: normalizeLimits(parseJsonRecord(row.LimitsJson))
   }
 }
 
 export const serializeTenantSettings = (settings: TenantSettings) => ({
   brandingJson: JSON.stringify(settings.branding),
-  modulesJson: JSON.stringify(settings.modules),
   limitsJson: JSON.stringify(settings.limits)
 })

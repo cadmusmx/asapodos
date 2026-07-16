@@ -111,5 +111,6 @@ export async function withTenantContext<T>(
     await tx.$queryRaw`EXEC sp_SetTenantContext @TenantID = ${tenantId}`
 
     return callback(tx)
-  })
+  }, { timeout: 30_000, maxWait: 10_000 },
+  )
 }

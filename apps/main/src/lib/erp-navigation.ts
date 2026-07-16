@@ -1,6 +1,5 @@
-import type { TenantModuleSettings } from '@/types/tenant-settings'
+import type { ErpModuleKey } from '@gaso/shared'
 
-import { type ErpModuleKey } from './erp-modules'
 import { canViewErpNavigationModule } from './erp-access'
 
 export type ErpNavigationItem = {
@@ -15,6 +14,7 @@ export type ErpNavigationModule = {
   key: ErpModuleKey
   labelKey: string
   icon: string
+
   /** Si true, sus items se renderizan como MenuItem sueltos (sin SubMenu). */
   flat?: boolean
   items: ErpNavigationItem[]
@@ -126,42 +126,42 @@ export const getDictionaryValue = (dictionary: any, path: string): string => {
 }
 
 type VisibleNavParams = {
-  menuGroups?: Record<string, boolean>
+  menuGroups?: Record<string, boolean>;
+
   /** me.views: solo se usa la presencia de la llave viewCode. */
-  views?: Record<string, unknown>
-  isAdmin: boolean
-  tenantModules?: TenantModuleSettings
-  isLoading: boolean
-}
+  views?: Record<string, unknown>;
+
+  /** me.planMenuGroups: módulos que el PLAN del tenant habilita. */
+  planMenuGroups?: ErpModuleKey[];
+  isLoading: boolean;
+};
 
 /**
  * Navegación visible para el usuario, doble filtro:
- *  - Grupo: canViewErpNavigationModule (tenant activo + RBAC + red de seguridad admin).
+ *  - Grupo: canViewErpNavigationModule (módulo ∈ plan ∧ RBAC tiene vistas en el grupo).
  *  - Ítem: solo los que el usuario tiene en me.views (RBAC por vista).
  * Grupos que quedan sin ítems visibles se omiten.
  */
 export const getVisibleErpNavigation = ({
   menuGroups,
   views,
-  isAdmin,
-  tenantModules,
-  isLoading
+  planMenuGroups,
+  isLoading,
 }: VisibleNavParams): ErpNavigationModule[] => {
-  if (isLoading) return []
+  if (isLoading) return [];
 
   return erpNavigationModules
     .filter(module =>
       canViewErpNavigationModule({
         moduleKey: module.key,
         isLoading,
-        isAdmin,
         menuGroups,
-        tenantModules
-      })
+        planMenuGroups,
+      }),
     )
     .map(module => ({
       ...module,
-      items: module.items.filter(item => Boolean(views?.[item.viewCode]))
+      items: module.items.filter(item => Boolean(views?.[item.viewCode])),
     }))
-    .filter(module => module.items.length > 0)
-}
+    .filter(module => module.items.length > 0);
+};

@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react'
 
-import { signIn } from 'next-auth/react'
+import { signIn, getSession } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
 import { Controller, useForm } from 'react-hook-form'
 import { valibotResolver } from '@hookform/resolvers/valibot'
@@ -16,9 +16,12 @@ import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
+import Image from 'next/image'
 import Box from '@mui/material/Box'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
+import Checkbox from '@mui/material/Checkbox'
+import FormControlLabel from '@mui/material/FormControlLabel'
 
 import classnames from 'classnames'
 
@@ -26,6 +29,7 @@ import Logo from '@components/layout/shared/Logo'
 import Illustrations from '@components/Illustrations'
 
 import { useSettings } from '@core/hooks/useSettings'
+import { useImageVariant } from '@core/hooks/useImageVariant'
 
 type ErrorType = {
   name?: string
@@ -63,7 +67,7 @@ const AdminLoginForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get('callbackUrl') ?? '/admin/tenants'
+  const callbackUrl = searchParams.get('callbackUrl') ?? '/admin'
   const { settings } = useSettings()
 
   const darkImg = '/images/pages/auth-v2-mask-dark.png'
@@ -73,11 +77,16 @@ const AdminLoginForm = () => {
   const borderedDarkIllustration = '/images/illustrations/auth/v2-login-dark-border.png'
   const borderedLightIllustration = '/images/illustrations/auth/v2-login-light-border.png'
 
-  const mode = settings.mode === 'system' ? 'light' : settings.mode
+  const mode = settings.mode === 'system' ? 'light' : settings.mode ?? 'light'
 
-  const authBackground = mode === 'dark' ? darkImg : lightImg
-  const characterIllustration =
-    mode === 'dark' ? darkIllustration : lightIllustration
+  const authBackground = useImageVariant(mode, lightImg, darkImg)
+  const characterIllustration = useImageVariant(
+    mode,
+    lightIllustration,
+    darkIllustration,
+    borderedLightIllustration,
+    borderedDarkIllustration
+  )
 
   const {
     control,
@@ -104,7 +113,6 @@ const AdminLoginForm = () => {
       if (mfaSetupRequired) {
         if (!mfaSetupData?.setupId) {
           setErrorState({ message: ['La sesión de configuración MFA ha expirado. Intenta de nuevo.'] })
-          setIsSubmitting(false)
 
           return
         }
@@ -124,7 +132,6 @@ const AdminLoginForm = () => {
 
         if (!setupVerifyRes.ok) {
           setErrorState(setupVerifyResult)
-          setIsSubmitting(false)
 
           return
         }
@@ -135,7 +142,6 @@ const AdminLoginForm = () => {
         setMfaStep(false)
         setChallengeId(null)
         setErrorState({ message: ['Configuración completada. Ahora inicia sesión nuevamente.'] })
-        setIsSubmitting(false)
 
         return
       }
@@ -151,7 +157,6 @@ const AdminLoginForm = () => {
 
         if (!res.ok) {
           setErrorState(result)
-          setIsSubmitting(false)
 
           return
         }
@@ -167,7 +172,6 @@ const AdminLoginForm = () => {
 
           if (!setupRes.ok) {
             setErrorState(setupResult)
-            setIsSubmitting(false)
 
             return
           }
@@ -184,7 +188,6 @@ const AdminLoginForm = () => {
             accountName: setupResult.accountName
           })
           setErrorState(null)
-          setIsSubmitting(false)
 
           return
         }
@@ -193,7 +196,6 @@ const AdminLoginForm = () => {
         setMfaStep(true)
         setMfaSetupRequired(false)
         setMfaSetupData(null)
-        setIsSubmitting(false)
 
         return
       }
@@ -201,7 +203,6 @@ const AdminLoginForm = () => {
       if (!challengeId) {
         setErrorState({ message: ['El desafío MFA ha expirado. Intenta de nuevo.'] })
         setMfaStep(false)
-        setIsSubmitting(false)
 
         return
       }
@@ -216,7 +217,9 @@ const AdminLoginForm = () => {
       })
 
       if (res && res.ok && res.error === null) {
-        window.location.replace(callbackUrl)
+        const session = await getSession()
+        const redirectUrl = session?.user?.platformRole === 'auditor' ? '/admin/audit' : callbackUrl
+        window.location.replace(redirectUrl)
 
         return
       }
@@ -242,24 +245,22 @@ const AdminLoginForm = () => {
     <div className='flex bs-full justify-center'>
       <div
         className={classnames(
-          'flex bs-full items-center justify-center flex-1 min-bs-[100dvh] relative p-6 max-md:hidden',
+          'flex-1 min-h-screen max-md:hidden relative',
           {
             'border-ie': settings.skin === 'bordered'
           }
         )}
+        style={{ minHeight: '100vh' }}
       >
-        <div className='plb-12 pis-12'>
-          <img
-            src={characterIllustration}
-            alt='character-illustration'
-            className='max-bs-[500px] max-is-full bs-auto'
+        <Box sx={{ width: '100%', height: '100vh', position: 'relative' }}>
+          <Image
+            src='/images/background.png'
+            alt='background'
+            fill
+            style={{ objectFit: 'cover', objectPosition: 'center' }}
+            unoptimized
           />
-        </div>
-        <Illustrations
-          image1={{ src: '/images/illustrations/objects/tree-2.png' }}
-          image2={null}
-          maskImg={{ src: authBackground }}
-        />
+        </Box>
       </div>
       <div className='flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:!min-is-[unset] md:p-12 md:is-[480px]'>
         <div className='flex flex-col gap-5 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset]'>
@@ -267,7 +268,7 @@ const AdminLoginForm = () => {
             <div className='flex justify-center py-2'>
               <Logo />
             </div>
-            <Typography align='center'>
+            <Typography>
               {mfaSetupRequired
                 ? 'Configura tu verificación en dos pasos'
                 : mfaStep
@@ -275,12 +276,6 @@ const AdminLoginForm = () => {
                   : 'Inicia sesión para acceder al panel de administración'}
             </Typography>
           </div>
-
-          {errorState && (
-            <Alert severity='error'>
-              {errorState.message[0]}
-            </Alert>
-          )}
 
           {mfaSetupRequired && (
             <Alert severity='info'>
@@ -299,56 +294,61 @@ const AdminLoginForm = () => {
                   fullWidth
                   autoFocus
                   disabled={mfaStep || isSubmitting}
+                  type='user'
                   label='Usuario'
                   onChange={e => {
                     field.onChange(e.target.value)
-                    if (errorState !== null) setErrorState(null)
+                    errorState !== null && setErrorState(null)
                   }}
-                  {...(errors.user && { error: true, helperText: errors.user.message })}
+                  {...((errors.user || errorState !== null) && {
+                    error: true,
+                    helperText: errorState?.message
+                      ? errorState?.message[0]
+                      : errors.user?.message
+                  })}
                 />
               )}
             />
 
-            {!mfaStep && (
-              <Controller
-                name='password'
-                control={control}
-                rules={{ required: true }}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    disabled={isSubmitting}
-                    label='Contraseña'
-                    type={isPasswordShown ? 'text' : 'password'}
-                    onChange={e => {
-                      field.onChange(e.target.value)
-                      if (errorState !== null) setErrorState(null)
-                    }}
-                    slotProps={{
-                      input: {
-                        endAdornment: (
-                          <InputAdornment position='end'>
-                            <IconButton
-                              size='small'
-                              edge='end'
-                              onClick={handleClickShowPassword}
-                              onMouseDown={e => e.preventDefault()}
-                              aria-label='toggle password visibility'
-                            >
-                              <i className={isPasswordShown ? 'ri-eye-off-line' : 'ri-eye-line'} />
-                            </IconButton>
-                          </InputAdornment>
-                        )
-                      }
-                    }}
-                    {...(errors.password && { error: true, helperText: errors.password.message })}
-                  />
-                )}
-              />
-            )}
+            <Controller
+              name='password'
+              control={control}
+              rules={{ required: true }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  disabled={mfaStep || isSubmitting}
+                  label='Contraseña'
+                  id='login-password'
+                  type={isPasswordShown ? 'text' : 'password'}
+                  onChange={e => {
+                    field.onChange(e.target.value)
+                    errorState !== null && setErrorState(null)
+                  }}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <IconButton
+                            size='small'
+                            edge='end'
+                            onClick={handleClickShowPassword}
+                            onMouseDown={e => e.preventDefault()}
+                            aria-label='toggle password visibility'
+                          >
+                            <i className={isPasswordShown ? 'ri-eye-off-line' : 'ri-eye-line'} />
+                          </IconButton>
+                        </InputAdornment>
+                      )
+                    }
+                  }}
+                  {...(errors.password && { error: true, helperText: errors.password.message })}
+                />
+              )}
+            />
 
-            {(mfaStep || mfaSetupRequired) && (
+            {mfaStep && (
               <Controller
                 name='mfaCode'
                 control={control}
@@ -357,40 +357,46 @@ const AdminLoginForm = () => {
                   <TextField
                     {...field}
                     fullWidth
-                    label={mfaSetupRequired ? 'Código de verificación' : 'Código MFA'}
-                    placeholder='000000'
-                    disabled={isSubmitting}
+                    label='Código MFA'
+                    placeholder='Ingresa tu código de 6 dígitos'
                     onChange={e => {
                       field.onChange(e.target.value)
-                      if (errorState !== null) setErrorState(null)
+                      errorState !== null && setErrorState(null)
                     }}
-                    inputProps={{ maxLength: 6, inputMode: 'numeric', pattern: '[0-9]*' }}
                     {...(errorState !== null && {
                       error: true,
-                      helperText: errorState.message[0]
+                      helperText: errorState?.message[0]
                     })}
                   />
                 )}
               />
             )}
 
+            <div className='flex justify-between items-center flex-wrap gap-x-3 gap-y-1'>
+              <FormControlLabel control={<Checkbox defaultChecked />} label='Recordarme' />
+            </div>
+
             {mfaSetupRequired && mfaSetupData && (
               <div className='flex flex-col gap-5 rounded-xl border border-divider bg-backgroundPaper p-5 shadow-sm'>
                 <div className='flex flex-col gap-1 text-center'>
                   <Typography className='font-semibold'>Configura Google Authenticator</Typography>
+
                   <Typography variant='body2' color='text.secondary'>
                     Escanea el código QR para activar la verificación en dos pasos.
                   </Typography>
                 </div>
 
-                <div className='mx-auto rounded-xl bg-backgroundPaper p-4 shadow-md'>
-                  <QRCodeSVG value={mfaSetupData.otpauthUrl} size={180} />
+                <div className='mx-auto rounded-xl bg-white p-4 shadow-md'>
+                  <QRCodeSVG value={mfaSetupData.otpauthUrl} size={190} />
                 </div>
 
                 <div className='flex flex-col gap-2 rounded-lg bg-actionHover p-4'>
                   <Typography variant='body2'>1. Abre Google Authenticator en tu celular.</Typography>
+
                   <Typography variant='body2'>2. Toca el botón +.</Typography>
-                  <Typography variant='body2'>3. Selecciona &quot;Escanear código QR&quot;.</Typography>
+
+                  <Typography variant='body2'>3. Selecciona "Escanear código QR".</Typography>
+
                   <Typography variant='body2'>
                     4. Ingresa abajo el código de 6 dígitos generado por la app.
                   </Typography>
@@ -408,17 +414,32 @@ const AdminLoginForm = () => {
                     {mfaSetupData.manualKey}
                   </Typography>
                 )}
+
+                <Controller
+                  name='mfaCode'
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label='Código de verificación'
+                      placeholder='Ingresa el código de 6 dígitos'
+                      onChange={e => {
+                        field.onChange(e.target.value)
+                        errorState !== null && setErrorState(null)
+                      }}
+                      {...(errorState !== null && {
+                        error: true,
+                        helperText: errorState?.message[0]
+                      })}
+                    />
+                  )}
+                />
               </div>
             )}
 
-            <Button
-              type='submit'
-              variant='contained'
-              size='large'
-              fullWidth
-              disabled={isSubmitting}
-              startIcon={isSubmitting ? <CircularProgress size={20} color='inherit' /> : null}
-            >
+            <Button fullWidth variant='contained' type='submit' disabled={isSubmitting}>
               {isSubmitting
                 ? 'Por favor espera...'
                 : mfaSetupRequired
@@ -428,13 +449,12 @@ const AdminLoginForm = () => {
                     : 'Continuar'}
             </Button>
 
-            {(mfaSetupRequired || mfaStep) && (
+            {mfaSetupRequired && (
               <Button
-                type='button'
-                variant='outlined'
                 fullWidth
+                variant='outlined'
+                type='button'
                 onClick={() => {
-                  setMfaStep(false)
                   setMfaSetupRequired(false)
                   setMfaSetupData(null)
                   setShowManualKey(false)
@@ -443,7 +463,7 @@ const AdminLoginForm = () => {
                 }}
                 disabled={isSubmitting}
               >
-                Volver
+                Volver al inicio de sesión
               </Button>
             )}
           </form>

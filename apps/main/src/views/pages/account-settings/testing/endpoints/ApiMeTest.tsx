@@ -1,41 +1,11 @@
 import Grid from '@mui/material/Grid2'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
-import Card from '@mui/material/Card'
-import CardContent from '@mui/material/CardContent'
-import Chip from '@mui/material/Chip'
 import Divider from '@mui/material/Divider'
 
-import ApiTestCard, { type ApiState } from '../components/ApiTestCard'
+import type { MeResponse } from '@gaso/shared/types/me'
 
-type MeResponse = {
-  user: {
-    id: number
-    name: string
-    email: string
-    admin: boolean
-    area: number | null
-    cityBase: number | null
-    position: number | null
-    region: number | null
-    company: number | null
-  }
-  tenant: {
-    id: string
-    slug: string
-    name: string
-    isActive: boolean
-  }
-  profile: {
-    id: number | null
-    name: string | null
-  }
-  permissions: Array<{
-    moduleId: number
-    moduleName: string
-    subModules: Array<{ id: number; name: string }>
-  }>
-}
+import ApiTestCard, { type ApiState } from '../components/ApiTestCard'
 
 type Props = {
   state: ApiState
@@ -114,45 +84,7 @@ function MeDisplay({ state, data }: Props) {
           ))}
         </Box>
       </Grid>
-
-      <Grid size={{ xs: 12 }}>
-        <Typography variant='subtitle2' color='text.secondary' gutterBottom>
-          PERMISSIONS ({data.permissions.length})
-        </Typography>
-        {data.permissions.length === 0 ? (
-          <Typography variant='body2' color='text.secondary'>
-            No permissions found
-          </Typography>
-        ) : (
-          <Box className='flex flex-col gap-2'>
-            {data.permissions.map(mod => (
-              <Card key={mod.moduleId} variant='outlined'>
-                <CardContent className='flex flex-col gap-1 py-3'>
-                  <Box className='flex items-center gap-2'>
-                    <Chip label={`ID: ${mod.moduleId}`} size='small' variant='outlined' />
-                    <Typography variant='body2' className='font-medium'>
-                      {mod.moduleName || '—'}
-                    </Typography>
-                  </Box>
-                  {mod.subModules.length > 0 && (
-                    <Box className='flex flex-wrap gap-1 mt-1'>
-                      {mod.subModules.map(sm => (
-                        <Chip
-                          key={sm.id}
-                          label={`${sm.id} — ${sm.name}`}
-                          size='small'
-                          color='primary'
-                          variant='filled'
-                        />
-                      ))}
-                    </Box>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
-        )}
-      </Grid>
+      {/* data.permissions migrado por rbac */}
     </Grid>
   )
 }

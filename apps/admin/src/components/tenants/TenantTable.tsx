@@ -425,17 +425,6 @@ export default function TenantTable({
                 <TableCell
                   scope='col'
                   sx={{ cursor: 'pointer', userSelect: 'none' }}
-                  onClick={() => handleSort('SubscriptionPlan')}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    Plan
-                    <SortIcon field='SubscriptionPlan' current={sortField} direction={sortDir} />
-                  </Box>
-                </TableCell>
-                <TableCell scope='col'>Usuarios</TableCell>
-                <TableCell
-                  scope='col'
-                  sx={{ cursor: 'pointer', userSelect: 'none' }}
                   onClick={() => handleSort('CreatedAt')}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -485,8 +474,6 @@ export default function TenantTable({
                     <TableCell>
                       <TenantStatusBadge status={tenant.Status} locked={locked} />
                     </TableCell>
-                    <TableCell>{tenant.SubscriptionPlan || '-'}</TableCell>
-                    <TableCell>{tenant.MaxUsers ?? '∞'}</TableCell>
                     <TableCell>{formatDate(tenant.CreatedAt)}</TableCell>
                     <TableCell align='right' onClick={e => e.stopPropagation()}>
                       <IconButton

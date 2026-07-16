@@ -1,21 +1,28 @@
-import { withTenantContext } from '../tenant-context'
+import { withTenantContext } from '../tenant-context';
+import { getEnabledMenuGroups } from '../plans/plan-menu-groups';
+import { resolveUserViews, type ResolvedView } from './resolve-permissions';
+import { ErpModuleKey } from '../erp-modules';
 
-import { resolveUserViews, type ResolvedView } from './resolve-permissions'
+export interface EffectiveViews {
+  views: ResolvedView[];
+  planMenuGroups: Set<ErpModuleKey>;
+}
 
 /**
  * Punto ÚNICO que abre el contexto de tenant para resolver permisos.
- * Lo reusan los guards de permiso (requirePermission, vía withPermission en APIs
- * y requireViewAccess en páginas) y /api/me, para no repetir el withTenantContext
- * ni anidar transacciones por accidente.
- * para no repetir el withTenantContext + no anidar transacciones por accidente.
- *
- * Invariante: `tenantId` es el del request ya validado (header / JWT).
- * El SESSION_CONTEXT se fija aquí sobre la conexión transaccional;
- * resolveUserViews corre sobre ese mismo `tx`.
+ * Devuelve las vistas RBAC (puras) + los MenuGroups del PLAN,
+ * para que requirePermission combine RBAC ∧ plan y distinga "por plan" de "por permiso".
  */
 export function getEffectiveViews(
   tenantId: string,
   idUsuario: number
-): Promise<ResolvedView[]> {
-  return withTenantContext(tenantId, tx => resolveUserViews(tx, { tenantId, idUsuario }));
+): Promise<EffectiveViews> {
+  return withTenantContext(tenantId, async tx => {
+    const [views, planMenuGroups] = await Promise.all([
+      resolveUserViews(tx, { tenantId, idUsuario }),
+      getEnabledMenuGroups(tx, tenantId),
+    ]);
+
+    return { views, planMenuGroups };
+  });
 }

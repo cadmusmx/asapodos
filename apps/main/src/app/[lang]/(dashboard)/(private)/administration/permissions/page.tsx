@@ -1,9 +1,10 @@
 import { redirect } from 'next/navigation';
 
+import { PERM } from '@gaso/shared';
+
 import type { Locale } from '@configs/i18n';
 
-import { PERM } from '@gaso/shared';
-import { requireViewAccess } from '@/lib/auth/require-view-access';
+import { getTargetByReason, requireViewAccess } from '@/lib/auth/require-view-access';
 import { getLocalizedUrl } from '@/utils/i18n';
 import PermissionsManager from '@views/permissions/PermissionsManager';
 
@@ -21,9 +22,7 @@ const PermissionsPage = async (props: { params: Promise<{ lang: Locale }> }) => 
   const access = await requireViewAccess('permissions_access', PERM.R);
 
   if (!access.ok) {
-    const target = access.reason === 'UNAUTHENTICATED' ? '/login' : '/pages/misc/401-not-authorized';
-
-    redirect(getLocalizedUrl(target, lang));
+    redirect(getLocalizedUrl(getTargetByReason(access.reason), lang));
   }
 
   // canEdit: ¿tiene el bit U sobre permissions_access? La UI mostrará edición o solo-lectura según esto.

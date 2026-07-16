@@ -11,9 +11,10 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
-import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
+import Alert from '@mui/material/Alert'
 import type { TenantRow } from '@/services/tenant-service'
+import { toast } from 'react-toastify'
 
 interface TenantSuspendModalProps {
   open: boolean
@@ -25,14 +26,12 @@ interface TenantSuspendModalProps {
 export default function TenantSuspendModal({ open, onClose, tenant, onSuccess }: TenantSuspendModalProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [suspendReason, setSuspendReason] = useState('')
 
   const handleSubmit = async () => {
     if (!tenant || !suspendReason.trim()) return
 
     setLoading(true)
-    setError(null)
 
     try {
       const res = await fetch(`/api/admin/tenants/${tenant.TenantID}/suspend`, {
@@ -46,12 +45,13 @@ export default function TenantSuspendModal({ open, onClose, tenant, onSuccess }:
         throw new Error(result.message?.[0] || 'Failed to suspend tenant')
       }
 
+      toast.success('Tenant suspendido exitosamente')
       setSuspendReason('')
       onClose()
       onSuccess?.()
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to suspend tenant')
+      toast.error(err instanceof Error ? err.message : 'Failed to suspend tenant')
     } finally {
       setLoading(false)
     }
@@ -60,7 +60,6 @@ export default function TenantSuspendModal({ open, onClose, tenant, onSuccess }:
   const handleClose = () => {
     if (!loading) {
       setSuspendReason('')
-      setError(null)
       onClose()
     }
   }
@@ -83,12 +82,6 @@ export default function TenantSuspendModal({ open, onClose, tenant, onSuccess }:
       </DialogTitle>
 
       <DialogContent sx={{ p: 0 }}>
-        {error && (
-          <Alert severity='error' sx={{ mb: 2 }} role='alert'>
-            {error}
-          </Alert>
-        )}
-
         <Box sx={{ mb: 2 }}>
           <Typography variant='body2' color='text.secondary' gutterBottom>
             Vas a suspender:

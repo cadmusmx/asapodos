@@ -1,10 +1,7 @@
-import type { TenantModuleSettings } from '@/types/tenant-settings'
-
-import { type ErpModuleKey } from './erp-modules'
+import type { ErpModuleKey } from "@gaso/shared"
 
 export type ErpAccessUser = {
   id?: number | string | null
-  admin?: boolean | null
   profile?: number | null
   company?: number | null
   area?: number | null
@@ -18,51 +15,26 @@ export type ErpAccessResult = {
   reason?: 'NO_SESSION' | 'CROSS_TENANT' | 'MODULE_RESTRICTED' | 'MODULE_DISABLED'
 }
 
-type GetModuleAccessParams = {
-  moduleKey: ErpModuleKey
-  user?: ErpAccessUser | null
-  tenantModules?: TenantModuleSettings
+type GetNavigationAccessParams = {
+  moduleKey: ErpModuleKey;
+  isLoading: boolean;
+  menuGroups?: Record<string, boolean>;
+  planMenuGroups?: ErpModuleKey[]; // antes: planFeatures?: PlanFeaturesById
 }
 
 /**
- * ¿El tenant tiene esta área activada? (config de tenant, independiente del RBAC)
- * Explícito `false` => apagado. Ausente/undefined => encendido (el RBAC sigue gateando).
+ * ¿El módulo está en el plan del tenant? Per-módulo (corrige el bug de "¿algún módulo?").
+ * planMenuGroups viene de /api/me ya traducido y con el fallback aplicado en server;
+ * el `!planMenuGroups` es solo seguridad de transición (mientras /api/me propaga).
  */
-export const isTenantModuleEnabled = (
+export const isModuleEnabledByPlan = (
   moduleKey: ErpModuleKey,
-  tenantModules?: TenantModuleSettings
+  planMenuGroups?: ErpModuleKey[],
 ): boolean => {
-  return tenantModules?.[moduleKey] !== false
-}
+  if (!planMenuGroups) return false;
 
-export const canAccessErpModule = ({
-  moduleKey,
-  user,
-  tenantModules
-}: GetModuleAccessParams): ErpAccessResult => {
-  if (!user) {
-    return { allowed: false, reason: 'NO_SESSION' }
-  }
-
-  if (!isTenantModuleEnabled(moduleKey, tenantModules)) {
-    return { allowed: false, reason: 'MODULE_DISABLED' }
-  }
-
-  const publicAuthenticatedModules: ErpModuleKey[] = ['dashboard', 'warehouses', 'human_capital', 'projects']
-
-  if (publicAuthenticatedModules.includes(moduleKey)) {
-    return { allowed: true }
-  }
-
-  if (moduleKey === 'administration') {
-    return {
-      allowed: user.admin === true,
-      reason: user.admin === true ? undefined : 'MODULE_RESTRICTED'
-    }
-  }
-
-  return { allowed: false, reason: 'MODULE_RESTRICTED' }
-}
+  return planMenuGroups.includes(moduleKey);
+};
 
 export const validateTenantMatch = (
   userTenantId?: string | null,
@@ -79,43 +51,21 @@ export const validateTenantMatch = (
   return { allowed: true }
 }
 
-// ===========================================================================
-// RBAC (S2): visibilidad de módulos del shell
-// Tras homologar el vocabulario, ErpModuleKey === MenuGroup (1:1), así que el
-// "puente" es identidad: basta consultar menuGroups[moduleKey]. El servidor
-// expone `menuGroups` crudos (de /api/me); cada consumidor (shell, Flutter) los lee.
-// ===========================================================================
-
-/** ¿El usuario tiene ≥1 vista RBAC del MenuGroup homónimo a este módulo? */
 export const hasRbacModuleAccess = (
   moduleKey: ErpModuleKey,
   menuGroups?: Record<string, boolean>
 ): boolean => menuGroups?.[moduleKey] === true
 
-type GetNavigationAccessParams = {
-  moduleKey: ErpModuleKey
-  isLoading: boolean
-  isAdmin: boolean
-  menuGroups?: Record<string, boolean>
-  tenantModules?: TenantModuleSettings
-}
-
 export const canViewErpNavigationModule = ({
   moduleKey,
   isLoading,
-  isAdmin,
   menuGroups,
-  tenantModules
+  planMenuGroups,
 }: GetNavigationAccessParams): boolean => {
-  if (isLoading) return false
+  if (isLoading) return false;
 
-  // 1) El tenant debe tener el área activada (config de tenant).
-  if (!isTenantModuleEnabled(moduleKey, tenantModules)) return false
+  const planEnabled = isModuleEnabledByPlan(moduleKey, planMenuGroups);
+  const rbacAllows = hasRbacModuleAccess(moduleKey, menuGroups);
 
-  // 2) RBAC manda. administration: RBAC primero, admin como RED DE SEGURIDAD.
-  const rbacAllows = hasRbacModuleAccess(moduleKey, menuGroups)
-
-  if (moduleKey === 'administration') return rbacAllows || isAdmin
-
-  return rbacAllows
-}
+  return planEnabled && rbacAllows;
+};

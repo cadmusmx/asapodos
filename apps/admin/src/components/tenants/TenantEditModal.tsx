@@ -13,27 +13,26 @@ import TextField from '@mui/material/TextField'
 import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
 import Stack from '@mui/material/Stack'
-import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
 import Divider from '@mui/material/Divider'
+import Typography from '@mui/material/Typography'
 import type { TenantRow } from '@/services/tenant-service'
+import { toast } from 'react-toastify'
 
-const subscriptionPlans = [
-  { value: '', label: 'Sin plan' },
-  { value: 'basic', label: 'Basic' },
-  { value: 'pro', label: 'Pro' },
-  { value: 'enterprise', label: 'Enterprise' }
-]
-
-// const DOMAIN_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/
 const DOMAIN_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]*/
 
 function validateDomain(value: string): boolean {
   const trimmed = value.trim()
   if (!trimmed) return false
-  // const parts = trimmed.split('.')
-  // if (parts.length < 2) return false
+
   return DOMAIN_REGEX.test(trimmed)
+}
+
+interface PlanOption {
+  id: number
+  name: string
+  displayName: string
+  monthlyPrice: number
 }
 
 interface TenantEditModalProps {
@@ -46,25 +45,46 @@ interface TenantEditModalProps {
 export default function TenantEditModal({ open, onClose, tenant, onSuccess }: TenantEditModalProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [plans, setPlans] = useState<PlanOption[]>([])
+  const [currentSubscriptionId, setCurrentSubscriptionId] = useState<string | null>(null)
+  const [currentPlanId, setCurrentPlanId] = useState<number | null>(null)
   const [dominioError, setDominioError] = useState<string | null>(null)
   const [form, setForm] = useState({
     companyName: '',
     dominio: '',
-    subscriptionPlan: '',
-    maxUsers: '',
+    planId: '' as string,
     region: ''
   })
 
   useEffect(() => {
+    if (open) {
+      fetch('/api/admin/plans')
+        .then(r => r.json())
+        .then(data => setPlans(data.plans ?? []))
+        .catch(() => {})
+
+      if (tenant) {
+        fetch(`/api/admin/tenants/${tenant.TenantID}/subscription`)
+          .then(r => r.json())
+          .then(data => {
+            const sub = data.subscription
+            setCurrentSubscriptionId(sub?.subscriptionId ?? null)
+            setCurrentPlanId(sub?.planId ?? null)
+            setForm(prev => ({ ...prev, planId: sub?.planId ? String(sub.planId) : '' }))
+          })
+          .catch(() => {})
+      }
+    }
+  }, [open, tenant])
+
+  useEffect(() => {
     if (tenant) {
-      setForm({
+      setForm(prev => ({
+        ...prev,
         companyName: tenant.CompanyName,
-        dominio: tenant.Dominio,
-        subscriptionPlan: tenant.SubscriptionPlan || '',
-        maxUsers: tenant.MaxUsers?.toString() || '',
-        region: tenant.Region || ''
-      })
+        dominio: tenant.Dominio ?? '',
+        region: tenant.Region ?? ''
+      }))
     }
   }, [tenant])
 
@@ -78,7 +98,6 @@ export default function TenantEditModal({ open, onClose, tenant, onSuccess }: Te
     if (!tenant) return
 
     setLoading(true)
-    setError(null)
     setDominioError(null)
 
     const dominio = form.dominio.trim()
@@ -88,11 +107,9 @@ export default function TenantEditModal({ open, onClose, tenant, onSuccess }: Te
       return
     }
 
-    const data = {
+    const tenantData = {
       companyName: form.companyName,
       dominio,
-      subscriptionPlan: form.subscriptionPlan || undefined,
-      maxUsers: form.maxUsers ? Number(form.maxUsers) : undefined,
       region: form.region || undefined
     }
 
@@ -100,7 +117,7 @@ export default function TenantEditModal({ open, onClose, tenant, onSuccess }: Te
       const res = await fetch(`/api/admin/tenants/${tenant.TenantID}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(tenantData)
       })
 
       if (!res.ok) {
@@ -108,11 +125,30 @@ export default function TenantEditModal({ open, onClose, tenant, onSuccess }: Te
         throw new Error(result.message?.[0] || 'Failed to update tenant')
       }
 
+      if (form.planId && Number(form.planId) !== currentPlanId) {
+        const method = currentSubscriptionId ? 'PUT' : 'POST'
+        const body = currentSubscriptionId
+          ? { subscriptionId: currentSubscriptionId, planId: Number(form.planId), adminUserId: 0, adminEmail: 'admin@gaso.com' }
+          : { planId: Number(form.planId), adminUserId: 0, adminEmail: 'admin@gaso.com' }
+
+        const subRes = await fetch(`/api/admin/tenants/${tenant.TenantID}/subscription`, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        })
+
+        if (!subRes.ok) {
+          const subResult = await subRes.json()
+          throw new Error(subResult.message || 'Failed to update plan')
+        }
+      }
+
+      toast.success('Tenant actualizado exitosamente')
       onClose()
       onSuccess?.()
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update tenant')
+      toast.error(err instanceof Error ? err.message : 'Failed to update tenant')
     } finally {
       setLoading(false)
     }
@@ -120,7 +156,6 @@ export default function TenantEditModal({ open, onClose, tenant, onSuccess }: Te
 
   const handleClose = () => {
     if (!loading) {
-      setError(null)
       setDominioError(null)
       onClose()
     }
@@ -151,12 +186,6 @@ export default function TenantEditModal({ open, onClose, tenant, onSuccess }: Te
 
         <Divider sx={{ mb: 3 }} />
 
-        {error && (
-          <Alert severity='error' sx={{ mb: 3 }} role='alert'>
-            {error}
-          </Alert>
-        )}
-
         <DialogContent sx={{ p: 1 }}>
           <Stack spacing={3}>
             <TextField
@@ -185,28 +214,23 @@ export default function TenantEditModal({ open, onClose, tenant, onSuccess }: Te
             <TextField
               select
               label='Plan de Suscripción'
-              value={form.subscriptionPlan}
-              onChange={handleChange('subscriptionPlan')}
+              value={form.planId}
+              onChange={handleChange('planId')}
               fullWidth
               disabled={loading}
             >
-              {subscriptionPlans.map(option => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
+              <MenuItem value=''>Sin plan</MenuItem>
+              {plans.map(plan => (
+                <MenuItem key={plan.id} value={String(plan.id)}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                    <span>{plan.displayName}</span>
+                    <Typography variant='body2' color='text.secondary' sx={{ ml: 2 }}>
+                      ${plan.monthlyPrice}/mes
+                    </Typography>
+                  </Box>
                 </MenuItem>
               ))}
             </TextField>
-
-            <TextField
-              label='Límite de Usuarios'
-              type='number'
-              placeholder='Dejar vacío para ilimitado'
-              value={form.maxUsers}
-              onChange={handleChange('maxUsers')}
-              fullWidth
-              disabled={loading}
-              inputProps={{ min: 1 }}
-            />
 
             <TextField
               label='Región'

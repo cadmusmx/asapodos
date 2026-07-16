@@ -72,11 +72,9 @@ const DebouncedSearch = ({
 type Props = {
   selectedId: number | null;
   onSelect: (user: AssignableUser) => void;
-  /** Depto del actor (de /api/me) para preseleccionar el filtro. */
-  actorDept: number | null;
 };
 
-const UsersMaster = ({ selectedId, onSelect, actorDept }: Props) => {
+const UsersMaster = ({ selectedId, onSelect }: Props) => {
   // Departamentos filtrables
   const [departments, setDepartments] = useState<FilterableDepartment[]>([]);
   const [dept, setDept] = useState<DeptSelection | null>(null); // null = aún no inicializado
@@ -107,12 +105,10 @@ const UsersMaster = ({ selectedId, onSelect, actorDept }: Props) => {
 
         setDepartments(json.departments);
 
-        // Default: depto del actor si está en la lista; si no, el primero.
-        const hasActorDept = actorDept !== null && json.departments.some(d => d.idDepartamento === actorDept);
-
-        setDept(hasActorDept ? actorDept! : (json.departments[0]?.idDepartamento ?? ALL_DEPTS));
+        // Default: el primer departamento de la lista (o Todos si viene vacía).
+        setDept(json.departments[0]?.idDepartamento ?? ALL_DEPTS);
       } catch {
-        // silencioso: si falla, el filtro queda vacío y se listan todos.
+        // silencioso: si falla, el filtro queda en Todos y se listan todos.
         setDept(ALL_DEPTS);
       }
     };
@@ -120,7 +116,7 @@ const UsersMaster = ({ selectedId, onSelect, actorDept }: Props) => {
     load();
 
     return () => controller.abort();
-  }, [actorDept]);
+  }, []);
 
   // 2) Cargar usuarios según dept/search/página/refresh.
   useEffect(() => {
@@ -183,7 +179,23 @@ const UsersMaster = ({ selectedId, onSelect, actorDept }: Props) => {
             {info.getValue() ?? info.row.original.idDepartamento ?? '—'}
           </Typography>
         )
-      })
+      }),
+      columnHelper.accessor('puesto', {
+        header: 'Puesto',
+        cell: info => (
+          <Typography color='text.secondary'>
+            {info.getValue() ?? info.row.original.idPuesto ?? '—'}
+          </Typography>
+        )
+      }),
+      columnHelper.accessor('perfil', {
+        header: 'Perfil',
+        cell: info => (
+          <Typography color='text.secondary'>
+            {info.getValue() ?? info.row.original.idPerfil ?? '—'}
+          </Typography>
+        )
+      }),
     ],
     []
   );
@@ -211,7 +223,7 @@ const UsersMaster = ({ selectedId, onSelect, actorDept }: Props) => {
                 size='small'
                 value={String(dept)}
                 onChange={e => setDept(e.target.value === ALL_DEPTS ? ALL_DEPTS : Number(e.target.value))}
-                className='min-is-[180px]'
+                className='min-is-[200px]'
               >
                 <MenuItem value={ALL_DEPTS}>Todos</MenuItem>
                 {departments.map(d => (

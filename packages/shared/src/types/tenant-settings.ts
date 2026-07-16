@@ -15,17 +15,15 @@ export type TenantBrandingSettings = {
   primaryColor: string | null
 }
 
-export type TenantModuleSettings = Record<TenantModuleKey, boolean>
-
 export type TenantLimitSettings = {
   maxUsers: number | null
+  maxBranches: number | null
   maxStorageMb: number | null
   maxProjects: number | null
 }
 
 export type TenantSettings = {
   branding: TenantBrandingSettings
-  modules: TenantModuleSettings
   limits: TenantLimitSettings
 }
 

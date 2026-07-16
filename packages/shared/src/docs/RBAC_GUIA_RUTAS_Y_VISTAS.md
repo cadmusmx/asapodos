@@ -27,12 +27,16 @@ Regla: cualquiera de `W`, `U`, `D` **requiere** `R`. Máscaras canónicas válid
 
 El permiso efectivo de un usuario sobre una vista es la **unión** de:
 
-1. **Otorgado**: `UserViews.PermMask & DepartmentViews.PermMask` — el grant del usuario, *recortado* por el techo de su departamento (fail-closed: si falta cualquiera de los dos, no hay acceso).
+1. **Otorgado**: `UserViews.PermMask` — el grant del usuario sobre la vista, directo (sin techo por departamento). La diferenciación entre usuarios vive aquí, por usuario.
 2. **Público**: `Security.Views.PublicMask` — si la vista es pública, todos los usuarios del tenant la reciben con esa máscara, sin necesidad de grant.
 
-Ambos sujetos a **disponibilidad**: la vista debe estar disponible para el tenant (`TenantViews`).
+Sobre esa unión se aplica una **compuerta de plan**, a nivel **módulo** (`MenuGroup`): una vista solo es accesible si su módulo está incluido en el **plan del tenant**. Esto se combina **por anotación, no por filtro**: `resolveUserViews` es puro (solo `UserViews`/público), y `getEffectiveViews` devuelve las vistas **junto a** `planMenuGroups` (los módulos del plan, vía `getEnabledMenuGroups`). El guard combina ambos y **distingue el motivo**:
+- Vista ausente en la resolución → **401/403 por permiso** (no la tienes).
+- Vista presente pero su módulo **fuera del plan** → **401/403 por plan** (`PLAN_RESTRICTED`; caso downgrade: el tenant bajó de plan y perdió el módulo).
 
-> No necesitas entender la resolución para proteger una ruta. Solo necesitas saber: **el guard te dice sí o no, y tú confías en él.** La copia que el cliente recibe en `/api/me` (`views`, `menuGroups`) es **solo para pintar UI** — nunca es la autoridad.
+> Ya **no** hay techo por departamento (`DepartmentViews`) ni disponibilidad por vista (`TenantViews`) — ambos se retiraron. La disponibilidad la gobierna el **plan del tenant** a nivel módulo. Ver el contrato `PERMISOS-PRESETS-RBAC.md` para el modelo completo.
+
+> No necesitas entender la resolución para proteger una ruta. Solo necesitas saber: **el guard te dice sí o no, y tú confías en él.** La copia que el cliente recibe en `/api/me` (`views`, `menuGroups`, `planMenuGroups`) es **solo para pintar UI** — nunca es la autoridad.
 
 ---
 
@@ -44,7 +48,7 @@ Proteger una ruta **no es una sola capa**. Una ruta está segura solo cuando tie
 |------|----------|-----------|
 | **0 · Autenticación** | ¿Hay sesión válida? | `withPermission` / `requireViewAccess` lo resuelven |
 | **1 · Tenant** | ¿La query está aislada al tenant correcto? | `withTenantContext(tenantId, ...)` |
-| **2 · RBAC** | ¿Tiene la vista + bit requerido? | `withPermission` / `requirePermission` |
+| **2 · RBAC** | ¿Tiene la vista + bit requerido, y el módulo está en el plan del tenant? | `withPermission` / `requirePermission` |
 | **3 · Input** | ¿El SQL está parametrizado? | `$queryRaw` / `Prisma.sql` (NUNCA concatenación) |
 
 > **Advertencia crítica.** Agregar solo el piso 2 (RBAC) a una ruta que no tiene los pisos 0/1/3 da una **falsa sensación de seguridad**. Gatear *quién* llama a una ruta que igual es inyectable o que fuga datos cross-tenant no la hace segura. Si una ruta no tiene auth, ni aislamiento de tenant, ni parametrización, **no se "protege con RBAC": se reconstruye o se elimina.**
@@ -141,11 +145,10 @@ const InventoryPage = async (props: { params: Promise<{ lang: Locale }> }) => {
   const access = await requireViewAccess('inventory') // bit R por defecto
 
   if (!access.ok) {
-    const target = access.reason === 'UNAUTHENTICATED'
-      ? '/login'
-      : '/pages/misc/401-not-authorized'
-
-    redirect(getLocalizedUrl(target, lang))
+    // getTargetByReason mapea el motivo al destino: UNAUTHENTICATED -> /login,
+    // PLAN_RESTRICTED -> 401 con ?reason=plan (mensaje "tu plan no incluye este módulo"),
+    // FORBIDDEN/MISSING_TENANT -> 401 genérico.
+    redirect(getLocalizedUrl(getTargetByReason(access.reason), lang))
   }
 
   return <InventoryView />
@@ -154,8 +157,8 @@ const InventoryPage = async (props: { params: Promise<{ lang: Locale }> }) => {
 
 `requireViewAccess(viewCode, bit?)`:
 - Resuelve la sesión vía NextAuth y el tenant desde los headers inyectados por el middleware.
-- Llama `requirePermission` (misma autoridad que la API).
-- Devuelve un resultado discriminado (`ok: true | false` con `reason`) para que la página decida el `redirect` (las páginas **redirigen**, no devuelven 401/403).
+- Llama `requirePermission` (misma autoridad que la API), que aplica RBAC **y** la compuerta de plan.
+- Devuelve un resultado discriminado (`ok: true | false` con `reason`). Los `reason` posibles: `UNAUTHENTICATED`, `MISSING_TENANT`, `FORBIDDEN` (sin permiso) y `PLAN_RESTRICTED` (módulo fuera del plan del tenant). Usa `getTargetByReason(reason)` para el destino del `redirect` — no ramifiques a mano (las páginas **redirigen**, no devuelven 401/403).
 
 > **El guard de página es defensa en profundidad de UX, NO la protección de los datos.** Evita que se *renderice* el cascarón a quien no debe. Pero **los datos los protege la API**. Una página protegida que llama a una API sin proteger sigue filtrando datos. Protege SIEMPRE la API; la página es complementaria.
 
@@ -188,7 +191,7 @@ SQL Server devuelve `uniqueidentifier` en **mayúsculas**; los headers/JWT lo tr
 
 ### 6.5 `isAdmin` no es un bypass
 
-El flag `isAdmin` significa "puede asignar permisos" (autoridad para otorgar), **no** "ve todo". No lo uses como atajo para saltarte el RBAC en la resolución. Donde el negocio lo justifique (p. ej. la red de seguridad del grupo `administration`), hazlo explícito y documentado, no implícito.
+El flag `isAdmin` significa "puede asignar permisos" (autoridad para otorgar), **no** "ve todo". No lo uses como atajo para saltarte el RBAC en la resolución: la autoridad viva es siempre la vista + bit (y el plan). La antigua "red de seguridad" que dejaba pasar `administration` a cualquier admin **se retiró** — hoy el acceso a cualquier módulo, incluido `administration`, es RBAC puro (vista `permissions_access`) combinado con el plan.
 
 ### 6.6 El prefijo `/api/admin/` está excluido del middleware
 
@@ -270,14 +273,15 @@ curl -i -X GET https://<host>/api/<ruta> \
 DECLARE @T uniqueidentifier = CAST('<tenant-guid>' AS uniqueidentifier);
 EXEC sp_SetTenantContext @TenantID = @T;
 
--- Techo del departamento (necesario: el grant se recorta contra el techo)
-INSERT INTO Security.DepartmentViews (TenantID, IdDepartamento, ViewCode, PermMask)
-VALUES (@T, <idDepto>, 'mi_vista', 7);
-
--- Grant del usuario
+-- Grant del usuario (directo, sin techo por departamento).
 INSERT INTO Security.UserViews (TenantID, IdUsuario, ViewCode, PermMask)
 VALUES (@T, <idUsuario>, 'mi_vista', 5);
 ```
+
+> **El grant solo es efectivo si el módulo de la vista (`Security.Views.MenuGroup`) está en el
+> plan del tenant.** Si el plan no incluye ese módulo, el guard responde `PLAN_RESTRICTED` aunque
+> exista el `UserViews`. Para pruebas, usa una vista de un módulo que el plan del tenant sí tenga
+> (o confirma el plan con `getEnabledMenuGroups` / el `planMenuGroups` de `/api/me`).
 
 ---
 
@@ -314,9 +318,10 @@ Debe terminar en 0 errores (o solo errores preexistentes ajenos a tu cambio, que
 | HOF para APIs | `withPermission` (`packages/shared`) |
 | Guard para páginas | `requireViewAccess` (`apps/main/src/lib/auth/require-view-access.ts`) |
 | Core de permiso (puro) | `requirePermission` (`packages/shared`) |
-| Apertura de contexto | `getEffectiveViews` → `withTenantContext` (`packages/shared`) |
-| Resolución (otorgado + público) | `resolveUserViews` (`packages/shared`) |
+| Apertura de contexto + anotación de plan | `getEffectiveViews` → `withTenantContext` (devuelve `views` + `planMenuGroups`) (`packages/shared`) |
+| Resolución RBAC pura (otorgado + público) | `resolveUserViews` (`packages/shared`) |
+| Compuerta de plan (módulos del tenant) | `getEnabledMenuGroups` (`packages/shared/src/lib/plans`) |
 | Bitmask y helpers | `permission-mask` (`packages/shared`) |
-| Catálogo de navegación + filtro | `erp-navigation.ts` (`apps/main`) |
+| Catálogo de navegación + filtro (RBAC ∧ plan) | `erp-navigation.ts` / `erp-access.ts` (`apps/main`) |
 | Ruta de referencia (solo-lectura) | `GET /api/audit` |
 | Ruta de referencia (lectura + escritura con guardarraíl) | `POST /api/permissions` |

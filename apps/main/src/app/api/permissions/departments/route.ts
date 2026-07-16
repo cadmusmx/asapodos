@@ -3,7 +3,9 @@ import { NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 
 import { withPermission, PERM } from '@gaso/shared';
+
 import { withTenantContext } from '@/lib/tenant-context';
+import { resolveAssignmentScope } from '@/lib/permissions/assignment-scope';
 
 export const runtime = 'nodejs';
 
@@ -15,12 +17,12 @@ type DeptRow = {
 /**
  * GET /api/permissions/departments — departamentos filtrables (para el select del maestro)
  *
- * Devuelve los departamentos que el actor puede administrar, para poblar el
- * filtro. Mismo modelo RBAC-puro que 7.1:
+ * Alcance vía resolveAssignmentScope (punto único de verdad, compartido con
+ * /users, /user/[id] y /presets/apply):
  *   - actor privilegiado (depto ∈ AssignableDepartments) -> todos los deptos con
  *     usuarios activos del tenant.
  *   - actor no privilegiado -> solo su propio departamento.
- *   - actor sin depto -> fail-closed (vacío).
+ *   - actor sin depto -> fail-closed (lista vacía, 200).
  *
  * Solo deptos CON usuarios activos (elegir uno vacío daría lista vacía).
  * GASOCO_Cat_Usuarios sin RLS -> filtro TenantID obligatorio.
@@ -30,32 +32,17 @@ export const GET = withPermission(
   async (_req, { auth, tenantId }) => {
     try {
       const result = await withTenantContext(tenantId, async tx => {
-        // Depto del actor + privilegio.
-        const actorRows = await tx.$queryRaw<Array<{ IdDepartamento: number | null }>>`
-          SELECT IdDepartamento
-          FROM dbo.GASOCO_Cat_Usuarios
-          WHERE IdUsuario = ${auth.userId}
-            AND TenantID = CAST(${tenantId} AS uniqueidentifier)
-        `;
+        // Alcance del actor. null => fail-closed => lista vacía.
+        const scope = await resolveAssignmentScope(tx, tenantId, auth.userId);
 
-        const actorDept = actorRows[0]?.IdDepartamento ?? null;
-
-        if (actorDept === null) {
+        if (scope === null) {
           return [] as DeptRow[];
         }
 
-        const privRows = await tx.$queryRaw<Array<{ ok: number }>>`
-          SELECT TOP 1 1 AS ok
-          FROM Security.AssignableDepartments
-          WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
-            AND IdDepartamento = ${actorDept}
-        `;
-        const hasFullScope = privRows.length > 0;
-
         // Deptos DISTINTOS con al menos un usuario activo, dentro del alcance.
-        const scopeCondition = hasFullScope
+        const scopeCondition = scope.hasFullScope
           ? Prisma.sql`1 = 1`
-          : Prisma.sql`u.IdDepartamento = ${actorDept}`;
+          : Prisma.sql`u.IdDepartamento = ${scope.actorDept}`;
 
         const rows = await tx.$queryRaw<DeptRow[]>`
           SELECT DISTINCT u.IdDepartamento, d.NombreDepartamento

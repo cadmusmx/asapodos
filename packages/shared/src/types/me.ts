@@ -1,13 +1,5 @@
 import type { TenantSettings } from './tenant-settings'
-
-export type MePermission = {
-  moduleId: number
-  moduleName: string
-  subModules: Array<{
-    id: number
-    name: string
-  }>
-}
+import type { PlanFeatureKey, PlanTier, TenantSubscriptionStatus } from './plan'
 
 export type MeResponse = {
   user: {
@@ -17,7 +9,7 @@ export type MeResponse = {
     admin: boolean
     area: number | null
     cityBase: number | null
-    departament: number | null
+    department: number | null
     position: number | null
     region: number | null
     company: number | null
@@ -27,22 +19,20 @@ export type MeResponse = {
     slug: string
     name: string
     isActive: boolean
+    plan: {
+      name: PlanTier | null
+      displayName: string | null
+      status: TenantSubscriptionStatus | null
+    }
   }
   profile: {
     id: number | null
     name: string | null
   }
-  permissions: MePermission[]
   settings: TenantSettings
   views: Record<string, { mask: number; label: string; menuGroup: string | null }>
   menuGroups: Record<string, boolean>
-}
-
-export type ModuleRow = {
-  IdModulo: number
-  NombreModulo: string | null
-  IdSubModulo: number | null
-  NombreSubModulo: string | null
+  planMenuGroups: PlanFeatureKey[]
 }
 
 export type ProfileRow = {

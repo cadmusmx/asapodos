@@ -1,4 +1,4 @@
-import { prisma } from '@gaso/shared'
+import { prisma, prismaAdmin } from '@gaso/shared'
 import type { TransactionLogEntry } from '@gaso/shared'
 
 export interface AuditLogFilters {
@@ -139,7 +139,7 @@ export async function getTenantAuditLog({
 interface GetGlobalAuditLogOptions {
   page: number
   pageSize: number
-  tenantId?: string | null
+  tenantId: string
   tableName?: string | null
   action?: string | null
   startDate?: Date | null
@@ -150,16 +150,46 @@ interface GetGlobalAuditLogOptions {
 export async function getGlobalAuditLog(options: GetGlobalAuditLogOptions): Promise<AuditLogResult> {
   const page = Math.max(1, Number(options.page) || 1)
   const pageSize = Math.max(1, Number(options.pageSize) || 50)
-  return getAuditLog({
-    page,
-    pageSize,
-    filters: {
-      tenantId: options.tenantId,
-      tableName: options.tableName,
-      action: options.action,
-      startDate: options.startDate,
-      endDate: options.endDate,
-      appUser: options.appUser
+
+  const { tenantId, tableName, action, startDate, endDate, appUser } = options
+
+  const tenantIdParam = `N'${tenantId}'`
+  const tableNameParam = tableName != null ? `N'${tableName.replace(/'/g, "''")}'` : 'NULL'
+  const actionParam = action != null ? `N'${action.replace(/'/g, "''")}'` : 'NULL'
+  const startDateParam = startDate != null ? `N'${startDate.toISOString()}'` : 'NULL'
+  const endDateParam = endDate != null ? (() => {
+    const d = new Date(endDate)
+    d.setHours(23, 59, 59, 999)
+    return `N'${d.toISOString()}'`
+  })() : 'NULL'
+  const appUserParam = appUser != null ? `N'%${appUser.replace(/'/g, "''")}%'` : 'NULL'
+
+  const query = `EXEC Audit.sp_GetGlobalTransactionLog @TenantID=${tenantIdParam}, @TableName=${tableNameParam}, @Action=${actionParam}, @StartDate=${startDateParam}, @EndDate=${endDateParam}, @AppUser=${appUserParam}, @Page=${page}, @PageSize=${pageSize};`
+
+  interface SpResult {
+    result: string | null
+  }
+
+  const rawResult = await prismaAdmin.$queryRawUnsafe<SpResult[]>(query)
+
+  if (!rawResult[0]?.result) {
+    return { entries: [], total: 0 }
+  }
+
+  const parsed = JSON.parse(rawResult[0].result) as {
+    total: number
+    entries: Array<AuditEntryWithTenantName & { changedAt?: string | Date }>
+  }
+
+  const entries = (parsed.entries ?? []).map(entry => {
+    if (typeof entry.changedAt === 'string' && entry.changedAt) {
+      return { ...entry, changedAt: new Date(entry.changedAt + (entry.changedAt.endsWith('Z') ? '' : 'Z')) }
     }
+    return entry
   })
+
+  return {
+    entries,
+    total: parsed.total ?? 0
+  }
 }

@@ -45,10 +45,6 @@ type RenderVerticalExpandIconProps = {
   transitionDuration?: VerticalMenuContextProps['transitionDuration']
 }
 
-type ErpSessionUser = {
-  admin?: boolean | null
-}
-
 const RenderExpandIcon = ({ level }: RenderExpandIconProps) => (
   <StyledHorizontalNavExpandIcon level={level}>
     <i className='ri-arrow-right-s-line' />
@@ -68,28 +64,24 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
   const { settings } = useSettings()
   const params = useParams()
   const { data: me, isLoading: isMeLoading } = useMe()
-  const { data: session, status } = useSession()
+  const { status } = useSession()
 
   // Vars
   const { skin } = settings
   const { transitionDuration } = verticalNavOptions
   const { lang: locale } = params
 
-  const sessionUser = session?.user as ErpSessionUser | undefined
-
   /*
    * Navegación ERP gobernada por RBAC (/api/me).
    * Mismo doble filtro (grupo/ítem) que el menú vertical, vía getVisibleErpNavigation.
    */
   const isNavigationLoading = isMeLoading && status === 'loading'
-  const isAdmin = Boolean(me?.user.admin ?? sessionUser?.admin)
 
   const modules = getVisibleErpNavigation({
-    menuGroups: me?.menuGroups,
+    isLoading: isNavigationLoading,
     views: me?.views,
-    isAdmin,
-    tenantModules: me?.settings?.modules,
-    isLoading: isNavigationLoading
+    menuGroups: me?.menuGroups,
+    planMenuGroups: me?.planMenuGroups,
   })
 
   return (

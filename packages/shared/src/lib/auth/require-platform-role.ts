@@ -16,7 +16,7 @@ export type PlatformGuardResult =
   };
 
 export async function requirePlatformRole(
-  requiredRole?: PlatformRole
+  requiredRole?: PlatformRole | PlatformRole[]
 ): Promise<PlatformGuardResult> {
   const session = await getServerSession(authOptions);
 
@@ -34,8 +34,11 @@ export async function requirePlatformRole(
     return { ok: false, status: 403, message: 'Acceso de plataforma requerido' };
   }
 
-  if (requiredRole && platformRole !== requiredRole) {
-    return { ok: false, status: 403, message: `Rol ${requiredRole} requerido` };
+  if (requiredRole) {
+    const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+    if (!allowedRoles.includes(platformRole)) {
+      return { ok: false, status: 403, message: `Rol ${requiredRole} requerido` };
+    }
   }
 
   return { ok: true, userId: id, platformRole };

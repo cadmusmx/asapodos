@@ -1,0 +1,41 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "globalDependencies": [
+    ".env",
+    "pnpm-workspace.yaml"
+  ],
+  "globalEnv": [
+    "PRISMA_QUERY_ENGINE_LIBRARY",
+    "PRISMA_QUERY_ENGINE_BINARY",
+    "PRISMA_SCHEMA_ENGINE_BINARY",
+    "DATABASE_URL"
+  ],
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "env": [
+        "PRISMA_QUERY_ENGINE_LIBRARY",
+        "PRISMA_QUERY_ENGINE_BINARY",
+        "PRISMA_SCHEMA_ENGINE_BINARY",
+        "DATABASE_URL"
+      ]
+    },
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**"
+      ]
+    },
+    "lint": {
+      "outputs": []
+    },
+    "format": {
+      "outputs": []
+    }
+  }
+}

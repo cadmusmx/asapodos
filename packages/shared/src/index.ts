@@ -1,4 +1,4 @@
-export { prisma } from './lib/prisma';
+export { prisma, prismaAdmin } from './lib/prisma';
 export { queryRaw, executeRaw } from './lib/prisma-helpers';
 export * from './lib/audit/catalog';
 export { writeTransactionLog, ID_ORIGIN_WEB } from './lib/audit/transaction-log';
@@ -16,4 +16,6 @@ export { signMobileToken, verifyMobileToken, MOBILE_TOKEN_TTL_SECONDS } from './
 export type { MobileTokenClaims, VerifiedMobileToken } from './lib/auth/mobile-jwt';
 export { resolveSession } from './lib/auth/resolve-session';
 export type { AuthContext } from './lib/auth/resolve-session';
+export * from './lib/erp-modules';
 export * from './lib/rbac';
+export * from './lib/plans';

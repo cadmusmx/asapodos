@@ -4,7 +4,7 @@ import { getGlobalAuditLog } from '@/services/audit-service'
 import { AUDIT_ACTION_LABELS, type AuditActionCode } from '@gaso/shared'
 
 export async function GET(request: NextRequest) {
-  const guard = await requirePlatformRole('super_admin')
+  const guard = await requirePlatformRole(['super_admin', 'auditor'])
   if (!guard.ok) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -17,10 +17,14 @@ export async function GET(request: NextRequest) {
   const startDate = searchParams.get('startDate')
   const endDate = searchParams.get('endDate')
 
+  if (!tenantId) {
+    return NextResponse.json({ error: 'tenantId is required' }, { status: 400 })
+  }
+
   const { entries } = await getGlobalAuditLog({
     page: 1,
     pageSize: 10000,
-    tenantId: tenantId || null,
+    tenantId,
     tableName: tableName || null,
     action: action || null,
     appUser: appUser || null,

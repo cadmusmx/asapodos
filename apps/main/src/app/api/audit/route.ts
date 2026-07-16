@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 
 import { withPermission, PERM } from '@gaso/shared';
+
 import { withTenantContext } from '@/lib/tenant-context';
 import { KNOWN_ACTIONS, ACTION_OTHER, ORIGIN_NONE } from '@/lib/audit/catalog';
 
@@ -119,6 +120,7 @@ export const GET = withPermission(
       });
     } catch (e) {
       console.error('[AUDIT_VIEWER_ERROR]', e instanceof Error ? { message: e.message } : e);
+
       return NextResponse.json({ message: 'Error al consultar la auditoría' }, { status: 500 });
     }
   },

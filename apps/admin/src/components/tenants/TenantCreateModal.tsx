@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 import Dialog from '@mui/material/Dialog'
@@ -13,26 +13,25 @@ import TextField from '@mui/material/TextField'
 import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
 import Stack from '@mui/material/Stack'
-import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
 import Divider from '@mui/material/Divider'
+import Typography from '@mui/material/Typography'
+import { toast } from 'react-toastify'
 
-const subscriptionPlans = [
-  { value: '', label: 'Sin plan' },
-  { value: 'basic', label: 'Basic' },
-  { value: 'pro', label: 'Pro' },
-  { value: 'enterprise', label: 'Enterprise' }
-]
-
-// const DOMAIN_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/
 const DOMAIN_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]*/
 
 function validateDomain(value: string): boolean {
   const trimmed = value.trim()
   if (!trimmed) return false
-  // const parts = trimmed.split('.')
-  // if (parts.length < 2) return false
+
   return DOMAIN_REGEX.test(trimmed)
+}
+
+interface PlanOption {
+  id: number
+  name: string
+  displayName: string
+  monthlyPrice: number
 }
 
 interface TenantCreateModalProps {
@@ -44,15 +43,23 @@ interface TenantCreateModalProps {
 export default function TenantCreateModal({ open, onClose, onSuccess }: TenantCreateModalProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [dominioError, setDominioError] = useState<string | null>(null)
+  const [plans, setPlans] = useState<PlanOption[]>([])
   const [form, setForm] = useState({
     companyName: '',
     dominio: '',
-    subscriptionPlan: '',
-    maxUsers: '',
+    planId: '' as string,
     region: ''
   })
+
+  useEffect(() => {
+    if (open) {
+      fetch('/api/admin/plans')
+        .then(r => r.json())
+        .then(data => setPlans(data.plans ?? []))
+        .catch(() => {})
+    }
+  }, [open])
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [field]: e.target.value }))
@@ -62,7 +69,6 @@ export default function TenantCreateModal({ open, onClose, onSuccess }: TenantCr
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
-    setError(null)
     setDominioError(null)
 
     const dominio = form.dominio.trim()
@@ -75,8 +81,7 @@ export default function TenantCreateModal({ open, onClose, onSuccess }: TenantCr
     const data = {
       companyName: form.companyName,
       dominio,
-      subscriptionPlan: form.subscriptionPlan || undefined,
-      maxUsers: form.maxUsers ? Number(form.maxUsers) : undefined,
+      planId: form.planId ? Number(form.planId) : undefined,
       region: form.region || undefined
     }
 
@@ -92,12 +97,13 @@ export default function TenantCreateModal({ open, onClose, onSuccess }: TenantCr
         throw new Error(result.message?.[0] || 'Failed to create tenant')
       }
 
-      setForm({ companyName: '', dominio: '', subscriptionPlan: '', maxUsers: '', region: '' })
+      toast.success('Tenant creado exitosamente')
+      setForm({ companyName: '', dominio: '', planId: '', region: '' })
       onClose()
       onSuccess?.()
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create tenant')
+      toast.error(err instanceof Error ? err.message : 'Failed to create tenant')
     } finally {
       setLoading(false)
     }
@@ -105,8 +111,7 @@ export default function TenantCreateModal({ open, onClose, onSuccess }: TenantCr
 
   const handleClose = () => {
     if (!loading) {
-      setForm({ companyName: '', dominio: '', subscriptionPlan: '', maxUsers: '', region: '' })
-      setError(null)
+      setForm({ companyName: '', dominio: '', planId: '', region: '' })
       setDominioError(null)
       onClose()
     }
@@ -134,12 +139,6 @@ export default function TenantCreateModal({ open, onClose, onSuccess }: TenantCr
         </DialogTitle>
 
         <Divider sx={{ mb: 3 }} />
-
-        {error && (
-          <Alert severity='error' sx={{ mb: 3 }} role='alert'>
-            {error}
-          </Alert>
-        )}
 
         <DialogContent sx={{ p: 1 }}>
           <Stack spacing={3}>
@@ -169,28 +168,23 @@ export default function TenantCreateModal({ open, onClose, onSuccess }: TenantCr
             <TextField
               select
               label='Plan de Suscripción'
-              value={form.subscriptionPlan}
-              onChange={handleChange('subscriptionPlan')}
+              value={form.planId}
+              onChange={handleChange('planId')}
               fullWidth
               disabled={loading}
             >
-              {subscriptionPlans.map(option => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
+              <MenuItem value=''>Sin plan</MenuItem>
+              {plans.map(plan => (
+                <MenuItem key={plan.id} value={String(plan.id)}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                    <span>{plan.displayName}</span>
+                    <Typography variant='body2' color='text.secondary' sx={{ ml: 2 }}>
+                      ${plan.monthlyPrice}/mes
+                    </Typography>
+                  </Box>
                 </MenuItem>
               ))}
             </TextField>
-
-            <TextField
-              label='Límite de Usuarios'
-              type='number'
-              placeholder='Dejar vacío para ilimitado'
-              value={form.maxUsers}
-              onChange={handleChange('maxUsers')}
-              fullWidth
-              disabled={loading}
-              inputProps={{ min: 1 }}
-            />
 
             <TextField
               label='Región'

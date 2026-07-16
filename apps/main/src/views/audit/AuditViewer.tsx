@@ -3,6 +3,7 @@
 // React Imports
 import { useEffect, useMemo, useState } from 'react';
 
+// eslint-disable-next-line import/named
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 
 // MUI Imports
@@ -52,6 +53,8 @@ const columns = [
     header: 'Fecha (UTC)',
     cell: info => {
       const v = info.getValue();
+
+
       // ChangedAt llega como ISO string. Lo formateamos legible.
       return v ? new Date(v).toLocaleString('es-MX', { timeZone: 'UTC' }) : '—';
     }
@@ -60,8 +63,11 @@ const columns = [
     header: 'Acción',
     cell: info => {
       const code = info.getValue();
+
       // Etiqueta legible si la conocemos; si no, el código crudo (caso "OTHER").
       const label = AUDIT_ACTION_LABELS[code as keyof typeof AUDIT_ACTION_LABELS] ?? code;
+
+
       return <Chip size='small' variant='tonal' label={label} />
     }
   }),
@@ -115,7 +121,7 @@ const AuditViewer = () => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [origin, setOrigin] = useState('') // '' = todos | id como string
-  const [tenantOverride, setTenantOverride] = useState(''); // solo SaaS admin
+  const [tenantOverride] = useState(''); // solo SaaS admin
 
   // Estado de paginación (0-indexed, como TanStack)
   const [pageIndex, setPageIndex] = useState(0);

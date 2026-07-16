@@ -1,7 +1,7 @@
 module.exports = {
   extends: ['next/core-web-vitals', 'plugin:@typescript-eslint/recommended', 'plugin:import/recommended', 'prettier'],
 
-  ignorePatterns: ['src/app/api/v1/*'], //only qa
+  ignorePatterns: ['src/app/api/v1/*', 'src/views/apps/*'], //only qa
   rules: {
     'jsx-a11y/alt-text': 'off',
     'react/display-name': 'off',
@@ -13,6 +13,7 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-unused-vars': 'error',
     '@typescript-eslint/no-non-null-assertion': 'off',
+    'import/named': 'off',
     'lines-around-comment': [
       'error',
       {

@@ -10,18 +10,9 @@ import Stack from '@mui/material/Stack'
 import Divider from '@mui/material/Divider'
 import Button from '@mui/material/Button'
 import { requirePlatformRole } from '@gaso/shared'
-import { getTenantStats, getRecentActivity } from '@/services/dashboard-service'
-import { AUDIT_ACTION_LABELS, type AuditActionCode } from '@gaso/shared'
+import { getTenantStats, getRecentTenants } from '@/services/dashboard-service'
 
 export const dynamic = 'force-dynamic'
-
-const actionColors: Record<string, 'success' | 'warning' | 'error' | 'info' | 'default'> = {
-  TEN_CR: 'success',
-  TEN_UP: 'info',
-  TEN_ACT: 'success',
-  TEN_SUSP: 'warning',
-  TEN_DEA: 'error'
-}
 
 function formatDate(date: Date | string | null | undefined) {
   if (!date) return '-'
@@ -40,9 +31,9 @@ export default async function AdminDashboardPage() {
     redirect('/admin/login')
   }
 
-  const [stats, recentActivity] = await Promise.all([
+  const [stats, recentTenants] = await Promise.all([
     getTenantStats(),
-    getRecentActivity(8)
+    getRecentTenants(8)
   ])
 
   return (
@@ -123,58 +114,72 @@ export default async function AdminDashboardPage() {
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant='h6' fontWeight='bold'>
-                  Actividad Reciente
+                  Tenants Recientes
                 </Typography>
                 <Button
                   variant='text'
                   size='small'
-                  href='/admin/audit'
+                  href='/admin/tenants'
                   endIcon={<i className='ri-arrow-right-s-line' />}
                 >
-                  Ver todo
+                  Ver todos
                 </Button>
               </Box>
               <Divider sx={{ mb: 2 }} />
 
-              {recentActivity.length === 0 ? (
+              {recentTenants.length === 0 ? (
                 <Box sx={{ py: 4, textAlign: 'center' }}>
-                  <Typography color='text.secondary'>No hay actividad reciente</Typography>
+                  <Typography color='text.secondary'>No hay tenants registrados</Typography>
                 </Box>
               ) : (
                 <Stack spacing={1}>
-                  {recentActivity.map((entry, i) => (
-                    <Box
-                      key={entry.auditId ? String(entry.auditId) : `entry-${i}`}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        py: 1,
-                        borderBottom: i < recentActivity.length - 1 ? '1px solid' : 'none',
-                        borderColor: 'divider'
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Chip
-                          label={AUDIT_ACTION_LABELS[entry.action as AuditActionCode] || entry.action}
-                          color={actionColors[entry.action] || 'default'}
-                          size='small'
-                          variant='outlined'
-                        />
-                        <Box>
-                          <Typography variant='body2' fontWeight='medium'>
-                            {entry.tenantName || 'Tenant desconocido'}
-                          </Typography>
-                          <Typography variant='caption' color='text.secondary'>
-                            {entry.appUser || 'Sistema'}
-                          </Typography>
+                  {recentTenants.map((tenant, i) => {
+                    const statusColorMap: Record<string, 'success' | 'info' | 'warning' | 'error'> = {
+                      ACTIVE: 'success',
+                      TRIAL: 'info',
+                      SUSPENDED: 'warning',
+                      INACTIVE: 'error'
+                    }
+                    const statusLabelMap: Record<string, string> = {
+                      ACTIVE: 'Activo',
+                      TRIAL: 'Trial',
+                      SUSPENDED: 'Suspendido',
+                      INACTIVE: 'Inactivo'
+                    }
+                    return (
+                      <Box
+                        key={tenant.TenantID}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          py: 1,
+                          borderBottom: i < recentTenants.length - 1 ? '1px solid' : 'none',
+                          borderColor: 'divider'
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <Chip
+                            label={statusLabelMap[tenant.Status] || tenant.Status}
+                            color={statusColorMap[tenant.Status] || 'default'}
+                            size='small'
+                            variant='outlined'
+                          />
+                          <Box>
+                            <Typography variant='body2' fontWeight='medium'>
+                              {tenant.CompanyName}
+                            </Typography>
+                            <Typography variant='caption' color='text.secondary'>
+                              {tenant.SubscriptionPlan || 'Sin plan'}
+                            </Typography>
+                          </Box>
                         </Box>
+                        <Typography variant='caption' color='text.secondary'>
+                          {formatDate(tenant.CreatedAt)}
+                        </Typography>
                       </Box>
-                      <Typography variant='caption' color='text.secondary'>
-                        {formatDate(entry.changedAt)}
-                      </Typography>
-                    </Box>
-                  ))}
+                    )
+                  })}
                 </Stack>
               )}
             </CardContent>

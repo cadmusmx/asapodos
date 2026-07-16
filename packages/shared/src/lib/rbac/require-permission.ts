@@ -1,6 +1,7 @@
 import { ForbiddenError } from './errors';
 import { getEffectiveViews } from './get-effective-views';
 import { describeMask } from './permission-mask';
+import type { ErpModuleKey } from '../erp-modules';
 
 /**
  * Capa PURA, sin HTTP: recibe la identidad ya resuelta (no `req`), resuelve el
@@ -29,13 +30,11 @@ export async function requirePermission(
   viewCode: string,
   requiredBit: number
 ): Promise<PermissionGrant> {
-  const views = await getEffectiveViews(identity.tenantId, identity.idUsuario);
+  const { views, planMenuGroups } = await getEffectiveViews(identity.tenantId, identity.idUsuario);
 
   const match = views.find(v => v.viewCode === viewCode);
 
-  // Sin fila resuelta para la vista => el usuario no tiene acceso alguno a ella
-  // (fail-closed: o no hay grant, o el techo del depto la dejó en 0, o no está
-  // disponible para el tenant). No distinguimos el motivo hacia afuera.
+  // (1) Sin fila resuelta => sin acceso alguno. Motivo: PERMISO.
   if (!match) {
     throw new ForbiddenError(
       'Permiso denegado',
@@ -44,7 +43,17 @@ export async function requirePermission(
     );
   }
 
-  // Tiene la vista, pero ¿con el bit pedido? (match.mask & bit) === bit
+  // (2) Compuerta de PLAN: la vista existe por RBAC, pero su módulo no está en el
+  // plan del tenant => denegado POR PLAN (distinto de por permiso). Caso downgrade.
+  if (match.menuGroup && !planMenuGroups.has(match.menuGroup as ErpModuleKey)) {
+    throw new ForbiddenError(
+      `Módulo fuera del plan del tenant: ${match.menuGroup}`,
+      'PLAN_RESTRICTED',
+      { viewCode, menuGroup: match.menuGroup }
+    );
+  }
+
+  // (3) Tiene la vista y el módulo está en plan, ¿pero con el bit pedido?
   if ((match.mask & requiredBit) !== requiredBit) {
     throw new ForbiddenError(
       `Permiso insuficiente sobre ${viewCode}: requiere ${describeMask(requiredBit)}, tiene ${describeMask(match.mask)}`,

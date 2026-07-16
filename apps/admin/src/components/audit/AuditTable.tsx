@@ -36,11 +36,27 @@ interface AuditTableProps {
 }
 
 const actionColors: Record<string, 'success' | 'warning' | 'error' | 'info' | 'default'> = {
+  PWD_OK: 'success',
+  MFA_START: 'info',
+  MFA_SETUP: 'info',
+  MFA_OK: 'success',
+  MFA_FAIL: 'error',
+  LOGIN_OK: 'success',
+  LOGIN_FAIL: 'error',
+  XTENANT: 'warning',
+  NO_SESS: 'warning',
+  MFA_RESET: 'warning',
+  INSERT: 'info',
+  UPDATE: 'info',
+  READ: 'default',
+  PERM_CHG: 'warning',
   TEN_CR: 'success',
   TEN_UP: 'info',
   TEN_ACT: 'success',
   TEN_SUSP: 'warning',
-  TEN_DEA: 'error'
+  TEN_DEA: 'error',
+  PLT_CR: 'success',
+  PLT_RM: 'warning'
 }
 
 function buildUrl(params: {
@@ -65,9 +81,19 @@ function buildUrl(params: {
   return `/admin/audit?${p.toString()}`
 }
 
+function normalizeDate(value: Date | string | null | undefined): Date | null {
+  if (!value) return null
+  if (value instanceof Date) return value
+  const str = String(value)
+  if (/[+-]\d{2}:\d{2}$/.test(str) || str.endsWith('Z')) return new Date(str)
+  return new Date(str + 'Z')
+}
+
 function formatDate(date: Date | string | null | undefined) {
   if (!date) return '-'
-  return new Date(date).toLocaleString('es-MX', {
+  const d = normalizeDate(date)
+  if (!d || isNaN(d.getTime())) return '-'
+  return d.toLocaleString('es-MX', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -144,7 +170,7 @@ export default function AuditTable({
               ) : (
                 entries.map((entry, index) => (
                   <TableRow
-                    key={entry.changedAt ? String(entry.changedAt) : `row-${index}`}
+                    key={`${entry.changedAt ? new Date(entry.changedAt).toISOString() : 'row'}-${index}`}
                     hover
                     sx={{ cursor: 'pointer' }}
                     onClick={() => setSelectedEntry(entry)}

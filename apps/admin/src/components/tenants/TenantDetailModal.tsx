@@ -140,20 +140,6 @@ export default function TenantDetailModal({
 
                   <Box>
                     <Typography variant='body2' color='text.secondary'>
-                      Plan
-                    </Typography>
-                    <Typography>{tenant.SubscriptionPlan || 'No especificado'}</Typography>
-                  </Box>
-
-                  <Box>
-                    <Typography variant='body2' color='text.secondary'>
-                      Límite de usuarios
-                    </Typography>
-                    <Typography>{tenant.MaxUsers ?? 'Ilimitado'}</Typography>
-                  </Box>
-
-                  <Box>
-                    <Typography variant='body2' color='text.secondary'>
                       Región
                     </Typography>
                     <Typography>{tenant.Region || 'No especificada'}</Typography>

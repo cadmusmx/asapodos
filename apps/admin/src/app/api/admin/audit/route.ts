@@ -4,7 +4,7 @@ import { requirePlatformRole } from '@gaso/shared'
 import { getGlobalAuditLog } from '@/services/audit-service'
 
 export async function GET(req: NextRequest) {
-  const guard = await requirePlatformRole('super_admin')
+  const guard = await requirePlatformRole(['super_admin', 'auditor'])
 
   if (!guard.ok) {
     return NextResponse.json({ message: guard.message }, { status: guard.status })
@@ -20,6 +20,10 @@ export async function GET(req: NextRequest) {
   const startDateStr = searchParams.get('startDate')
   const endDateStr = searchParams.get('endDate')
 
+  if (!tenantId) {
+    return NextResponse.json({ message: ['tenantId query parameter is required'] }, { status: 400 })
+  }
+
   const startDate = startDateStr ? new Date(startDateStr) : null
   const endDate = endDateStr ? new Date(endDateStr) : null
 
@@ -27,7 +31,7 @@ export async function GET(req: NextRequest) {
     const result = await getGlobalAuditLog({
       page,
       pageSize,
-      tenantId: tenantId || null,
+      tenantId,
       tableName,
       action,
       appUser,

@@ -41,10 +41,6 @@ type Props = {
   scrollMenu: (container: any, isPerfectScrollbar: boolean) => void
 }
 
-type ErpSessionUser = {
-  admin?: boolean | null
-}
-
 const RenderExpandIcon = ({ open, transitionDuration }: RenderExpandIconProps) => (
   <StyledVerticalNavExpandIcon open={open} transitionDuration={transitionDuration}>
     <i className='ri-arrow-right-s-line' />
@@ -57,15 +53,13 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
   const verticalNavOptions = useVerticalNav()
   const params = useParams()
   const { data: me, isLoading: isMeLoading } = useMe()
-  const { data: session, status } = useSession()
+  const { status } = useSession()
 
   // Vars
   const { isBreakpointReached, transitionDuration } = verticalNavOptions
   const { lang: locale } = params
 
   const ScrollWrapper = isBreakpointReached ? 'div' : PerfectScrollbar
-
-  const sessionUser = session?.user as ErpSessionUser | undefined
 
   /*
    * Navegación ERP gobernada por RBAC (/api/me).
@@ -74,14 +68,12 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
    * - Grupos sin ítems visibles se omiten. menuGroups ausente => fail-closed.
    */
   const isNavigationLoading = isMeLoading && status === 'loading'
-  const isAdmin = Boolean(me?.user.admin ?? sessionUser?.admin)
 
   const modules = getVisibleErpNavigation({
-    menuGroups: me?.menuGroups,
+    isLoading: isNavigationLoading,
     views: me?.views,
-    isAdmin,
-    tenantModules: me?.settings?.modules,
-    isLoading: isNavigationLoading
+    menuGroups: me?.menuGroups,
+    planMenuGroups: me?.planMenuGroups,
   })
 
   return (

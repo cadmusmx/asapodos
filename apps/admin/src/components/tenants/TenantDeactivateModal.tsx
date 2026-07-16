@@ -10,9 +10,10 @@ import DialogActions from '@mui/material/DialogActions'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
-import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
+import Alert from '@mui/material/Alert'
 import type { TenantRow } from '@/services/tenant-service'
+import { toast } from 'react-toastify'
 
 interface TenantDeactivateModalProps {
   open: boolean
@@ -24,13 +25,11 @@ interface TenantDeactivateModalProps {
 export default function TenantDeactivateModal({ open, onClose, tenant, onSuccess }: TenantDeactivateModalProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async () => {
     if (!tenant) return
 
     setLoading(true)
-    setError(null)
 
     try {
       const res = await fetch(`/api/admin/tenants/${tenant.TenantID}/deactivate`, {
@@ -42,11 +41,12 @@ export default function TenantDeactivateModal({ open, onClose, tenant, onSuccess
         throw new Error(result.message?.[0] || 'Failed to deactivate tenant')
       }
 
+      toast.success('Tenant desactivado exitosamente')
       onClose()
       onSuccess?.()
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to deactivate tenant')
+      toast.error(err instanceof Error ? err.message : 'Failed to deactivate tenant')
     } finally {
       setLoading(false)
     }
@@ -54,7 +54,6 @@ export default function TenantDeactivateModal({ open, onClose, tenant, onSuccess
 
   const handleClose = () => {
     if (!loading) {
-      setError(null)
       onClose()
     }
   }
@@ -77,12 +76,6 @@ export default function TenantDeactivateModal({ open, onClose, tenant, onSuccess
       </DialogTitle>
 
       <DialogContent sx={{ p: 1 }}>
-        {error && (
-          <Alert severity='error' sx={{ mb: 2 }} role='alert'>
-            {error}
-          </Alert>
-        )}
-
         <Typography variant='body2' color='text.secondary' gutterBottom>
           Vas a desactivar:
         </Typography>

@@ -10,7 +10,6 @@ import TenantTable from '@/components/tenants/TenantTable'
 import TenantFilters from '@/components/tenants/TenantFilters'
 import TenantCreateModal from '@/components/tenants/TenantCreateModal'
 import TenantEditModal from '@/components/tenants/TenantEditModal'
-import TenantDetailModal from '@/components/tenants/TenantDetailModal'
 import TenantSuspendModal from '@/components/tenants/TenantSuspendModal'
 import TenantActivateModal from '@/components/tenants/TenantActivateModal'
 import TenantDeactivateModal from '@/components/tenants/TenantDeactivateModal'
@@ -36,17 +35,11 @@ export default function TenantsPageClient({
 }: TenantsPageClientProps) {
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
-  const [detailModalOpen, setDetailModalOpen] = useState(false)
   const [suspendModalOpen, setSuspendModalOpen] = useState(false)
   const [activateModalOpen, setActivateModalOpen] = useState(false)
   const [deactivateModalOpen, setDeactivateModalOpen] = useState(false)
 
   const [selectedTenant, setSelectedTenant] = useState<TenantRow | null>(null)
-
-  const handleView = (tenant: TenantRow) => {
-    setSelectedTenant(tenant)
-    setDetailModalOpen(true)
-  }
 
   const handleEdit = (tenant: TenantRow) => {
     setSelectedTenant(tenant)
@@ -89,7 +82,6 @@ export default function TenantsPageClient({
         status={status}
         search={search}
         adminTenantDomain={adminTenantDomain}
-        onView={handleView}
         onEdit={handleEdit}
         onSuspend={handleSuspend}
         onActivate={handleActivate}
@@ -106,17 +98,6 @@ export default function TenantsPageClient({
         open={editModalOpen}
         onClose={() => { setEditModalOpen(false); setSelectedTenant(null) }}
         tenant={selectedTenant}
-      />
-
-      <TenantDetailModal
-        open={detailModalOpen}
-        onClose={() => { setDetailModalOpen(false); setSelectedTenant(null) }}
-        tenant={selectedTenant}
-        adminTenantDomain={adminTenantDomain}
-        onEdit={handleEdit}
-        onSuspend={handleSuspend}
-        onActivate={handleActivate}
-        onDeactivate={handleDeactivate}
       />
 
       <TenantSuspendModal

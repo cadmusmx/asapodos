@@ -10,15 +10,7 @@ import Button from '@mui/material/Button'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import Alert from '@mui/material/Alert'
-import MenuItem from '@mui/material/MenuItem'
 import CircularProgress from '@mui/material/CircularProgress'
-
-const subscriptionPlans = [
-  { value: '', label: 'Sin plan' },
-  { value: 'basic', label: 'Basic' },
-  { value: 'pro', label: 'Pro' },
-  { value: 'enterprise', label: 'Enterprise' }
-]
 
 const DOMAIN_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/
 
@@ -35,8 +27,6 @@ interface TenantFormProps {
   initialData?: {
     companyName: string
     dominio: string
-    subscriptionPlan: string
-    maxUsers: string | number
     region: string
   }
   onSuccess?: (tenantId: string) => void
@@ -66,8 +56,6 @@ export default function TenantForm({ tenantId, initialData, onSuccess, onCancel 
     const data = {
       companyName: formData.get('companyName'),
       dominio,
-      subscriptionPlan: formData.get('subscriptionPlan') || undefined,
-      maxUsers: formData.get('maxUsers') ? Number(formData.get('maxUsers')) : undefined,
       region: formData.get('region') || undefined
     }
 
@@ -144,40 +132,6 @@ export default function TenantForm({ tenantId, initialData, onSuccess, onCancel 
               input: {
                 'aria-label': 'Dominio del tenant',
                 'aria-describedby': dominioError ? 'dominio-error' : undefined
-              }
-            }}
-          />
-
-          <TextField
-            name='subscriptionPlan'
-            label='Plan de Suscripción'
-            select
-            fullWidth
-            defaultValue={initialData?.subscriptionPlan ?? ''}
-            slotProps={{
-              select: {
-                'aria-label': 'Plan de suscripción'
-              }
-            }}
-          >
-            {subscriptionPlans.map(option => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </TextField>
-
-          <TextField
-            name='maxUsers'
-            label='Límite de Usuarios'
-            type='number'
-            placeholder='Dejar vacío para ilimitado'
-            fullWidth
-            defaultValue={initialData?.maxUsers ?? ''}
-            slotProps={{
-              input: {
-                inputProps: { min: 1 },
-                'aria-label': 'Límite de usuarios'
               }
             }}
           />

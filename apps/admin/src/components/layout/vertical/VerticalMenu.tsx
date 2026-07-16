@@ -5,9 +5,11 @@ import { useTheme } from '@mui/material/styles'
 
 // Third-party Imports
 import PerfectScrollbar from 'react-perfect-scrollbar'
+import { useSession } from 'next-auth/react'
 
 // Type Imports
 import type { VerticalMenuContextProps } from '@menu/components/vertical-menu/Menu'
+import type { VerticalMenuItemDataType } from '@/types/menuTypes'
 
 // Component Imports
 import { Menu, MenuItem } from '@menu/vertical-menu'
@@ -43,10 +45,17 @@ const RenderExpandIcon = ({ open, transitionDuration }: RenderExpandIconProps) =
 const VerticalMenu = ({ scrollMenu }: Props) => {
   const theme = useTheme()
   const verticalNavOptions = useVerticalNav()
+  const { data: session } = useSession()
 
   const { isBreakpointReached, transitionDuration } = verticalNavOptions
 
   const ScrollWrapper = isBreakpointReached ? 'div' : PerfectScrollbar
+
+  const platformRole = session?.user?.platformRole
+
+  const filteredNav = adminNavigation.filter(
+    (item: VerticalMenuItemDataType) => !item.roles || item.roles.includes(platformRole!)
+  )
 
   return (
     // <ScrollWrapper
@@ -67,7 +76,7 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
       renderExpandedMenuItemIcon={{ icon: <i className='ri-circle-line' /> }}
       menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
     >
-      {adminNavigation.map((item: any) => (
+      {filteredNav.map((item: VerticalMenuItemDataType) => (
         <MenuItem
           key={item.id}
           href={item.href}

@@ -23,24 +23,27 @@ import Illustrations from '@components/Illustrations'
 // Hook Imports
 import { useImageVariant } from '@core/hooks/useImageVariant'
 
-const NotAuthorized = ({ mode }: { mode: Mode }) => {
-  // Vars
+const NotAuthorized = ({ mode, reason }: { mode: Mode; reason?: string }) => {
+  const isPlan = reason === 'plan'
+
   const darkImg = '/images/pages/misc-mask-dark.png'
   const lightImg = '/images/pages/misc-mask-light.png'
 
-  // Hooks
   const { lang: locale } = useParams()
   const miscBackground = useImageVariant(mode, lightImg, darkImg)
+
+  const title = isPlan ? 'Módulo no incluido en tu plan 🔒' : 'No tienes autorización 🔐'
+  const description = isPlan
+    ? 'Tu plan actual no incluye este módulo. Contacta a administración para habilitarlo.'
+    : 'No tienes permiso para acceder a esta página. Contacta a tu administrador.'
 
   return (
     <div className='flex items-center justify-center min-bs-[100dvh] relative p-6 overflow-x-hidden'>
       <div className='flex items-center flex-col text-center gap-10'>
         <div className='flex flex-col gap-2 is-[90vw] sm:is-[unset]'>
-          <Typography className='text-8xl font-medium' color='text.primary'>
-            401
-          </Typography>
-          <Typography variant='h4'>You are not authorized! 🔐</Typography>
-          <Typography>You don&#39;t have permission to access this page. Go Home!</Typography>
+          <Typography className='text-8xl font-medium' color='text.primary'>401</Typography>
+          <Typography variant='h4'>{title}</Typography>
+          <Typography>{description}</Typography>
         </div>
         <img
           alt='error-illustration'
@@ -48,7 +51,7 @@ const NotAuthorized = ({ mode }: { mode: Mode }) => {
           className='object-cover bs-[400px] md:bs-[450px] lg:bs-[500px]'
         />
         <Button href={getLocalizedUrl('/', locale as Locale)} component={Link} variant='contained'>
-          Back to Home
+          Volver al inicio
         </Button>
       </div>
       <Illustrations maskImg={{ src: miscBackground }} />

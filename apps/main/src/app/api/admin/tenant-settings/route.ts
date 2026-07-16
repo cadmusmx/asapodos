@@ -4,30 +4,22 @@ import type { Prisma } from '@prisma/client'
 
 import { getServerSession } from 'next-auth'
 
+import type { TenantRow } from '@gaso/shared/types/me'
+
+import type { TenantSettings } from '@gaso/shared/types/tenant-settings'
+
 import { authOptions } from '@/libs/auth'
 import { getTenantFromHeaders } from '@/lib/tenant-context'
 import { writeTransactionLog } from '@/lib/audit/transaction-log'
+import type {
+  TenantSettingsRow
+} from '@/lib/tenant-settings/normalize';
 import {
   normalizeTenantSettingsFromRow,
   serializeTenantSettings
 } from '@/lib/tenant-settings/normalize'
 
-import type { TenantSettings } from '@/types/tenant-settings'
-
 export const runtime = 'nodejs'
-
-type TenantSettingsRow = {
-  BrandingJson: string | null
-  ModulesJson: string | null
-  LimitsJson: string | null
-}
-
-type TenantRow = {
-  TenantID: string
-  CompanyName: string | null
-  isActive: boolean
-  Dominio: string | null
-}
 
 type TenantSettingsBody = {
   settings?: TenantSettings
@@ -73,7 +65,7 @@ export async function GET(req: Request) {
           WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
         `,
         tx.$queryRaw<TenantSettingsRow[]>`
-          SELECT BrandingJson, ModulesJson, LimitsJson
+          SELECT BrandingJson, LimitsJson
           FROM Security.TenantSettings
           WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
         `
@@ -162,8 +154,7 @@ export async function PUT(req: Request) {
 
   const normalizedSettings = normalizeTenantSettingsFromRow({
     BrandingJson: JSON.stringify(body.settings.branding),
-    ModulesJson: JSON.stringify(body.settings.modules),
-    LimitsJson: JSON.stringify(body.settings.limits)
+    LimitsJson: JSON.stringify(body.settings.limits),
   })
 
   const serializedSettings = serializeTenantSettings(normalizedSettings)
@@ -190,7 +181,6 @@ export async function PUT(req: Request) {
           SELECT
             CAST(${tenantId} AS uniqueidentifier) AS TenantID,
             ${serializedSettings.brandingJson} AS BrandingJson,
-            ${serializedSettings.modulesJson} AS ModulesJson,
             ${serializedSettings.limitsJson} AS LimitsJson,
             ${userId} AS UpdatedBy
         ) AS source
@@ -198,13 +188,12 @@ export async function PUT(req: Request) {
         WHEN MATCHED THEN
           UPDATE SET
             BrandingJson = source.BrandingJson,
-            ModulesJson = source.ModulesJson,
             LimitsJson = source.LimitsJson,
             UpdatedAt = SYSUTCDATETIME(),
             UpdatedBy = source.UpdatedBy
         WHEN NOT MATCHED THEN
-          INSERT (TenantID, BrandingJson, ModulesJson, LimitsJson, UpdatedBy)
-          VALUES (source.TenantID, source.BrandingJson, source.ModulesJson, source.LimitsJson, source.UpdatedBy);
+          INSERT (TenantID, BrandingJson, LimitsJson, UpdatedBy)
+          VALUES (source.TenantID, source.BrandingJson, source.LimitsJson, source.UpdatedBy);
       `
 
       return {

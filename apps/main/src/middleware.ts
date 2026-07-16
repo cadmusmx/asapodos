@@ -51,6 +51,9 @@ interface TenantResult {
   CompanyName: string | null
   isActive: boolean
   Dominio: string | null
+  Status: string | null
+  SuspendedReason: string | null
+  SuspendedMessage: string | null
 }
 
 function extractSubdomain(host: string): string {
@@ -109,7 +112,19 @@ export async function middleware(request: NextRequest) {
       const { tenant } = (await res.json()) as { tenant: TenantResult | null }
 
       if (!tenant) return mobileTenantError('TENANT_NOT_FOUND', 'Organization not found', 404)
-      if (!tenant.isActive) return mobileTenantError('TENANT_SUSPENDED', 'Organization is suspended', 403)
+
+      if (!tenant.isActive) {
+        const errorCode = tenant.Status === 'SUSPENDED' ? 'TENANT_SUSPENDED' : 'TENANT_INACTIVE'
+
+        const errorMessage = tenant.Status === 'SUSPENDED'
+          ? (tenant.SuspendedMessage ?? 'Organization is suspended')
+          : 'Organization is inactive'
+
+        return NextResponse.json(
+          { ok: false, code: errorCode, message: errorMessage, reason: tenant.SuspendedReason ?? null },
+          { status: 403 }
+        )
+      }
 
       const headers = new Headers(request.headers)
 
@@ -122,6 +137,7 @@ export async function middleware(request: NextRequest) {
       return mobileTenantError('TENANT_LOOKUP_FAILED', 'Tenant lookup failed', 502)
     }
   }
+
   // --- fin rama móvil ---
 
   if (pathname.includes('/auth/tenant-not-found') || pathname.includes('/auth/tenant-inactive'))
@@ -142,8 +158,25 @@ export async function middleware(request: NextRequest) {
 
     if (!tenant) return NextResponse.redirect(new URL(`/${getLocale(pathname)}/auth/tenant-not-found`, request.url))
 
-    if (!tenant.isActive)
-      return NextResponse.redirect(new URL(`/${getLocale(pathname)}/auth/tenant-inactive`, request.url))
+    if (!tenant.isActive) {
+      const redirectUrl = new URL(`/${getLocale(pathname)}/auth/tenant-inactive`, request.url)
+
+      if (tenant.Status === 'SUSPENDED') {
+        redirectUrl.searchParams.set('status', 'suspended')
+
+        if (tenant.SuspendedReason) {
+          redirectUrl.searchParams.set('reason', tenant.SuspendedReason)
+        }
+
+        if (tenant.SuspendedMessage) {
+          redirectUrl.searchParams.set('message', tenant.SuspendedMessage)
+        }
+      } else if (tenant.Status === 'INACTIVE') {
+        redirectUrl.searchParams.set('status', 'inactive')
+      }
+
+      return NextResponse.redirect(redirectUrl)
+    }
 
     // Las APIs se protegen a sí mismas server-side; el middleware no las redirige a login. Solo resuelve tenant para ellas.
     // Si mañana nace /api/health y nadie la añade al matcher, el isApiRoute la atrapa igual y no la rompe

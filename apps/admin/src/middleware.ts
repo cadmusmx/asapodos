@@ -2,7 +2,9 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
-const PUBLIC_PATHS = ['/admin/login', '/api/admin/', '/api/auth/']
+const PUBLIC_PATHS = ['/admin/login', '/api/admin/login', '/api/admin/auth-mfa/start', '/api/auth/', '/images/']
+
+const AUDITOR_ALLOWED_PATHS = ['/admin/audit', '/api/admin/audit', '/api/admin/audit/tenants']
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)']
@@ -25,6 +27,10 @@ export async function middleware(request: NextRequest) {
 
   if (!token.platformRole) {
     return NextResponse.redirect(new URL('/admin/login?error=unauthorized', request.url))
+  }
+
+  if (token.platformRole === 'auditor' && !AUDITOR_ALLOWED_PATHS.some(p => pathname.startsWith(p))) {
+    return NextResponse.redirect(new URL('/admin/audit', request.url))
   }
 
   const headers = new Headers(request.headers)

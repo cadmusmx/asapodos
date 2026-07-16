@@ -1,24 +1,27 @@
 import type { Prisma } from '@prisma/client';
 
 /**
- * RBAC · Motor de resolución
+ * RBAC · Motor de resolución (PURO)
  *
  * Devuelve el set de vistas efectivas de un usuario en su tenant, como la UNIÓN de:
- *   (A) Otorgadas:  maskEfectiva = UserViews.PermMask & DepartmentViews.PermMask  (!= 0)
+ *   (A) Otorgadas:  UserViews.PermMask  (!= 0)   — directo, SIN techo
  *   (B) Públicas:   Security.Views.PublicMask (no NULL) — todos la reciben sin grant.
- * Ambas sujetas a disponibilidad (TenantViews, decisión A). Si una vista cae en (A) y
- * (B), el mask final es el OR (la pública es un piso; el grant puede sumar por encima).
+ * Si una vista cae en (A) y (B), el mask final es el OR (la pública es un piso).
  *
- * Invariantes (sin cambios): INNER JOIN en (A) = fail-closed; IdDepartamento en vivo;
- * GASOCO_Cat_Usuarios SIN RLS -> filtro por tenant obligatorio; $queryRaw parametrizado
- * sobre el `tx` cuyo SESSION_CONTEXT ya fijó el llamador.
+ * La compuerta de PLAN (módulo ∈ plan del tenant) NO se aplica aquí — el resolver es puro.
+ * Se anota por fuera en getEffectiveViews y la combinan requirePermission / la nav, para distinguir "401 por plan" de "401 por permiso".
+ *
+ * Invariantes: IdDepartamento ya no participa (sin techo);
+ * GASOCO_Cat_Usuarios SIN RLS -> filtro por tenant obligatorio;
+ * $queryRaw parametrizado sobre el `tx` cuyo SESSION_CONTEXT ya fijó el llamador.
  */
 
 export interface ResolvedView {
   viewCode: string;
   label: string;
   menuGroup: string | null;
-  /** maskEfectiva canónica != 0. */
+
+  /** mask canónica != 0. */
   mask: number;
 }
 
@@ -37,46 +40,30 @@ export async function resolveUserViews(
   const { idUsuario } = params;
 
   const rows = await tx.$queryRaw<RawResolvedView[]>`
-    -- (A) otorgadas: UserViews & DepartmentViews, capadas por techo, disponibles
+    -- (A) otorgadas: UserViews.PermMask directo (SIN techo)
     SELECT v.ViewCode, v.Label, v.MenuGroup,
-           (uv.PermMask & dv.PermMask) AS EffectiveMask
+           uv.PermMask AS EffectiveMask
     FROM dbo.GASOCO_Cat_Usuarios u
     JOIN Security.UserViews uv
            ON uv.TenantID  = u.TenantID
           AND uv.IdUsuario = u.IdUsuario
-    JOIN Security.DepartmentViews dv
-           ON dv.TenantID       = u.TenantID
-          AND dv.IdDepartamento = u.IdDepartamento
-          AND dv.ViewCode       = uv.ViewCode
     JOIN Security.Views v
            ON v.ViewCode = uv.ViewCode
     WHERE u.IdUsuario = ${idUsuario}
       AND u.TenantID  = CAST(${tenantId} AS uniqueidentifier)
-      AND (uv.PermMask & dv.PermMask) <> 0
-      AND (
-            NOT EXISTS (SELECT 1 FROM Security.TenantViews tv WHERE tv.ViewCode = uv.ViewCode)
-            OR EXISTS  (SELECT 1 FROM Security.TenantViews tv
-                         WHERE tv.ViewCode = uv.ViewCode
-                           AND tv.TenantID = CAST(${tenantId} AS uniqueidentifier))
-          )
+      AND uv.PermMask <> 0
 
     UNION ALL
 
-    -- (B) públicas: PublicMask para todos, sujetas a disponibilidad del tenant
+    -- (B) públicas: PublicMask para todos
     SELECT v.ViewCode, v.Label, v.MenuGroup,
            v.PublicMask AS EffectiveMask
     FROM Security.Views v
     WHERE v.PublicMask IS NOT NULL
-      AND (
-            NOT EXISTS (SELECT 1 FROM Security.TenantViews tv WHERE tv.ViewCode = v.ViewCode)
-            OR EXISTS  (SELECT 1 FROM Security.TenantViews tv
-                         WHERE tv.ViewCode = v.ViewCode
-                           AND tv.TenantID = CAST(${tenantId} AS uniqueidentifier))
-          )
   `;
 
   // Merge por ViewCode: una vista puede llegar de (A) y (B); mask final = OR.
-  const map = new Map<string, ResolvedView>()
+  const map = new Map<string, ResolvedView>();
   for (const r of rows) {
     const incoming = Number(r.EffectiveMask);
     const existing = map.get(r.ViewCode);

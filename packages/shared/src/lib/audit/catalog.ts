@@ -29,6 +29,14 @@ export const AUDIT_ACTIONS = {
   UPDATE: 'UPDATE',
   READ: 'READ',
   PERM_CHG: 'PERM_CHG',
+  TEN_CR: 'TEN_CR',
+  TEN_UP: 'TEN_UP',
+  TEN_SUSP: 'TEN_SUSP',
+  TEN_ACT: 'TEN_ACT',
+  TEN_DEA: 'TEN_DEA',
+  PLT_CR: 'PLT_CR',
+  PLT_RM: 'PLT_RM',
+  CHPERMSS: 'CHPERMSS',
 } as const;
 
 export type AuditActionCode = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
@@ -45,10 +53,18 @@ export const AUDIT_ACTION_LABELS: Record<AuditActionCode, string> = {
   XTENANT: 'Acceso cross-tenant',
   NO_SESS: 'Acceso sin sesión',
   MFA_RESET: 'MFA restablecido',
-  INSERT: 'Insercción',
+  INSERT: 'Inserción',
   UPDATE: 'Actualización',
   READ: 'Consulta',
-  PERM_CHG: 'Cambio de permisos',   // <-- nuevo: cambio de permisos RBAC (Security.UserViews)
+  PERM_CHG: 'Cambio de permisos',
+  TEN_CR: 'Tenant creado',
+  TEN_UP: 'Tenant actualizado',
+  TEN_SUSP: 'Tenant suspendido',
+  TEN_ACT: 'Tenant activado',
+  TEN_DEA: 'Tenant desactivado',
+  PLT_CR: 'Rol de plataforma asignado',
+  PLT_RM: 'Rol de plataforma removido',
+  CHPERMSS: 'Cambio de permisos via preset',
 } as const;
 
 // Lista de códigos conocidos. La API la usa para el filtro "OTHER" (NOT IN).
@@ -68,6 +84,8 @@ export const EVENT_TO_ACTION: Record<string, AuditActionCode> = {
   LOGIN_SUCCESS: 'LOGIN_OK',
   LOGIN_FAILED: 'LOGIN_FAIL',
   MFA_RESET: 'MFA_RESET',
+  PERM_CHG: 'PERM_CHG',
+  CHPERMSS: 'CHPERMSS',
 };
 
 // Catálogo de orígenes de evento (espejo de la tabla Audit.Cat_OriginTL).

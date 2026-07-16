@@ -15,6 +15,7 @@ import type {
   MenuItemProps as HorizontalMenuItemProps
 } from '@menu/horizontal-menu'
 import type { MenuItemExactMatchUrlProps } from '@menu/types'
+import type { PlatformRole } from '@gaso/shared'
 
 // Vertical Menu Data
 export type VerticalMenuItemDataType = Omit<
@@ -27,6 +28,7 @@ export type VerticalMenuItemDataType = Omit<
     icon?: string
     prefix?: ReactNode | ChipProps
     suffix?: ReactNode | ChipProps
+    roles?: PlatformRole[]
   }
 export type VerticalSubMenuDataType = Omit<VerticalSubMenuProps, 'children' | 'icon' | 'prefix' | 'suffix'> & {
   children: VerticalMenuDataType[]

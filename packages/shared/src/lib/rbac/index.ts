@@ -16,5 +16,3 @@ export * from './require-permission';
 // HOF de ruta que blinda un handler de App Router.
 export * from './with-permission';
 
-
-export * from './assign-permission';

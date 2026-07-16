@@ -1,14 +1,11 @@
-// Component Imports
 import NotAuthorized from '@views/NotAuthorized'
-
-// Server Action Imports
 import { getServerMode } from '@core/utils/serverHelpers'
 
-const Error401 = async () => {
-  // Vars
+const Error401 = async (props: { searchParams: Promise<{ reason?: string }> }) => {
   const mode = await getServerMode()
+  const { reason } = await props.searchParams
 
-  return <NotAuthorized mode={mode} />
+  return <NotAuthorized mode={mode} reason={reason} />
 }
 
 export default Error401

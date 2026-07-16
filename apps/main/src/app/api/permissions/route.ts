@@ -3,10 +3,11 @@ import { NextResponse } from 'next/server';
 import {
   PERM,
   ValidationError,
-  assignPermission,
   withPermission,
   writeTransactionLog
 } from '@gaso/shared';
+
+import { assignPermission } from '@/lib/permissions/assign-permission';
 
 export const runtime = 'nodejs';
 interface ParsedBody {

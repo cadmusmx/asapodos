@@ -6,10 +6,21 @@ import {
   writeTransactionLog,
   ID_ORIGIN_WEB,
   withTenantContext,
-  resolveUserViews
+  resolveUserViews,
+  getEnabledMenuGroups
 } from '@gaso/shared'
-import { normalizeTenantSettingsFromRow, TenantSettingsRow } from '@/lib/tenant-settings/normalize'
-import { MeResponse, ModuleRow, ProfileRow, TenantRow, UserRow } from '@gaso/shared/types/me'
+
+import type { PlanTier, TenantSubscriptionStatus } from '@gaso/shared/types/plan'
+import type { MeResponse, ProfileRow, TenantRow, UserRow } from '@gaso/shared/types/me'
+
+import type { TenantSettingsRow } from '@/lib/tenant-settings/normalize'
+import { normalizeTenantSettingsFromRow } from '@/lib/tenant-settings/normalize'
+
+interface SubscriptionPlanRow {
+  PlanName: string | null
+  PlanDisplayName: string | null
+  Status: string | null
+}
 
 export const runtime = 'nodejs'
 
@@ -44,7 +55,7 @@ export async function GET(req: Request) {
 
   try {
     const result = await withTenantContext(tenantId, async tx => {
-      const [userRows, tenantRows, profileRows, moduleRows, settingsRows, resolvedViews] = await Promise.all([
+      const [userRows, tenantRows, profileRows, settingsRows, subscriptionRows, resolvedViews, planModules] = await Promise.all([
         tx.$queryRaw<UserRow[]>`
           SELECT IdUsuario, Nombre, Email, IdPerfil, isAdmin, IdArea, IdBaseCiudad, IdDepartamento, IdPuesto, IdRegion, IdEmpresa
           FROM GASOCO_Cat_Usuarios
@@ -69,30 +80,24 @@ export async function GET(req: Request) {
           INNER JOIN GASOCO_Cat_Usuarios u ON u.IdPerfil = p.Id
           WHERE u.IdUsuario = ${userId} AND u.TenantID = CAST(${tenantId} AS uniqueidentifier)
         `,
-        tx.$queryRaw<ModuleRow[]>`
-          SELECT
-            m.IdModulo,
-            m.NombreModulo,
-            sm.IdSubModulo,
-            sm.NombreSubModulo
-          FROM Permisos_Paquetes pp
-          INNER JOIN Cat_Modulos m ON m.IdModulo = pp.IdModulo
-          LEFT JOIN Cat_SubModulos sm ON sm.IdModulo = pp.IdModulo AND sm.IdSec = pp.IdSec
-          WHERE pp.IdPaquete = (
-            SELECT TOP 1 e.Paquete
-            FROM Cat_Empresas e
-            INNER JOIN GASOCO_Cat_Usuarios u ON u.IdEmpresa = e.IdEmpresa
-            WHERE u.IdUsuario = ${userId}
-              AND u.TenantID = CAST(${tenantId} AS uniqueidentifier)
-          )
-          ORDER BY m.IdModulo, sm.IdSubModulo
-        `,
         tx.$queryRaw<TenantSettingsRow[]>`
-          SELECT BrandingJson, ModulesJson, LimitsJson
+          SELECT BrandingJson, LimitsJson
           FROM Security.TenantSettings
           WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
         `,
-        resolveUserViews(tx, { tenantId, idUsuario: userId })
+        tx.$queryRaw<SubscriptionPlanRow[]>`
+          SELECT TOP 1
+            p.Name AS PlanName,
+            p.DisplayName AS PlanDisplayName,
+            s.Status
+          FROM Security.TenantSubscriptions s
+          INNER JOIN Security.Plans p ON p.PlanId = s.PlanId
+          WHERE s.TenantId = CAST(${tenantId} AS uniqueidentifier)
+            AND s.Status IN ('TRIAL', 'ACTIVE')
+          ORDER BY s.CreatedAt DESC
+        `,
+        resolveUserViews(tx, { tenantId, idUsuario: userId }),
+        getEnabledMenuGroups(tx, tenantId),
       ])
 
       const user = userRows[0]
@@ -103,38 +108,17 @@ export async function GET(req: Request) {
 
       const profile = profileRows[0] ?? null
 
-      const permissionsMap = new Map<number, { moduleId: number; moduleName: string; subModules: Set<string> }>()
-
-      for (const row of moduleRows) {
-        if (!permissionsMap.has(row.IdModulo)) {
-          permissionsMap.set(row.IdModulo, {
-            moduleId: row.IdModulo,
-            moduleName: row.NombreModulo ?? '',
-            subModules: new Set()
-          })
-        }
-
-        if (row.IdSubModulo != null && row.NombreSubModulo != null) {
-          permissionsMap
-            .get(row.IdModulo)!
-            .subModules.add(JSON.stringify({ id: row.IdSubModulo, name: row.NombreSubModulo }))
-        }
-      }
-
-      const permissions = Array.from(permissionsMap.values()).map(m => ({
-        moduleId: m.moduleId,
-        moduleName: m.moduleName,
-        subModules: Array.from(m.subModules).map(s => JSON.parse(s) as { id: number; name: string })
-      }))
-
       const views: MeResponse['views'] = {}
       const menuGroups: Record<string, boolean> = {}
+
       for (const v of resolvedViews) {
         views[v.viewCode] = { mask: v.mask, label: v.label, menuGroup: v.menuGroup }
         if (v.menuGroup) menuGroups[v.menuGroup] = true
       }
 
       const settings = normalizeTenantSettingsFromRow(settingsRows[0] ?? null)
+
+      const subscription = subscriptionRows[0]
 
       const body: MeResponse = {
         user: {
@@ -144,7 +128,7 @@ export async function GET(req: Request) {
           admin: user.isAdmin === 1,
           area: user.IdArea ?? null,
           cityBase: user.IdBaseCiudad ?? null,
-          departament: user.IdDepartamento ?? null,
+          department: user.IdDepartamento ?? null,
           position: user.IdPuesto ?? null,
           region: user.IdRegion ?? null,
           company: user.IdEmpresa ?? null
@@ -153,15 +137,20 @@ export async function GET(req: Request) {
           id: tenantId,
           slug: tenantSlugOrDefault || tenant?.Dominio || sessionTenantId || '',
           name: tenant?.CompanyName ?? tenantNameOrDefault,
-          isActive: tenant?.isActive === 1
+          isActive: tenant?.isActive === 1,
+          plan: {
+            name: (subscription?.PlanName as PlanTier) ?? null,
+            displayName: subscription?.PlanDisplayName ?? null,
+            status: (subscription?.Status as TenantSubscriptionStatus) ?? null
+          }
         },
+        settings,
         profile: profile
           ? { id: profile.Id, name: profile.Descripcion ?? null }
           : { id: null, name: null },
-        permissions, // legacy: se queda, DEPRECATED hasta que el shell migre
         views,
         menuGroups,
-        settings
+        planMenuGroups: Array.from(planModules),
       }
 
       return body

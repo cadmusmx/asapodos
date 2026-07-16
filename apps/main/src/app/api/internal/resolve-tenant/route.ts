@@ -12,20 +12,26 @@ type TenantRow = {
   CompanyName: string | null
   isActive: boolean
   Dominio: string | null
+  Status: string | null
+  SuspendedReason: string | null
+  SuspendedMessage: string | null
 }
 
 const getTenantByDomain = unstable_cache(
   async (domain: string): Promise<TenantRow | null> => {
     const result = await prisma.$queryRaw<TenantRow[]>`
-      SELECT 
-        TenantID, 
-        CompanyName, 
+      SELECT
+        TenantID,
+        CompanyName,
         (CASE
           WHEN Status = 'ACTIVE' THEN 1
           WHEN Status = 'TRIAL' THEN 1
           ELSE 0
-        END) AS isActive, 
-        Dominio
+        END) AS isActive,
+        Dominio,
+        Status,
+        SuspendedReason,
+        SuspendedMessage
       FROM Security.Tenants
       WHERE LOWER(Dominio) = LOWER(${domain})
     `

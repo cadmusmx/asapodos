@@ -158,7 +158,7 @@ const NavbarContent = () => {
           <Chip
             size='small'
             variant='outlined'
-            color={hasTenantError ? 'error' : hasTenant ? 'primary' : 'default'}
+            color={hasTenantError ? 'error' : 'default'}
             label={tenantLabel}
           />
         </div>

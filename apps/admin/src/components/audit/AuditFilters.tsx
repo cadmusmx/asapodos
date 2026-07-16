@@ -9,18 +9,16 @@ import MenuItem from '@mui/material/MenuItem'
 import Stack from '@mui/material/Stack'
 import InputAdornment from '@mui/material/InputAdornment'
 import Chip from '@mui/material/Chip'
-import Divider from '@mui/material/Divider'
-import Autocomplete from '@mui/material/Autocomplete'
-import CircularProgress from '@mui/material/CircularProgress'
+import Select from '@mui/material/Select'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
 import type { TenantRow } from '@/services/tenant-service'
+import { AUDIT_ACTIONS, AUDIT_ACTION_LABELS } from '@gaso/shared'
 
 const actionOptions = [
   { value: '', label: 'Todas las acciones' },
-  { value: 'TEN_CR', label: 'Tenant Creado' },
-  { value: 'TEN_UP', label: 'Tenant Actualizado' },
-  { value: 'TEN_ACT', label: 'Tenant Activado' },
-  { value: 'TEN_SUSP', label: 'Tenant Suspendido' },
-  { value: 'TEN_DEA', label: 'Tenant Desactivado' }
+  ...Object.keys(AUDIT_ACTIONS)
+    .map(k => ({ value: AUDIT_ACTIONS[k as keyof typeof AUDIT_ACTIONS], label: AUDIT_ACTION_LABELS[AUDIT_ACTIONS[k as keyof typeof AUDIT_ACTIONS]] })),
 ]
 
 type DatePreset = 'today' | '7days' | '30days' | 'thisMonth' | null
@@ -63,20 +61,34 @@ export default function AuditFilters() {
   const [endDate, setEndDate] = useState('')
   const [activePreset, setActivePreset] = useState<DatePreset>(null)
   const [tenantId, setTenantId] = useState<string | null>(null)
-  const [tenantInput, setTenantInput] = useState('')
   const [tenantOptions, setTenantOptions] = useState<TenantRow[]>([])
-  const [tenantLoading, setTenantLoading] = useState(false)
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const tenantFetchRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     setTableName(searchParams.get('tableName') || '')
     setAction(searchParams.get('action') || '')
     setAppUser(searchParams.get('appUser') || '')
-    setStartDate(searchParams.get('startDate') || '')
-    setEndDate(searchParams.get('endDate') || '')
+    const urlStart = searchParams.get('startDate') || ''
+    const urlEnd = searchParams.get('endDate') || ''
+    setStartDate(urlStart)
+    setEndDate(urlEnd)
     setTenantId(searchParams.get('tenantId') || null)
+
+    const now = new Date()
+    const today = now.toISOString().split('T')[0]
+    const thirtyDaysAgo = new Date(now)
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0]
+
+    if (urlStart === thirtyDaysAgoStr && urlEnd === today) {
+      setActivePreset('30days')
+    } else if (urlStart && urlEnd) {
+      setActivePreset(null)
+    } else {
+      setActivePreset(null)
+    }
+
     setMounted(true)
   }, [searchParams])
 
@@ -128,35 +140,35 @@ export default function AuditFilters() {
     setStartDate('')
     setEndDate('')
     setActivePreset(null)
-    setTenantId(null)
-    setTenantOptions([])
-    router.push('/admin/audit')
-  }, [router])
-
-  const fetchTenants = useCallback(async (search: string) => {
-    setTenantLoading(true)
-    try {
-      const res = await fetch(`/api/admin/tenants?page=1&pageSize=50${search ? `&search=${encodeURIComponent(search)}` : ''}`)
-      if (res.ok) {
-        const data = await res.json()
-        setTenantOptions(data.tenants || [])
-      }
-    } catch {
-      setTenantOptions([])
-    } finally {
-      setTenantLoading(false)
+    if (tenantId) {
+      const now = new Date()
+      const today = now.toISOString().split('T')[0]
+      const thirtyDaysAgo = new Date(now)
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      const startStr = thirtyDaysAgo.toISOString().split('T')[0]
+      router.push(`/admin/audit?tenantId=${tenantId}&startDate=${startStr}&endDate=${today}`)
     }
-  }, [])
+  }, [router, tenantId])
 
   useEffect(() => {
-    if (tenantFetchRef.current) clearTimeout(tenantFetchRef.current)
-    tenantFetchRef.current = setTimeout(() => {
-      fetchTenants(tenantInput)
-    }, 300)
-    return () => {
-      if (tenantFetchRef.current) clearTimeout(tenantFetchRef.current)
+    async function fetchTenants() {
+      try {
+        const res = await fetch('/api/admin/audit/tenants')
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          console.error('[AuditFilters] Failed to load tenants:', res.status, err)
+          setTenantOptions([])
+          return
+        }
+        const data = await res.json()
+        setTenantOptions(data.tenants || [])
+      } catch (err) {
+        console.error('[AuditFilters] Network error loading tenants:', err)
+        setTenantOptions([])
+      }
     }
-  }, [tenantInput, fetchTenants])
+    fetchTenants()
+  }, [])
 
   const hasActiveFilters = Boolean(tenantId || tableName || action || appUser || startDate || endDate)
 
@@ -197,33 +209,21 @@ export default function AuditFilters() {
 
       <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems='flex-end'>
-          <Autocomplete
-            options={tenantOptions}
-            loading={tenantLoading}
-            getOptionLabel={(option) => option.CompanyName}
-            value={tenantOptions.find(t => t.TenantID === tenantId) || null}
-            onChange={(_, value) => setTenantId(value?.TenantID || null)}
-            onInputChange={(_, value) => setTenantInput(value)}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label='Tenant'
-                size='small'
-                sx={{ minWidth: 200 }}
-                slotProps={{
-                  input: {
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {tenantLoading ? <CircularProgress size={16} /> : null}
-                        {params.InputProps.endAdornment}
-                      </>
-                    )
-                  }
-                }}
-              />
-            )}
-          />
+          <FormControl size='small' sx={{ minWidth: 220 }}>
+            <InputLabel id='tenant-select-label'>Tenant</InputLabel>
+            <Select
+              labelId='tenant-select-label'
+              label='Tenant'
+              value={mounted ? (tenantId || '') : ''}
+              onChange={e => setTenantId(e.target.value as string)}
+            >
+              {tenantOptions.map(t => (
+                <MenuItem key={t.TenantID} value={t.TenantID}>
+                  {t.CompanyName}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
           <TextField
             label='Tabla'

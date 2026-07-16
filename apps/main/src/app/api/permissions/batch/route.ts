@@ -4,10 +4,11 @@ import {
   ForbiddenError,
   PERM,
   ValidationError,
-  assignPermissionsBatch,
   withPermission,
   writeTransactionLog
 } from '@gaso/shared';
+
+import { assignPermissionsBatch } from '@/lib/permissions/assign-permission';
 
 export const runtime = 'nodejs';
 
@@ -21,6 +22,7 @@ function parseBody(raw: unknown): ParsedBatchBody {
   if (typeof raw !== 'object' || raw === null) {
     throw new ValidationError('Body inválido', 'INVALID_MASK');
   }
+
   const b = raw as Record<string, unknown>;
 
   if (!Number.isInteger(b.targetIdUsuario)) {
@@ -36,10 +38,13 @@ function parseBody(raw: unknown): ParsedBatchBody {
     if (typeof c !== 'object' || c === null) {
       throw new ValidationError(`changes[${i}] inválido`, 'INVALID_MASK');
     }
+
     const cc = c as Record<string, unknown>;
+
     if (typeof cc.viewCode !== 'string' || cc.viewCode.trim() === '') {
       throw new ValidationError(`changes[${i}].viewCode requerido`, 'UNKNOWN_VIEW');
     }
+
     if (!Number.isInteger(cc.mask)) {
       throw new ValidationError(`changes[${i}].mask debe ser entero`, 'INVALID_MASK');
     }
@@ -49,12 +54,14 @@ function parseBody(raw: unknown): ParsedBatchBody {
 
   // viewCode duplicado en el lote -> 400 (decisión del dev)
   const seen = new Set<string>();
+
   for (const c of changes) {
     if (seen.has(c.viewCode)) {
       throw new ValidationError(`viewCode duplicado en el lote: ${c.viewCode}`, 'INVALID_MASK', {
         viewCode: c.viewCode
       });
     }
+
     seen.add(c.viewCode);
   }
 
@@ -102,6 +109,7 @@ export const POST = withPermission(
           { status: 400 }
         );
       }
+
       if (e instanceof ForbiddenError) {
         console.warn('[RBAC_FORBIDDEN_BATCH]', e.code, e.details ?? {});
 
@@ -110,6 +118,7 @@ export const POST = withPermission(
           { status: 403 }
         );
       }
+
       throw e; // TenantError / inesperado -> manejo existente
     }
 

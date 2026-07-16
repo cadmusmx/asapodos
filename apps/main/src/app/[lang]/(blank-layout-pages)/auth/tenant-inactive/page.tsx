@@ -1,17 +1,35 @@
 'use client'
 
+import { useSearchParams } from 'next/navigation'
+
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
 
 const TenantInactive = () => {
+  const searchParams = useSearchParams()
+  const status = searchParams.get('status')
+  const reason = searchParams.get('reason')
+  const message = searchParams.get('message')
+
+  const isSuspended = status === 'suspended'
+
   return (
     <div className='flex items-center justify-center min-bs-[100dvh] relative p-6 overflow-x-hidden'>
       <div className='flex items-center flex-col text-center gap-8'>
         <div className='flex flex-col gap-3'>
           <Typography variant='h4' color='text.primary'>
-            Organization Suspended
+            {isSuspended ? 'Organization Suspended' : 'Organization Inactive'}
           </Typography>
-          <Typography color='text.secondary'>This organization is currently suspended and not accessible.</Typography>
+          <Typography color='text.secondary'>
+            {message || (isSuspended
+              ? 'This organization has been suspended due to a payment issue or request.'
+              : 'This organization is currently inactive and not accessible.')}
+          </Typography>
+          {reason && (
+            <Typography variant='body2' color='text.warning' sx={{ mt: 1 }}>
+              Reason: {reason}
+            </Typography>
+          )}
           <Typography variant='body2' color='text.disabled'>
             Please contact support to restore access.
           </Typography>

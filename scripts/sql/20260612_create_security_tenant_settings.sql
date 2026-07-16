@@ -29,3 +29,5 @@ BEGIN
   )
 END
 GO
+
+/* ModulesJson ya no forma parte de la configuracion, ahora los "modulos" se resuelven via plan del tenant y se autoriza por rbac

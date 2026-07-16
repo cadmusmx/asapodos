@@ -5,7 +5,7 @@
  */
 
 export type UnauthorizedCode = 'UNAUTHENTICATED' | 'MISSING_TENANT';
-export type ForbiddenCode = 'PERMISSION_DENIED' | 'TENANT_MISMATCH';
+export type ForbiddenCode = 'PERMISSION_DENIED' | 'TENANT_MISMATCH' | 'PLAN_RESTRICTED';
 export type ValidationCode = 'INVALID_MASK' | 'UNKNOWN_VIEW' | 'PROTECTED_VIEW';
 
 /** Falta sesión o falta contexto de tenant. El HOF lo mapea a 401. */

@@ -13,7 +13,7 @@ type TenantRow = {
   TenantID: string
 }
 
-const ADMIN_DOMAIN = process.env.ADMIN_TENANT ?? 'gasohub.com'
+const ADMIN_TENANT = process.env.ADMIN_TENANT ?? 'gasohub.com'
 
 async function safeWriteAudit(params: Parameters<typeof writeAuthAudit>[0]) {
   try {
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
       SELECT
         TenantID
       FROM Security.Tenants
-      WHERE LOWER(Dominio) = LOWER(${ADMIN_DOMAIN})
+      WHERE LOWER(Dominio) = LOWER(${ADMIN_TENANT})
     `
 
     if (!adminTenant[0]?.TenantID) {
