@@ -44,4 +44,4 @@ export const GET = withPermission('material_validation', async (_req, { tenantId
 
     return NextResponse.json({ message: 'Ha ocurrido un error inesperado' }, { status: 500 });
   }
-})
+});

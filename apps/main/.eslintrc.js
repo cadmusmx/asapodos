@@ -13,6 +13,7 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-unused-vars': 'error',
     '@typescript-eslint/no-non-null-assertion': 'off',
+    "@typescript-eslint/no-unused-vars": ["error", { "ignoreRestSiblings": true }],
     'import/named': 'off',
     'lines-around-comment': [
       'error',
