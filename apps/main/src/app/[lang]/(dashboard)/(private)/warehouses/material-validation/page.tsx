@@ -18,10 +18,9 @@ const MaterialValidationPage = async (props: { params: Promise<{ lang: Locale }>
     redirect(getLocalizedUrl(getTargetByReason(access.reason), lang));
   }
 
-  const canCreate = (access.mask & PERM.W) === PERM.W;
   const canEdit = (access.mask & PERM.U) === PERM.U;
 
-  return <MaterialValidationList canCreate={canCreate} canEdit={canEdit} />;
+  return <MaterialValidationList canEdit={canEdit} />;
 }
 
 export default MaterialValidationPage;

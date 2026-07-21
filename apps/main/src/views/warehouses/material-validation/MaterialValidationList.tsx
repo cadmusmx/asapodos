@@ -33,7 +33,7 @@ interface Catalogs {
   carriers: Array<{ Id: number; Carrier: string }>;
   motivos: Array<{ Id: number; Motivo: string }>;
   estadosFisicos: Array<{ Clave: string; Estado: string }>;
-};
+}
 
 interface VMRow {
   Id: number;
@@ -48,7 +48,7 @@ interface VMRow {
   Status: number;
   Vinculado: number | null;
   ES: boolean;
-};
+}
 
 const EMPTY_CATALOGS: Catalogs = {
   almacenes: [], proyectos: [], tiposMaterial: [], carriers: [], motivos: [], estadosFisicos: [],
@@ -56,7 +56,7 @@ const EMPTY_CATALOGS: Catalogs = {
 
 const columnHelper = createColumnHelper<VMRow>();
 
-const MaterialValidationList = ({ canCreate, canEdit }: { canCreate: boolean; canEdit: boolean }) => {
+const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
   const router = useRouter();
   const { lang } = useParams();
 
@@ -208,82 +208,67 @@ const MaterialValidationList = ({ canCreate, canEdit }: { canCreate: boolean; ca
       <CardHeader
         title='Validación de Material'
         action={
-          canCreate ? (
-            <Button
-              variant='contained'
-              startIcon={<i className='ri-add-line' />}
-              onClick={() => router.push(`/${lang}/warehouses/material-validation/nueva`)}
-            >
-              Nueva validación
-            </Button>
-          ) : null
+          <ToggleButtonGroup
+            exclusive
+            fullWidth
+            size='medium'
+            value={es}
+            onChange={(_, v) => {
+              if (v !== null) {
+                setEs(v)
+                resetToFirst()
+              }
+            }}
+          >
+            <ToggleButton value={true}>Entradas</ToggleButton>
+            <ToggleButton value={false}>Salidas</ToggleButton>
+          </ToggleButtonGroup>
         }
       />
       <CardContent>
         {/* Filtros */}
-        <Grid container spacing={4} className='mbe-4'>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <ToggleButtonGroup
-              exclusive
-              fullWidth
-              size='small'
-              value={es}
-              onChange={(_, v) => {
-                if (v !== null) {
-                  setEs(v)
-                  resetToFirst()
-                }
-              }}
-            >
-              <ToggleButton value={true}>Entradas</ToggleButton>
-              <ToggleButton value={false}>Salidas</ToggleButton>
-            </ToggleButtonGroup>
-          </Grid>
+        <Grid container spacing={2} className='mbe-4'>
           <Grid size={{ xs: 6, sm: 3, md: 2 }}>
             <TextField
-              fullWidth size='small' type='date' label='Desde' InputLabelProps={{ shrink: true }}
+              fullWidth size='small' type='date' label='Desde' slotProps={{ inputLabel: { shrink: true } }}
               value={fechaInicio}
               onChange={e => { setFechaInicio(e.target.value); resetToFirst() }}
             />
           </Grid>
           <Grid size={{ xs: 6, sm: 3, md: 2 }}>
             <TextField
-              fullWidth size='small' type='date' label='Hasta' InputLabelProps={{ shrink: true }}
+              fullWidth size='small' type='date' label='Hasta' slotProps={{ inputLabel: { shrink: true } }}
               value={fechaFin}
               onChange={e => { setFechaFin(e.target.value); resetToFirst() }}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 5 }}>
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 6, md: 3 }}>
-                <TextField fullWidth select size='small' label='Proyecto' value={proyecto}
-                  onChange={e => { setProyecto(e.target.value); resetToFirst() }}>
-                  <MenuItem value=''>Todos</MenuItem>
-                  {catalogs.proyectos.map(p => <MenuItem key={p.Id} value={p.Id}>{p.Proyecto}</MenuItem>)}
-                </TextField>
-              </Grid>
-              <Grid size={{ xs: 6, md: 3 }}>
-                <TextField fullWidth select size='small' label='Tipo' value={tipoMaterial}
-                  onChange={e => { setTipoMaterial(e.target.value); resetToFirst() }}>
-                  <MenuItem value=''>Todos</MenuItem>
-                  {catalogs.tiposMaterial.map(t => <MenuItem key={t.Id} value={t.Id}>{t.Tipo}</MenuItem>)}
-                </TextField>
-              </Grid>
-              <Grid size={{ xs: 6, md: 3 }}>
-                <TextField fullWidth select size='small' label='Almacén' value={almacen}
-                  onChange={e => { setAlmacen(e.target.value); resetToFirst() }}>
-                  <MenuItem value=''>Todos</MenuItem>
-                  {catalogs.almacenes.map(a => <MenuItem key={a.Id} value={a.Id}>{a.Nombre}</MenuItem>)}
-                </TextField>
-              </Grid>
-              <Grid size={{ xs: 6, md: 3 }}>
-                <TextField fullWidth select size='small' label='Carrier' value={carrier}
-                  onChange={e => { setCarrier(e.target.value); resetToFirst() }}>
-                  <MenuItem value=''>Todos</MenuItem>
-                  {catalogs.carriers.map(c => <MenuItem key={c.Id} value={c.Id}>{c.Carrier}</MenuItem>)}
-                </TextField>
-              </Grid>
-            </Grid>
+          <Grid size={{ xs: 6, sm: 3, md: 2 }}>
+            <TextField fullWidth select size='small' label='Proyecto' value={proyecto}
+              onChange={e => { setProyecto(e.target.value); resetToFirst() }}>
+              <MenuItem value=''>Todos</MenuItem>
+              {catalogs.proyectos.map(p => <MenuItem key={p.Id} value={p.Id}>{p.Proyecto}</MenuItem>)}
+            </TextField>
+          </Grid>
+          <Grid size={{ xs: 6, sm: 3, md: 2 }}>
+            <TextField fullWidth select size='small' label='Tipo' value={tipoMaterial}
+              onChange={e => { setTipoMaterial(e.target.value); resetToFirst() }}>
+              <MenuItem value=''>Todos</MenuItem>
+              {catalogs.tiposMaterial.map(t => <MenuItem key={t.Id} value={t.Id}>{t.Tipo}</MenuItem>)}
+            </TextField>
+          </Grid>
+          <Grid size={{ xs: 6, sm: 3, md: 2 }}>
+            <TextField fullWidth select size='small' label='Almacén' value={almacen}
+              onChange={e => { setAlmacen(e.target.value); resetToFirst() }}>
+              <MenuItem value=''>Todos</MenuItem>
+              {catalogs.almacenes.map(a => <MenuItem key={a.Id} value={a.Id}>{a.Nombre}</MenuItem>)}
+            </TextField>
+          </Grid>
+          <Grid size={{ xs: 6, sm: 3, md: 2 }}>
+            <TextField fullWidth select size='small' label='Carrier' value={carrier}
+              onChange={e => { setCarrier(e.target.value); resetToFirst() }}>
+              <MenuItem value=''>Todos</MenuItem>
+              {catalogs.carriers.map(c => <MenuItem key={c.Id} value={c.Id}>{c.Carrier}</MenuItem>)}
+            </TextField>
           </Grid>
         </Grid>
 
