@@ -21,8 +21,10 @@ import Alert from '@mui/material/Alert';
 // Style Imports
 import styles from '@core/styles/table.module.css';
 
-// Base pública de S3 para construir URLs de fotos/documentos (llaves guardadas en BD).
-const S3_BASE = process.env.NEXT_PUBLIC_S3_BASE_URL ?? '';
+// Base pública de S3 para construir URLs de fotos/QR/documentos (llaves en BD).
+// En el navegador solo se leen env con prefijo NEXT_PUBLIC_.
+// Mismo valor que S3_PUBLIC_BASE_URL del server, incluido el sufijo de entorno (/Qa/ | /Pr/).
+const S3_BASE = process.env.NEXT_PUBLIC_S3_PUBLIC_BASE_URL ?? '';
 
 interface Pieza { id: number; cl: number | string; clt: string; pzs: string };
 
@@ -38,32 +40,37 @@ interface VMDetail {
   PiezasMotivo: string; PiezasEstadoF: string;
 }
 
-const photoUrl = (key?: string | null): string => (key ? (S3_BASE ? `${S3_BASE}/${key}` : key) : '');
+const photoUrl = (key?: string | null): string => {
+  if (!key) return ''
+  if (!S3_BASE) return key
+
+  return `${S3_BASE.replace(/\/+$/, '')}/${String(key).replace(/^\/+/, '')}`
+}
 
 const firmaSrc = (f?: string | null): string =>
-  !f ? '' : f.startsWith('data:') ? f : `data:image/png;base64,${f}`;
+  !f ? '' : f.startsWith('data:') ? f : `data:image/png;base64,${f}`
 
 function parsePiezas(json: unknown): Pieza[] {
-  if (typeof json !== 'string' || !json) return [];
+  if (typeof json !== 'string' || !json) return []
 
   try {
-    const arr = JSON.parse(json);
+    const arr = JSON.parse(json)
 
-    return Array.isArray(arr) ? arr : [];
+    return Array.isArray(arr) ? arr : []
   } catch {
-    return [];
+    return []
   }
 }
 
 function parseDocs(json: unknown): string[] {
-  if (typeof json !== 'string' || !json) return [];
+  if (typeof json !== 'string' || !json) return []
 
   try {
-    const arr = JSON.parse(json);
+    const arr = JSON.parse(json)
 
-    return Array.isArray(arr) ? arr : [];
+    return Array.isArray(arr) ? arr : []
   } catch {
-    return [];
+    return []
   }
 }
 
@@ -73,7 +80,7 @@ const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
     <Typography variant='body2' color='text.secondary'>{label}</Typography>
     <Typography variant='body1'>{value ?? '—'}</Typography>
   </Grid>
-);
+)
 
 const PiezasTable = ({ titulo, piezas, claveLabel }: { titulo: string; piezas: Pieza[]; claveLabel: string }) => (
   <>
@@ -91,7 +98,7 @@ const PiezasTable = ({ titulo, piezas, claveLabel }: { titulo: string; piezas: P
       </div>
     )}
   </>
-);
+)
 
 const Foto = ({ label, url }: { label: string; url: string }) => (
   <Grid size={{ xs: 6, md: 3 }}>
@@ -129,14 +136,14 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
         if (res.status === 403) throw new Error('No tienes permiso para ver este registro.');
         if (res.status === 404) throw new Error('Registro no encontrado.');
         if (!res.ok) throw new Error('No se pudo cargar el registro.');
+        const data = await res.json();
 
-        setData(await res.json());
+        setData(data);
+        setLoading(false);
       } catch (e) {
         if ((e as Error).name === 'AbortError') return;
         setError((e as Error).message);
         setData(null);
-      } finally {
-        setLoading(false);
       }
     }
 
@@ -161,7 +168,7 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
     return (
       <Card><CardContent>
         <Alert severity='error' className='mbe-4'>{error ?? 'Sin datos'}</Alert>
-        <Button variant='outlined' onClick={() => router.push(`/${lang}/warehouses/material-validation`)}>
+        <Button variant='outlined' color='secondary' onClick={() => router.push(`/${lang}/warehouses/material-validation`)}>
           Volver al listado
         </Button>
       </CardContent></Card>
@@ -175,8 +182,8 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
       <CardHeader
         title={
           <div className='flex items-center gap-2'>
-            <span>Folio {data.Folio}</span>
-            <Chip size='small' variant='tonal' color={data.ES ? 'primary' : 'secondary'} label={data.ES ? 'Entrada' : 'Salida'} />
+            <span>{data.Folio}</span>
+            <Chip size='small' variant='tonal' color={data.ES ? 'info' : 'secondary'} label={data.ES ? 'Entrada' : 'Salida'} />
             <Chip size='small' variant='tonal' color={data.Status === 0 ? 'warning' : 'success'} label={data.Status === 0 ? 'Pendiente' : 'Revisado'} />
             {data.Cancelada && <Chip size='small' variant='tonal' color='error' label='Cancelada' />}
             {data.Vinculado && <Chip size='small' variant='tonal' color='info' label='Vinculado' />}
@@ -184,7 +191,7 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
         }
         action={
           <div className='flex gap-2'>
-            <Button variant='outlined' onClick={() => router.push(`/${lang}/warehouses/material-validation`)}>Volver</Button>
+            <Button variant='outlined' color='secondary' onClick={() => router.push(`/${lang}/warehouses/material-validation`)}>Volver</Button>
             {canEdit && data.Status === 0 && (
               <Button variant='contained' startIcon={<i className='ri-edit-line' />}
                 onClick={() => router.push(`/${lang}/warehouses/material-validation/${encodeURIComponent(folio)}/editar`)}>
@@ -216,7 +223,6 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
           <Field label='Capturado' value={new Date(data.FechaCaptura).toLocaleString()} />
           <Field label='Editado' value={data.FechaEdicion ? new Date(data.FechaEdicion).toLocaleString() : '—'} />
           <Field label='Notas' value={data.Notas} />
-          <Field label='QR' value={data.Qr} />
         </Grid>
 
         <Divider className='mlb-6' />
@@ -229,17 +235,6 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
           <Foto label='Placas' url={photoUrl(data.PlacasFoto)} />
           {data.ES && <Foto label='Material descargado' url={photoUrl(data.MaterialDescargadoFoto)} />}
         </Grid>
-
-        <Divider className='mlb-6' />
-
-        {/* Firma */}
-        <Typography variant='h6' className='mbe-4'>Firma ({data.AspNombre})</Typography>
-        {firmaSrc(data.AspFirma) ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={firmaSrc(data.AspFirma)} alt='Firma' style={{ maxWidth: 320, border: '1px solid var(--mui-palette-divider)', borderRadius: 8 }} />
-        ) : (
-          <Typography variant='body2' color='text.secondary'>Sin firma</Typography>
-        )}
 
         <Divider className='mlb-6' />
 
@@ -265,6 +260,30 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
             </div>
           </>
         )}
+
+        <Divider className='mlb-6' />
+
+        <Grid container spacing={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Typography variant='h6' className='mbe-4'>Firma ({data.AspNombre})</Typography>
+            {firmaSrc(data.AspFirma) ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={firmaSrc(data.AspFirma)} alt='Firma' style={{ maxWidth: 320, border: '1px solid var(--mui-palette-divider)', borderRadius: 8 }} />
+            ) : (
+              <Typography variant='body2' color='text.secondary'>Sin firma</Typography>
+            )}
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Typography variant='h6' className='mbe-4'>Código QR</Typography>
+            {data.Qr && (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={photoUrl(data.Qr)} alt='QR' style={{ maxWidth: 200 }} />
+              </>
+            )}
+          </Grid>
+        </Grid>
+
       </CardContent>
     </Card>
   );
