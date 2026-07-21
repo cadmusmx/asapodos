@@ -22,8 +22,6 @@ import Alert from '@mui/material/Alert';
 import styles from '@core/styles/table.module.css';
 
 // Base pública de S3 para construir URLs de fotos/QR/documentos (llaves en BD).
-// En el navegador solo se leen env con prefijo NEXT_PUBLIC_.
-// Mismo valor que S3_PUBLIC_BASE_URL del server, incluido el sufijo de entorno (/Qa/ | /Pr/).
 const S3_BASE = process.env.NEXT_PUBLIC_S3_PUBLIC_BASE_URL ?? '';
 
 interface Pieza { id: number; cl: number | string; clt: string; pzs: string };
@@ -62,15 +60,15 @@ function parsePiezas(json: unknown): Pieza[] {
   }
 }
 
-function parseDocs(json: unknown): string[] {
-  if (typeof json !== 'string' || !json) return []
+function parseDocs(json: unknown): Array<{ name: string; file: string }> {
+  if (typeof json !== 'string' || !json) return [];
 
   try {
-    const arr = JSON.parse(json)
+    const arr = JSON.parse(json);
 
-    return Array.isArray(arr) ? arr : []
+    return Array.isArray(arr) ? arr : [];
   } catch {
-    return []
+    return [];
   }
 }
 
@@ -255,7 +253,7 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
             <Typography variant='h6' className='mbe-4'>Documentos</Typography>
             <div className='flex flex-col gap-1'>
               {documentos.map((d, i) => (
-                <a key={i} href={photoUrl(d)} target='_blank' rel='noreferrer'>Documento {i + 1}</a>
+                <a key={i} href={photoUrl(d.file)} target='_blank' rel='noreferrer'>{d.name || `Documento ${i + 1}`}</a>
               ))}
             </div>
           </>
@@ -267,8 +265,9 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant='h6' className='mbe-4'>Firma ({data.AspNombre})</Typography>
             {firmaSrc(data.AspFirma) ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={firmaSrc(data.AspFirma)} alt='Firma' style={{ maxWidth: 320, border: '1px solid var(--mui-palette-divider)', borderRadius: 8 }} />
+              <div style={{ width: '60%', padding: '1em', borderRadius: 8, backgroundColor: '#FFF' }}>
+                <img src={firmaSrc(data.AspFirma)} alt='Firma' style={{ width: '100%', minWidth: 300 }} />
+              </div>
             ) : (
               <Typography variant='body2' color='text.secondary'>Sin firma</Typography>
             )}
@@ -276,10 +275,9 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant='h6' className='mbe-4'>Código QR</Typography>
             {data.Qr && (
-              <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={photoUrl(data.Qr)} alt='QR' style={{ maxWidth: 200 }} />
-              </>
+              <div style={{ width: '40%', padding: '1em', borderRadius: 8, backgroundColor: '#FFF' }}>
+                <img src={photoUrl(data.Qr)} alt='QR' style={{ width: '100%', minWidth: 200 }} />
+              </div>
             )}
           </Grid>
         </Grid>

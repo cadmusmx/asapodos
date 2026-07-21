@@ -184,7 +184,7 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
         id: 'actions',
         header: '',
         cell: ({ row }) => (
-          <Button size='small' variant='outlined' onClick={() => goToDetail(row.original.Folio)}>
+          <Button size='small' variant='outlined' color='info' onClick={() => goToDetail(row.original.Folio)}>
             {canEdit ? 'Ver / Editar' : 'Ver'}
           </Button>
         ),

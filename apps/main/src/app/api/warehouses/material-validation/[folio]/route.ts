@@ -10,10 +10,9 @@ import { piezasValues, safeIds, type Pieza, type PiezaEdit } from '../_shared';
 type RouteCtx = { params: Promise<{ folio: string }> };
 
 // Cabecera editable por el DUEÑO (app).
-// Incluye Folio (rename: se resuelve por el folio viejo de la URL, guardia UNIQUE(TenantID,Folio) -> 409).
-// ES y Fecha se tratan aparte por conversión de tipo.
+// Folio NO va aquí: su rename se maneja en el bloque explícito (con trim y guardia de diferencia).
+// ES y Fecha también se tratan aparte por conversión de tipo.
 const FIELD_MAP_FULL: Record<string, string> = {
-  folio: 'Folio',
   qr: 'Qr',
   idProyecto: 'IdProyecto',
   idTipoMaterial: 'IdTipoMaterial',
