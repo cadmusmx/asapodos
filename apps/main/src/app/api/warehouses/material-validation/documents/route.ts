@@ -48,7 +48,7 @@ export const POST = withPermission(
 
       const buffer = Buffer.from(await file.arrayBuffer());
       const ts = new Date().toISOString().replace(/[:.]/g, '').slice(0, 15);
-      const key = `${slug}/valMat/docs/${ts}-web${ext}`;
+      const key = `${slug}/material_validation/docs/web/${ts}-web${ext}`;
 
       await s3.send(new PutObjectCommand({
         Bucket: S3_BUCKET,
