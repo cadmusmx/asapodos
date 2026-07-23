@@ -142,6 +142,7 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
         if ((e as Error).name === 'AbortError') return;
         setError((e as Error).message);
         setData(null);
+        setLoading(false);
       }
     }
 

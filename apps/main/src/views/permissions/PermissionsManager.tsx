@@ -34,7 +34,7 @@ const PermissionsManager = ({ canEdit }: { canEdit: boolean }) => {
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>
         <div className='flex items-center justify-between is-full'>
-          <div className=''>
+          <div>
             <Typography variant='h4' className='mbe-1'>
               Permisos y Accesos
             </Typography>

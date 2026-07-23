@@ -63,6 +63,9 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
   const goToDetail = (folio: string) =>
     router.push(`/${lang}/warehouses/material-validation/${encodeURIComponent(folio)}`);
 
+  const goCatalogs = () => router.push(`/${lang}/warehouses/material-validation/catalogos`);
+
+
   // Filtros (cada cambio vuelve a la primera página)
   const [es, setEs] = useState(true); // true = entradas, false = salidas
   const [fechaInicio, setFechaInicio] = useState('');
@@ -208,21 +211,24 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
       <CardHeader
         title='Validación de Material'
         action={
-          <ToggleButtonGroup
-            exclusive
-            fullWidth
-            size='medium'
-            value={es}
-            onChange={(_, v) => {
-              if (v !== null) {
-                setEs(v)
-                resetToFirst()
-              }
-            }}
-          >
-            <ToggleButton value={true}>Entradas</ToggleButton>
-            <ToggleButton value={false}>Salidas</ToggleButton>
-          </ToggleButtonGroup>
+          <div className='flex gap-4'>
+            <ToggleButtonGroup
+              exclusive
+              fullWidth
+              size='small'
+              value={es}
+              onChange={(_, v) => {
+                if (v !== null) {
+                  setEs(v)
+                  resetToFirst()
+                }
+              }}
+            >
+              <ToggleButton value={true}>Entradas</ToggleButton>
+              <ToggleButton value={false}>Salidas</ToggleButton>
+            </ToggleButtonGroup>
+            <Button fullWidth size='small' variant='outlined' color='secondary' onClick={goCatalogs}>Catálogos</Button>
+          </div>
         }
       />
       <CardContent>
