@@ -26,13 +26,15 @@ import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '
 // Style Imports
 import styles from '@core/styles/table.module.css';
 
+import type { AlmacenRow, ProyectoRow, TipoMaterialRow, CarrierRow, MotivoRow, EstadoFisicoRow } from '@/app/api/warehouses/material-validation/catalogs/route';
+
 interface Catalogs {
-  almacenes: Array<{ Id: number; Nombre: string }>;
-  proyectos: Array<{ Id: number; Proyecto: string }>;
-  tiposMaterial: Array<{ Id: number; Tipo: string }>;
-  carriers: Array<{ Id: number; Carrier: string }>;
-  motivos: Array<{ Id: number; Motivo: string }>;
-  estadosFisicos: Array<{ Clave: string; Estado: string }>;
+  almacenes: Array<AlmacenRow>;
+  proyectos: Array<ProyectoRow>;
+  tiposMaterial: Array<TipoMaterialRow>;
+  carriers: Array<CarrierRow>;
+  motivos: Array<MotivoRow>;
+  estadosFisicos: Array<EstadoFisicoRow>;
 }
 
 interface VMRow {

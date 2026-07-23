@@ -36,7 +36,7 @@ export const POST = withPermission('material_validation', async (req, { auth, te
 
     if (required.some(isMissing)) return NextResponse.json({ message: 'Faltan datos' }, { status: 400 });
 
-    if (Number(b.idCarrier) === 4 && !b.carrier) {
+    if (Number(b.idCarrier) === 4 && !b.carrier) { // Alinear con EsOtro
       return NextResponse.json({ message: 'Falta el carrier' }, { status: 400 });
     }
 

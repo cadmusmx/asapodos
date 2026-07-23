@@ -24,6 +24,8 @@ import Alert from '@mui/material/Alert';
 import { toast } from 'react-toastify';
 import { Controller, useForm } from 'react-hook-form';
 
+import type { AlmacenRow, CarrierRow, EstadoFisicoRow, MotivoRow, ProyectoRow, TipoMaterialRow } from '@/app/api/warehouses/material-validation/catalogs/route';
+
 // Base pública S3 (misma que el detalle) para enlazar documentos existentes.
 const S3_BASE = process.env.NEXT_PUBLIC_S3_PUBLIC_BASE_URL ?? '';
 
@@ -35,12 +37,12 @@ const fileUrl = (key?: string | null): string => {
 };
 
 interface Catalogs {
-  almacenes: Array<{ Id: number; Nombre: string }>;
-  proyectos: Array<{ Id: number; Proyecto: string }>;
-  tiposMaterial: Array<{ Id: number; Tipo: string }>;
-  carriers: Array<{ Id: number; Carrier: string }>;
-  motivos: Array<{ Id: number; Motivo: string }>;
-  estadosFisicos: Array<{ Clave: string; Estado: string }>;
+  almacenes: Array<AlmacenRow>;
+  proyectos: Array<ProyectoRow>;
+  tiposMaterial: Array<TipoMaterialRow>;
+  carriers: Array<CarrierRow>;
+  motivos: Array<MotivoRow>;
+  estadosFisicos: Array<EstadoFisicoRow>;
 }
 
 interface Documento { name: string; file: string }
@@ -84,6 +86,10 @@ const parseDocs = (json: unknown): Documento[] => {
   }
 };
 
+/** Conserva el id solo si sigue vigente (activo) en el catálogo; si no, '' para forzar reselección. */
+const idSiVigente = (list: Array<{ Id: number }>, id: unknown): number | '' =>
+  list.some(x => x.Id === Number(id)) ? Number(id) : '';
+
 const MaterialValidationEditForm = ({ folio }: { folio: string }) => {
   const router = useRouter();
   const { lang } = useParams();
@@ -104,6 +110,7 @@ const MaterialValidationEditForm = ({ folio }: { folio: string }) => {
   });
 
   const idCarrier = watch('idCarrier');
+  const carrierEsOtro = catalogs.carriers.find(c => c.Id === Number(idCarrier))?.EsOtro ?? false;
 
   const backToDetail = () => router.push(`/${lang}/warehouses/material-validation/${encodeURIComponent(folio)}`);
 
@@ -134,8 +141,9 @@ const MaterialValidationEditForm = ({ folio }: { folio: string }) => {
         setCatalogs(cat);
         setDocs(parseDocs(rec.MaterialDocumentos));
         reset({
-          idProyecto: rec.IdProyecto ?? '',
-          idTipoMaterial: rec.IdTipoMaterial ?? '',
+          idProyecto: idSiVigente(cat.proyectos, rec.IdProyecto),
+          idTipoMaterial: idSiVigente(cat.tiposMaterial, rec.IdTipoMaterial),
+          idAlmacenDestino: idSiVigente(cat.almacenes, rec.IdAlmacenDestino),
           fecha: toDateInput(rec.Fecha),
           nombreSitio: rec.NombreSitio ?? '',
           idSitio: rec.IdSitio ?? '',
@@ -143,7 +151,6 @@ const MaterialValidationEditForm = ({ folio }: { folio: string }) => {
           nombreContacto: rec.NombreContacto ?? '',
           idCarrier: rec.IdCarrier ?? '',
           carrier: rec.OtroCarrier ?? '',
-          idAlmacenDestino: rec.IdAlmacenDestino ?? '',
           notas: rec.Notas ?? '',
         });
       } catch (e) {
@@ -208,7 +215,7 @@ const MaterialValidationEditForm = ({ folio }: { folio: string }) => {
         cuentaCliente: values.cuentaCliente,
         nombreContacto: values.nombreContacto,
         idCarrier: values.idCarrier === '' ? undefined : Number(values.idCarrier),
-        carrier: Number(values.idCarrier) === 4 ? values.carrier : null,
+        carrier: carrierEsOtro ? values.carrier : null,
         idAlmacenDestino: values.idAlmacenDestino === '' ? undefined : Number(values.idAlmacenDestino),
         notas: values.notas,
         materialDocumentos: JSON.stringify(docs),
@@ -321,9 +328,9 @@ const MaterialValidationEditForm = ({ folio }: { folio: string }) => {
                 )}
               />
             </Grid>
-            {Number(idCarrier) === 4 && (
+            {carrierEsOtro && (
               <Grid size={{ xs: 12, md: 4 }}>
-                <Controller name='carrier' control={control} rules={{ required: true }}
+                <Controller name='carrier' control={control} rules={{ required: carrierEsOtro }}
                   render={({ field, fieldState }) => <TextField {...field} fullWidth label='Otro carrier' error={!!fieldState.error} />} />
               </Grid>
             )}
