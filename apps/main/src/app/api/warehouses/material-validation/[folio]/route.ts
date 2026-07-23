@@ -88,7 +88,7 @@ export const GET = withPermission<RouteCtx>(
             INNER JOIN dbo.GASOAL_VMAlmacenes al ON VM.IdAlmacenDestino = al.Id
             INNER JOIN dbo.Cat_VMProyecto pro ON VM.IdProyecto = pro.Id
             INNER JOIN dbo.Cat_VMTiposMaterial tm ON VM.IdTipoMaterial = tm.Id
-            INNER JOIN dbo.Cat_Carrier ca ON VM.IdCarrier = ca.Id
+            INNER JOIN dbo.Cat_Carriers ca ON VM.IdCarrier = ca.Id
             INNER JOIN dbo.GASOCO_Cat_Usuarios U ON VM.IdUsuario = U.IdUsuario
             LEFT JOIN dbo.GASOCO_Cat_Usuarios USR ON VM.IdUsuarioEditorWeb = USR.IdUsuario
             WHERE VM.TenantID = ${tenantId} AND VM.Folio = ${folio}
