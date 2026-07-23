@@ -37,6 +37,7 @@ export const AUDIT_ACTIONS = {
   PLT_CR: 'PLT_CR',
   PLT_RM: 'PLT_RM',
   CHPERMSS: 'CHPERMSS',
+  CATALOG: 'CATALOG',
 } as const;
 
 export type AuditActionCode = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
@@ -65,6 +66,7 @@ export const AUDIT_ACTION_LABELS: Record<AuditActionCode, string> = {
   PLT_CR: 'Rol de plataforma asignado',
   PLT_RM: 'Rol de plataforma removido',
   CHPERMSS: 'Cambio de permisos via preset',
+  CATALOG: 'Actualización de catálogos',
 } as const;
 
 // Lista de códigos conocidos. La API la usa para el filtro "OTHER" (NOT IN).

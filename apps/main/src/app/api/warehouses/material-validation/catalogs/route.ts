@@ -7,7 +7,7 @@ import { withTenantContext } from '@/lib/tenant-context';
 interface AlmacenRow { Id: number; Nombre: string };
 interface ProyectoRow { Id: number; Proyecto: string };
 interface TipoMaterialRow { Id: number; Tipo: string };
-interface CarrierRow { Id: number; Carrier: string };
+interface CarrierRow { Id: number; Carrier: string, EsOtro: boolean };
 interface MotivoRow { Id: number; Motivo: string };
 interface EstadoFisicoRow { Clave: string; Estado: string };
 
@@ -26,7 +26,7 @@ export const GET = withPermission('material_validation', async (_req, { tenantId
         SELECT Id, Tipo FROM dbo.Cat_VMTiposMaterial ORDER BY Id ASC`;
 
       const carriers = await tx.$queryRaw<CarrierRow[]>`
-        SELECT Id, Carrier FROM dbo.Cat_Carriers ORDER BY Id ASC`;
+        SELECT Id, Carrier, EsOtro FROM dbo.Cat_Carriers ORDER BY Id ASC`;
 
       const motivos = await tx.$queryRaw<MotivoRow[]>`
         SELECT Id, Motivo FROM dbo.Cat_VMMotivo ORDER BY Id ASC`;
