@@ -48,7 +48,8 @@ export const POST = withPermission(
 
       const buffer = Buffer.from(await file.arrayBuffer());
       const ts = new Date().toISOString().replace(/[:.]/g, '').slice(0, 15);
-      const key = `Pr/${slug}/material_validation/docs/web/${ts}-web${ext}`;
+      const folder = S3_PUBLIC_BASE_URL && S3_PUBLIC_BASE_URL.includes('Qa') ? 'Qa/' : 'Pr/';
+      const key = `${folder}${slug}/material_validation/docs/web/${ts}-web${ext}`;
 
       await s3.send(new PutObjectCommand({
         Bucket: S3_BUCKET,
@@ -57,7 +58,7 @@ export const POST = withPermission(
         ContentType: file.type || 'application/octet-stream',
       }));
 
-      const url = S3_PUBLIC_BASE_URL ? `${S3_PUBLIC_BASE_URL}/${key}` : key;
+      const url = S3_PUBLIC_BASE_URL ? `${S3_PUBLIC_BASE_URL}${key}` : key;
 
       return NextResponse.json({ success: true, key, url });
     } catch (e) {

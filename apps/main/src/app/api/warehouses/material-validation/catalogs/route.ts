@@ -26,7 +26,7 @@ export const GET = withPermission('material_validation', async (_req, { tenantId
         SELECT Id, Tipo FROM dbo.Cat_VMTiposMaterial ORDER BY Id ASC`;
 
       const carriers = await tx.$queryRaw<CarrierRow[]>`
-        SELECT Id, Carrier FROM dbo.Cat_VMCarrier ORDER BY Id ASC`;
+        SELECT Id, Carrier FROM dbo.Cat_Carriers ORDER BY Id ASC`;
 
       const motivos = await tx.$queryRaw<MotivoRow[]>`
         SELECT Id, Motivo FROM dbo.Cat_VMMotivo ORDER BY Id ASC`;
