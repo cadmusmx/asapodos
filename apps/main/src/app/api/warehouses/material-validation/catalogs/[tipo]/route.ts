@@ -1,12 +1,3 @@
-// app/api/warehouses/material-validation/catalogs/[tipo]/route.ts
-//
-// Gestión de catálogos VM · colección.
-//   GET  -> listar TODO lo visible (propio + global), con Activo y EsGlobal. Bit R.
-//   POST -> crear fila del tenant (nunca global). Bit W.
-// Bits por default verbo->bit; sin overrides.
-//
-// Auditoría: acción genérica CATALOG (reusable por otros módulos).
-
 import { NextResponse } from 'next/server';
 
 import { Prisma } from '@prisma/client';
@@ -87,9 +78,8 @@ export const POST = withPermission<RouteCtx>(
       const N = Prisma.raw(nameCol);
 
       const outcome = await withTenantContext(tenantId, async tx => {
-        // Pre-chequeo de colisión: el UNIQUE(TenantID, <nombre>) haría fallar el
-        // INSERT igual, pero así devolvemos un mensaje accionable (y el id de la
-        // fila inactiva para que la UI ofrezca "reactivar" en vez de crear otra).
+        // Pre-chequeo de colisión: el UNIQUE(TenantID, <nombre>) haría fallar el INSERT igual,
+        // pero así devolvemos un mensaje accionable (y el id de la fila inactiva para que la UI ofrezca "reactivar" en vez de crear otra).
         const dup = await tx.$queryRaw<Array<{ Id: number; Activo: boolean; TenantID: string | null }>>`
           SELECT TOP 1 Id, Activo, TenantID
           FROM ${T}

@@ -1,9 +1,31 @@
-'use client'
+import { redirect } from 'next/navigation'
 
-import WarehousesView from './page.client'
+import type { Locale } from '@configs/i18n'
 
-const Page = () => {
-  return <WarehousesView />
+import { requireViewAccess } from '@/lib/auth/require-view-access'
+import { getLocalizedUrl } from '@/utils/i18n'
+
+import InventoryView from './page.client'
+
+const Page = async (
+  props: {
+    params: Promise<{ lang: Locale }>
+  }
+) => {
+  const { lang } = await props.params
+
+  const access = await requireViewAccess('inventory')
+
+  if (!access.ok) {
+    const target =
+      access.reason === 'UNAUTHENTICATED'
+        ? '/login'
+        : '/pages/misc/401-not-authorized'
+
+    redirect(getLocalizedUrl(target, lang))
+  }
+
+  return <InventoryView />
 }
 
 export default Page

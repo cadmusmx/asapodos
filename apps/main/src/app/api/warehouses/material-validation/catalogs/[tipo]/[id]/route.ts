@@ -1,13 +1,3 @@
-// Gestión de catálogos VM · fila individual.
-//   PUT    -> renombrar y/o REACTIVAR (activo: true). Bit U.
-//   DELETE -> borrado LÓGICO (Activo = 0). Bit D.
-// Bits por default verbo->bit; sin overrides.
-//
-// Filas GLOBALES (TenantID NULL): visibles por el filter predicate, pero NO
-// modificables. La RLS ya lo bloquea (el block AFTER UPDATE falla porque el
-// TenantID resultante sigue NULL), pero ese error es opaco -> se pre-chequea
-// aquí y se responde 403 con mensaje claro.
-
 import { NextResponse } from 'next/server';
 
 import { Prisma } from '@prisma/client';
