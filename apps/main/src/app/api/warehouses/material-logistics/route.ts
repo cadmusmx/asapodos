@@ -5,8 +5,8 @@ import { Prisma } from '@prisma/client';
 import { withPermission } from '@gaso/shared';
 
 import { withTenantContext } from '@/lib/tenant-context';
-import type { Sitio } from './_shared';
-import { execSp, isMissing, p, validateSitio, checkSitiosDuplicados } from './_shared';
+import type { Sitio, Documento } from './_shared';
+import { execSp, isMissing, p, validateSitio, validateDocumentos, checkSitiosDuplicados } from './_shared';
 
 interface CreateBody {
   fecha?: string;
@@ -22,10 +22,11 @@ interface CreateBody {
   idCarrier?: number;
   otroCarrier?: string;
   sitios?: Sitio[];
+  documentos?: Documento[];
 }
 
 // POST / — crear (bit W). IdUsuario y TenantID salen del token/contexto, NO del body.
-// El carrier "Otro" se valida por EsOtro del catálogo (no por id 4).
+// El carrier "Otro" se valida por EsOtro del catálogo.
 export const POST = withPermission('material_logistics', async (req, { auth, tenantId }) => {
   try {
     const b = (await req.json().catch(() => null)) as CreateBody | null;
@@ -54,6 +55,12 @@ export const POST = withPermission('material_logistics', async (req, { auth, ten
     if (checkSitiosDuplicados(sitios)) {
       return NextResponse.json({ message: 'Hay sitios duplicados (idSitio + nombreSitio)' }, { status: 400 });
     }
+
+    // Documentos de cabecera (opcional). NO sustituyen la evidencia por sitio.
+    const documentos = Array.isArray(b.documentos) ? b.documentos : [];
+    const docErr = validateDocumentos(documentos);
+
+    if (docErr) return NextResponse.json({ message: docErr }, { status: 400 });
 
     // Carrier "Otro": resolver por catálogo. Si EsOtro=1, otroCarrier es obligatorio.
     const esOtro = await withTenantContext(tenantId, async tx => {
@@ -87,6 +94,7 @@ export const POST = withPermission('material_logistics', async (req, { auth, ten
         p('@IdCarrier', b.idCarrier),
         p('@OtroCarrier', esOtro ? b.otroCarrier : null),
         p('@Sitios', JSON.stringify(sitios)),
+        p('@Documentos', documentos.length ? JSON.stringify(documentos) : null),
       ];
 
       const result = await withTenantContext(tenantId, tx =>
@@ -113,6 +121,7 @@ function mapSpError(e: unknown): NextResponse {
   if (msg.includes('50021')) return NextResponse.json({ message: 'El XDOCK no existe o no pertenece al tenant' }, { status: 400 });
   if (msg.includes('50022')) return NextResponse.json({ message: 'El carrier no existe' }, { status: 400 });
   if (msg.includes('50023')) return NextResponse.json({ message: 'Falta el carrier (Otro)' }, { status: 400 });
+  if (msg.includes('50024')) return NextResponse.json({ message: 'Documentos no es un JSON válido' }, { status: 400 });
 
   // Violación de UNIQUE(TenantID, Folio) — colisión de folio (muy improbable, folio server-side).
   if (msg.includes('GASOAL_LM_UQ_Folio') || msg.includes('duplicate key')) {

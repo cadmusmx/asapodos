@@ -26,6 +26,27 @@ export interface Tarima {
   orden?: number;
 }
 
+// Documento de cabecera: archivo general del arribo, una sola vez.
+// Evita duplicar en cada sitio las fotos generales (unidad, material en unidad).
+export interface Documento {
+  nombre: string; // etiqueta ingresada por el usuario
+  archivo: string; // llave S3
+  mimeType?: string; // permite distinguir PDF de imagen al renderizar
+}
+
+// Valida el bucket de documentos de cabecera. null/undefined = sin documentos (opcional).
+export function validateDocumentos(docs: unknown): string | null {
+  if (docs === undefined || docs === null) return null;
+  if (!Array.isArray(docs)) return 'documentos debe ser un arreglo';
+
+  for (const d of docs) {
+    if (isMissing(d?.nombre)) return 'Cada documento requiere nombre';
+    if (isMissing(d?.archivo)) return 'Cada documento requiere archivo';
+  }
+
+  return null;
+}
+
 // Sitio para creación / sitiosAdd (encabezado + hijos inline como arreglos).
 export interface Sitio {
   idSitio: string;
@@ -58,6 +79,8 @@ export interface SitioEdit {
   evidenciasAdd?: Evidencia[];
   tarimas?: Tarima[]; // presente = reemplazo completo del set del sitio; ausente = sin cambio
 }
+
+// Validación (equivalente a validateSitio / validateTarimas del legacy)
 
 const MAX_TARIMAS = 50;
 
@@ -110,6 +133,8 @@ export function checkSitiosDuplicados(sitios: Array<{ idSitio?: string; nombreSi
 
   return new Set(keys).size !== keys.length;
 }
+
+// Parseo de Sitios (D11: el server parsea el JSON de SQL Server)
 
 /**
  * usp_LM_GetList / usp_LM_GetByFolio devuelven `Sitios` como string JSON (FOR JSON PATH).

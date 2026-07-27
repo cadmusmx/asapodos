@@ -3,15 +3,15 @@ import { NextResponse } from 'next/server';
 import { withPermission } from '@gaso/shared';
 
 import { withTenantContext } from '@/lib/tenant-context';
-import type { Sitio, SitioEdit } from '../_shared';
+import type { Sitio, SitioEdit, Documento } from '../_shared';
 import {
   execSp, isMissing, p, parseSitios,
-  validateSitio, validateSitioEdit, checkSitiosDuplicados,
+  validateSitio, validateSitioEdit, validateDocumentos, checkSitiosDuplicados,
 } from '../_shared';
 
 type RouteCtx = { params: Promise<{ folio: string }> };
 
-// GET /[folio] — detalle jerárquico (bit R). Sitios completo, parseado.
+// GET /[folio] — detalle jerárquico (bit R). Sitios completo, parseado (D11).
 export const GET = withPermission<RouteCtx>(
   'material_logistics',
   async (_req, { tenantId }, routeCtx) => {
@@ -32,9 +32,13 @@ export const GET = withPermission<RouteCtx>(
         return NextResponse.json({ message: 'Registro no encontrado' }, { status: 404 });
       }
 
-      const { Sitios, ...cabecera } = rows[0];
+      const { Sitios, Documentos, ...cabecera } = rows[0];
 
-      return NextResponse.json({ ...cabecera, sitios: parseSitios(Sitios) });
+      return NextResponse.json({
+        ...cabecera,
+        sitios: parseSitios(Sitios),
+        documentos: parseSitios(Documentos), // mismo parser: string JSON -> array
+      });
     } catch (e) {
       console.error('[material-logistics/[folio] GET]', e);
 
@@ -54,6 +58,7 @@ interface UpdateBody {
   horaSalida?: string;
   idCarrier?: number;
   otroCarrier?: string;
+  documentos?: Documento[]; // reemplazo completo: [] limpia, ausente = sin cambio
   sitiosDel?: number[];
   sitiosAdd?: Sitio[];
   sitiosEdit?: SitioEdit[];
@@ -61,7 +66,8 @@ interface UpdateBody {
 
 // PUT /[folio] — edición (bit U). D6: SOLO EL DUEÑO edita (la guardia vive en el SP,
 // que resuelve por TenantID + IdUsuario y lanza 50010 si no coincide -> 404 aquí).
-// La URL trae folio; el SP recibe IdLogistica, así que se resuelve folio->Id dentro de la misma tx antes del EXEC.
+// D12: la URL trae folio; el SP recibe IdLogistica, así que se resuelve folio->Id
+// dentro de la misma tx antes del EXEC.
 export const PUT = withPermission<RouteCtx>(
   'material_logistics',
   async (req, { auth, tenantId }, routeCtx) => {
@@ -96,6 +102,14 @@ export const PUT = withPermission<RouteCtx>(
         const err = validateSitioEdit(s);
 
         if (err) return NextResponse.json({ message: err }, { status: 400 });
+      }
+
+      // Documentos (DA3): reemplazo completo. Ausente = sin cambio; [] = limpiar.
+      // Solo se valida si el cliente los envió (undefined -> no se toca la columna).
+      if (b.documentos !== undefined) {
+        const docErr = validateDocumentos(b.documentos);
+
+        if (docErr) return NextResponse.json({ message: docErr }, { status: 400 });
       }
 
       // Carrier "Otro" (si cambia): validar por catálogo.
@@ -137,6 +151,9 @@ export const PUT = withPermission<RouteCtx>(
           p('@HoraSalida', b.horaSalida ?? null),
           p('@IdCarrier', b.idCarrier ?? null),
           p('@OtroCarrier', b.otroCarrier ?? null),
+
+          // undefined -> null = sin cambio; array (incl. []) -> JSON = reemplazo/limpieza
+          p('@Documentos', b.documentos === undefined ? null : JSON.stringify(b.documentos)),
           p('@SitiosDel', b.sitiosDel ? JSON.stringify(b.sitiosDel) : null),
           p('@SitiosAdd', sitiosAdd.length ? JSON.stringify(sitiosAdd) : null),
           p('@SitiosEdit', sitiosEdit.length ? JSON.stringify(sitiosEdit) : null),
@@ -166,6 +183,7 @@ function mapUpdateError(e: unknown): NextResponse {
   if (msg.includes('50010')) return NextResponse.json({ message: 'Registro no encontrado' }, { status: 404 });
   if (msg.includes('50021')) return NextResponse.json({ message: 'El XDOCK no existe o no pertenece al tenant' }, { status: 400 });
   if (msg.includes('50022')) return NextResponse.json({ message: 'El carrier no existe' }, { status: 400 });
+  if (msg.includes('50024')) return NextResponse.json({ message: 'Documentos no es un JSON válido' }, { status: 400 });
 
   console.error('[material-logistics/[folio] PUT]', msg);
 

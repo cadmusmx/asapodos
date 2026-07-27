@@ -1,20 +1,26 @@
-import { redirect } from 'next/navigation'
+import { redirect } from 'next/navigation';
 
-import type { Locale } from '@configs/i18n'
+import { PERM } from '@gaso/shared';
 
-import { getTargetByReason, requireViewAccess } from '@/lib/auth/require-view-access'
-import { getLocalizedUrl } from '@/utils/i18n'
-import WarehousesView from './page.client'
+import MaterialLogisticsList from '@views/warehouses/material-logistics/MaterialLogisticsList';
 
-const Page = async (props: { params: Promise<{ lang: Locale }> }) => {
-  const { lang } = await props.params
-  const access = await requireViewAccess('material_logistics')
+import type { Locale } from '@configs/i18n';
+
+import { getTargetByReason, requireViewAccess } from '@/lib/auth/require-view-access';
+import { getLocalizedUrl } from '@/utils/i18n';
+
+// Logística de Material — listado (solo lectura).
+// La captura es responsabilidad de la app Flutter; la web solo lista, muestra detalle y genera el PDF cliente.
+const MaterialLogisticsPage = async (props: { params: Promise<{ lang: Locale }> }) => {
+  const { lang } = await props.params;
+
+  const access = await requireViewAccess('material_logistics', PERM.R);
 
   if (!access.ok) {
     redirect(getLocalizedUrl(getTargetByReason(access.reason), lang));
   }
 
-  return <WarehousesView />
-}
+  return <MaterialLogisticsList />;
+};
 
-export default Page
+export default MaterialLogisticsPage;
