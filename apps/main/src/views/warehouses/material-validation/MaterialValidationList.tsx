@@ -212,6 +212,7 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
     <Card>
       <CardHeader
         title='Validación de Material'
+        subheader='Un Sitio, proyecto, tipo de material, ASP'
         action={
           <div className='flex gap-4'>
             <ToggleButtonGroup

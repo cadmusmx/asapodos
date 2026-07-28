@@ -13,11 +13,9 @@ import CardHeader from '@mui/material/CardHeader';
 import Grid from '@mui/material/Grid2';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
-
-// import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import Tooltip from '@mui/material/Tooltip';
-import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import ToggleButton from '@mui/material/ToggleButton';
 import TablePagination from '@mui/material/TablePagination';
@@ -196,15 +194,14 @@ const MaterialLogisticsList = () => {
           const r = row.original;
           const label = carrierLabel(r);
 
-          return (
-            <span className='flex items-center gap-1'>
-              {label || '—'}
-              {r.EsOtro && (
-                <Tooltip title='Carrier fuera de catálogo'>
-                  <i className='tabler-info-circle text-[16px] text-textSecondary' />
-                </Tooltip>
-              )}
-            </span>
+          if (!label) return '—';
+
+          return r.EsOtro ? (
+            <Tooltip title='Carrier fuera de catálogo'>
+              <span className='underline decoration-dotted cursor-help'>{label}</span>
+            </Tooltip>
+          ) : (
+            <span>{label}</span>
           );
         },
       }),
@@ -257,17 +254,13 @@ const MaterialLogisticsList = () => {
         id: 'acciones',
         header: 'Acciones',
         cell: ({ row }) => (
-          <div className='flex items-center gap-1'>
-            <Tooltip title='Ver detalle'>
-              <IconButton size='small' onClick={() => goToDetail(row.original.Folio)}>
-                <i className='tabler-eye text-[20px]' />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title='Ver PDF'>
-              <IconButton size='small' onClick={() => goToPdf(row.original.Folio)}>
-                <i className='tabler-file-type-pdf text-[20px]' />
-              </IconButton>
-            </Tooltip>
+          <div className='flex items-center gap-2'>
+            <Button size='small' variant='outlined' color='info' onClick={() => goToDetail(row.original.Folio)}>
+              Detalle
+            </Button>
+            <Button size='small' variant='outlined' color='secondary' onClick={() => goToPdf(row.original.Folio)}>
+              PDF
+            </Button>
           </div>
         ),
       }),
@@ -289,33 +282,36 @@ const MaterialLogisticsList = () => {
 
   return (
     <Card>
-      <CardHeader title='Logística de Material' subheader='Recepción y entrega de arribos (solo lectura)' />
+      <CardHeader
+        title='Logística de Material'
+        subheader='Varios Sitios, XDOCK, Control de arribo'
+        action={
+          <ToggleButtonGroup
+            exclusive
+            fullWidth
+            size='small'
+            value={re}
+            onChange={(_, v) => {
+              if (v !== null) {
+                setRe(v);
+                resetToFirst();
+              }
+            }}
+          >
+            <ToggleButton value={true}>Recepción</ToggleButton>
+            <ToggleButton value={false}>Entrega</ToggleButton>
+          </ToggleButtonGroup>
+        }
+      />
       <CardContent>
         <Grid container spacing={4} className='mbe-4'>
-          <Grid size={{ xs: 12 }}>
-            <ToggleButtonGroup
-              exclusive
-              value={re}
-              onChange={(_, v) => {
-                if (v !== null) {
-                  setRe(v);
-                  resetToFirst();
-                }
-              }}
-              size='small'
-            >
-              <ToggleButton value={true}>Recepción</ToggleButton>
-              <ToggleButton value={false}>Entrega</ToggleButton>
-            </ToggleButtonGroup>
-          </Grid>
-
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <TextField
               fullWidth
               size='small'
               type='date'
               label='Desde'
-              slotProps={{ inputLabel: { shrink: true } }}
+              InputLabelProps={{ shrink: true }}
               value={fechaInicio}
               onChange={e => {
                 setFechaInicio(e.target.value);
@@ -329,7 +325,7 @@ const MaterialLogisticsList = () => {
               size='small'
               type='date'
               label='Hasta'
-              slotProps={{ inputLabel: { shrink: true } }}
+              InputLabelProps={{ shrink: true }}
               value={fechaFin}
               onChange={e => {
                 setFechaFin(e.target.value);

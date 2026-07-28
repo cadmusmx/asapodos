@@ -158,24 +158,33 @@ export function normalizeResumenSitio(s: Record<string, unknown>): Record<string
   return { ...s, materialFaltante: s.materialFaltante === true || s.materialFaltante === 1 };
 }
 
-// EXEC de SPs con parámetros nombrados
-// SQL Server acepta `EXEC sp @Param = value`.
-// Cada valor va como parámetro real de Prisma (${...}), nunca interpolado.
-// Prisma.join arma la lista con comas.
+// SQL Server acepta `EXEC sp @Param = value`. Cada valor va como parámetro real de Prisma (${...}), nunca interpolado.
+//
+// IMPORTANTE — nulls: Prisma no infiere tipo para un `null` de JS y lo envía tipado como int.
+// Si el parámetro del SP es DATE/otro, choca ("int is incompatible with date").
+// Como TODOS los params opcionales de las SPs declaran `= NULL` por defecto,
+// la solución es OMITIR del EXEC los params en null/undefined:
+//    el default del SP aplica el mismo NULL sin tipear nada.
+// Los valores presentes (string, número, '') sí se envían y SQL Server los convierte al tipo del param.
+// Nota: 0 y '' NO son null -> se envían (p. ej. @RE = 0, o NombreResponsable = '').
 
 export interface SpParam {
   name: string;
-  value: Prisma.Sql;
+  value: unknown;
 }
 
-/** `p('@IdXdock', 10)` -> fragmento `@IdXdock = ${10}` seguro. */
+/** `p('@IdXdock', 10)` -> par nombre/valor. El valor crudo se conserva para poder omitir nulls. */
 export function p(name: string, value: unknown): SpParam {
-  return { name, value: Prisma.sql`${value as never}` };
+  return { name, value };
 }
 
-/** Construye `EXEC dbo.usp_X @A = ${a}, @B = ${b}` con params saneados. */
+/**
+ * Construye `EXEC dbo.usp_X @A = ${a}, @B = ${b}` con params saneados.
+ * Omite los params cuyo valor sea null o undefined (el SP usa su default NULL).
+ */
 export function execSp(sp: string, params: SpParam[]): Prisma.Sql {
-  const assignments = params.map(pr => Prisma.sql`${Prisma.raw(pr.name)} = ${pr.value}`);
+  const present = params.filter(pr => pr.value !== null && pr.value !== undefined);
+  const assignments = present.map(pr => Prisma.sql`${Prisma.raw(pr.name)} = ${pr.value as never}`);
 
   return Prisma.sql`EXEC ${Prisma.raw(sp)} ${Prisma.join(assignments, ', ')}`;
 }

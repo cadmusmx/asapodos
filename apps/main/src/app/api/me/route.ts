@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from 'next/server'
 
 import {
@@ -156,7 +157,7 @@ export async function GET(req: Request) {
       return body
     })
 
-    writeTransactionLog({
+    /* writeTransactionLog({
       tenantId,
       tableName: 'Api.Me',
       action: 'READ',
@@ -167,7 +168,7 @@ export async function GET(req: Request) {
         profileId: result.profile.id,
         hasTenantSettings: true
       }
-    }).catch(() => { })
+    }).catch(() => { }) */
 
     return NextResponse.json(result)
   } catch (e) {
