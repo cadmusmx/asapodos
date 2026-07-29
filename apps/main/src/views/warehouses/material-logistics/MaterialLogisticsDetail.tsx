@@ -257,7 +257,7 @@ const MaterialLogisticsDetail = ({ folio }: { folio: string }) => {
       } catch (e) {
         if ((e as Error).name !== 'AbortError') setError((e as Error).message);
       } finally {
-        setLoading(false);
+        setTimeout(() => setLoading(false), 1000);
       }
     };
 
@@ -303,22 +303,9 @@ const MaterialLogisticsDetail = ({ folio }: { folio: string }) => {
         title={`${data.RE ? 'Recepción' : 'Entrega'} · ${data.Folio}`}
         subheader={`XDOCK ${data.Xdock} · ${data.Fecha}`}
         action={
-          <div className='flex gap-2'>
-            <Button
-              variant='contained'
-              onClick={() =>
-                window.open(
-                  `/${lang}/warehouses/material-logistics/pdf/${encodeURIComponent(data.Folio)}`,
-                  '_blank',
-                )
-              }
-            >
-              Ver PDF
-            </Button>
-            <Button variant='outlined' color='secondary' onClick={() => router.push(`/${lang}/warehouses/material-logistics`)}>
-              Volver
-            </Button>
-          </div>
+          <Button variant='outlined' color='secondary' onClick={() => router.push(`/${lang}/warehouses/material-logistics`)}>
+            Volver
+          </Button>
         }
       />
       <CardContent>
@@ -347,10 +334,6 @@ const MaterialLogisticsDetail = ({ folio }: { folio: string }) => {
           <Field label='Llegada de la unidad' value={data.HoraLlegada} />
           <Field label='Inicio de descarga' value={data.HoraInicioDescarga} />
           <Field label='Salida de la unidad' value={data.HoraSalida} />
-          <Field
-            label='Confirmado'
-            value={<Chip size='small' color={data.Confirmado ? 'success' : 'default'} variant='tonal' label={data.Confirmado ? 'Sí' : 'No'} />}
-          />
           <Field label='Fecha de captura' value={data.FechaCreacion ? new Date(data.FechaCreacion).toLocaleString('es-MX') : '—'} />
           <Field label='Última edición' value={data.FechaEdicion ? new Date(data.FechaEdicion).toLocaleString('es-MX') : '—'} />
         </Grid>

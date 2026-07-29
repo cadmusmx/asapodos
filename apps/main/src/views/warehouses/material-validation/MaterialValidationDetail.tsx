@@ -137,12 +137,12 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
         const data = await res.json();
 
         setData(data);
-        setLoading(false);
       } catch (e) {
         if ((e as Error).name === 'AbortError') return;
         setError((e as Error).message);
         setData(null);
-        setLoading(false);
+      } finally {
+        setTimeout(() => setLoading(false), 1000);
       }
     }
 

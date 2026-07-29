@@ -91,9 +91,6 @@ const MaterialLogisticsList = () => {
   const goToDetail = (folio: string) =>
     router.push(`/${lang}/warehouses/material-logistics/${encodeURIComponent(folio)}`);
 
-  const goToPdf = (folio: string) =>
-    window.open(`/${lang}/warehouses/material-logistics/pdf/${encodeURIComponent(folio)}`, '_blank');
-
   // Filtros. RE es el eje principal (recepción vs entrega), igual que el legacy.
   const [re, setRe] = useState(true); // true = recepción, false = entrega
   const [fechaInicio, setFechaInicio] = useState('');
@@ -258,9 +255,6 @@ const MaterialLogisticsList = () => {
             <Button size='small' variant='outlined' color='info' onClick={() => goToDetail(row.original.Folio)}>
               Detalle
             </Button>
-            <Button size='small' variant='outlined' color='secondary' onClick={() => goToPdf(row.original.Folio)}>
-              PDF
-            </Button>
           </div>
         ),
       }),
@@ -311,7 +305,7 @@ const MaterialLogisticsList = () => {
               size='small'
               type='date'
               label='Desde'
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
               value={fechaInicio}
               onChange={e => {
                 setFechaInicio(e.target.value);
@@ -325,7 +319,7 @@ const MaterialLogisticsList = () => {
               size='small'
               type='date'
               label='Hasta'
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
               value={fechaFin}
               onChange={e => {
                 setFechaFin(e.target.value);
