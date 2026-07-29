@@ -91,6 +91,8 @@ const MaterialLogisticsList = () => {
   const goToDetail = (folio: string) =>
     router.push(`/${lang}/warehouses/material-logistics/${encodeURIComponent(folio)}`);
 
+  const goCatalogs = () => router.push(`/${lang}/warehouses/material-logistics/catalogos`);
+
   // Filtros. RE es el eje principal (recepción vs entrega), igual que el legacy.
   const [re, setRe] = useState(true); // true = recepción, false = entrega
   const [fechaInicio, setFechaInicio] = useState('');
@@ -260,7 +262,6 @@ const MaterialLogisticsList = () => {
       }),
     ],
 
-    // goToDetail/goToPdf son estables por render; lang no cambia en la vista.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
@@ -280,21 +281,24 @@ const MaterialLogisticsList = () => {
         title='Logística de Material'
         subheader='Varios Sitios, XDOCK, Control de arribo'
         action={
-          <ToggleButtonGroup
-            exclusive
-            fullWidth
-            size='small'
-            value={re}
-            onChange={(_, v) => {
-              if (v !== null) {
-                setRe(v);
-                resetToFirst();
-              }
-            }}
-          >
-            <ToggleButton value={true}>Recepción</ToggleButton>
-            <ToggleButton value={false}>Entrega</ToggleButton>
-          </ToggleButtonGroup>
+          <div className='flex gap-4'>
+            <ToggleButtonGroup
+              exclusive
+              fullWidth
+              size='small'
+              value={re}
+              onChange={(_, v) => {
+                if (v !== null) {
+                  setRe(v);
+                  resetToFirst();
+                }
+              }}
+            >
+              <ToggleButton value={true}>Recepción</ToggleButton>
+              <ToggleButton value={false}>Entrega</ToggleButton>
+            </ToggleButtonGroup>
+            <Button fullWidth size='small' variant='outlined' color='secondary' onClick={goCatalogs}>Catálogos</Button>
+          </div>
         }
       />
       <CardContent>
