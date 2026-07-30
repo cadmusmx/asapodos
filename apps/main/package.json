@@ -16,7 +16,6 @@
     "removeI18n": "tsx src/remove-translation-scripts/index.ts"
   },
   "dependencies": {
-    "@gaso/shared": "workspace:*",
     "@auth/prisma-adapter": "2.7.4",
     "@aws-sdk/client-s3": "^3.1090.0",
     "@emoji-mart/data": "1.2.1",
@@ -27,6 +26,8 @@
     "@floating-ui/react": "0.27.2",
     "@formatjs/intl-localematcher": "0.5.9",
     "@formkit/drag-and-drop": "0.2.6",
+    "@fortawesome/free-solid-svg-icons": "^7.3.1",
+    "@fortawesome/react-fontawesome": "^3.5.0",
     "@fullcalendar/common": "5.11.5",
     "@fullcalendar/core": "6.1.15",
     "@fullcalendar/daygrid": "6.1.15",
@@ -34,6 +35,7 @@
     "@fullcalendar/list": "6.1.15",
     "@fullcalendar/react": "6.1.15",
     "@fullcalendar/timegrid": "6.1.15",
+    "@gaso/shared": "workspace:*",
     "@hookform/resolvers": "3.9.1",
     "@mui/lab": "6.0.0-beta.19",
     "@mui/material": "6.2.1",

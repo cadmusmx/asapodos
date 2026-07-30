@@ -1,5 +1,9 @@
 'use client'
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable padding-line-between-statements */
+/* eslint-disable newline-before-return */
+
 // Next Imports
 import Link from 'next/link'
 import { useParams } from 'next/navigation'

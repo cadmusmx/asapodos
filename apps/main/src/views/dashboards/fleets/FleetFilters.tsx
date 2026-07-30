@@ -8,21 +8,26 @@ import InputLabel from '@mui/material/InputLabel'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
+import TextField from '@mui/material/TextField'
 import Box from '@mui/material/Box'
 
 type Props = {
   t: (key: string) => string
   values: {
-    year: string
+    fechaInicio: string
+    fechaFin: string
+    estatus: string
     region: string
+    vehicleType: string
   }
   onChange: (field: string, value: string) => void
   onSearch: () => void
   onClear: () => void
   regions?: Array<{ id: number; nombre: string }>
+  vehicleTypes?: Array<{ id: number; nombre: string }>
 }
 
-const GeneralFilters = ({ t, values, onChange, onSearch, onClear, regions = [] }: Props) => {
+const FleetFilters = ({ t, values, onChange, onSearch, onClear, regions = [], vehicleTypes = [] }: Props) => {
   return (
     <Card
       sx={{
@@ -95,23 +100,50 @@ const GeneralFilters = ({ t, values, onChange, onSearch, onClear, regions = [] }
             </Box>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, md: 2 }}>
+            <TextField
+              fullWidth
+              size='small'
+              type='date'
+              label={t('filters.dateStart')}
+              InputLabelProps={{ shrink: true }}
+              value={values.fechaInicio}
+              onChange={(e) => onChange('fechaInicio', e.target.value)}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 2 }}>
+            <TextField
+              fullWidth
+              size='small'
+              type='date'
+              label={t('filters.dateEnd')}
+              InputLabelProps={{ shrink: true }}
+              value={values.fechaFin}
+              onChange={(e) => onChange('fechaFin', e.target.value)}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 2.4 }}>
             <FormControl fullWidth size='small' sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}>
-              <InputLabel>{t('dashboard.general.year')}</InputLabel>
+              <InputLabel>{t('filters.status')}</InputLabel>
               <Select
-                value={values.year}
-                label={t('dashboard.general.year')}
-                onChange={(e) => onChange('year', e.target.value)}
+                value={values.estatus}
+                label={t('filters.status')}
+                onChange={(e) => onChange('estatus', e.target.value)}
               >
                 <MenuItem value=''>{t('filters.all')}</MenuItem>
-                <MenuItem value='2024'>2024</MenuItem>
-                <MenuItem value='2025'>2025</MenuItem>
-                <MenuItem value='2026'>2026</MenuItem>
+                <MenuItem value='1'>{t('dashboard.expenses.accepted')}</MenuItem>
+                <MenuItem value='2'>{t('dashboard.expenses.rejected')}</MenuItem>
+                <MenuItem value='3'>{t('dashboard.expenses.pending')}</MenuItem>
+                <MenuItem value='4'>{t('dashboard.expenses.paid')}</MenuItem>
               </Select>
             </FormControl>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, md: 2.4 }}>
             <FormControl fullWidth size='small' sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}>
               <InputLabel>{t('filters.region')}</InputLabel>
               <Select
@@ -126,10 +158,26 @@ const GeneralFilters = ({ t, values, onChange, onSearch, onClear, regions = [] }
               </Select>
             </FormControl>
           </Grid>
+
+          <Grid size={{ xs: 12, md: 2.4 }}>
+            <FormControl fullWidth size='small' sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}>
+              <InputLabel>{t('dashboard.fleets.vehicleType')}</InputLabel>
+              <Select
+                value={values.vehicleType}
+                label={t('dashboard.fleets.vehicleType')}
+                onChange={(e) => onChange('vehicleType', e.target.value)}
+              >
+                <MenuItem value=''>{t('filters.all')}</MenuItem>
+                {vehicleTypes.map((vt) => (
+                  <MenuItem key={vt.id} value={vt.id}>{vt.nombre}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
         </Grid>
       </CardContent>
     </Card>
   )
 }
 
-export default GeneralFilters
+export default FleetFilters

@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable padding-line-between-statements */
+/* eslint-disable newline-before-return */
+
 import { headers } from 'next/headers';
 
 import { getServerSession } from 'next-auth';

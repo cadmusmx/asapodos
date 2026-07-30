@@ -1,4 +1,8 @@
-import { ForbiddenError, isCanonical, PERM, resolveUserViews, ValidationError, withTenantContext, getEnabledMenuGroups } from '@gaso/shared';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable padding-line-between-statements */
+/* eslint-disable newline-before-return */
+
+import { describeMask, ForbiddenError, isCanonical, PERM, resolveUserViews, ValidationError, withTenantContext, getEnabledMenuGroups } from '@gaso/shared';
 import type { ErpModuleKey } from '@gaso/shared';
 
 import type { Prisma } from '@prisma/client';

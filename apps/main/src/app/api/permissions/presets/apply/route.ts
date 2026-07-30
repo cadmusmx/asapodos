@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable padding-line-between-statements */
+/* eslint-disable newline-before-return */
+/* eslint-disable @typescript-eslint/consistent-type-imports */
+
 import { NextResponse } from 'next/server';
 
 import { Prisma } from '@prisma/client';

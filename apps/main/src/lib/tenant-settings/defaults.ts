@@ -11,5 +11,16 @@ export const defaultTenantSettings: TenantSettings = {
     maxBranches: null,
     maxStorageMb: null,
     maxProjects: null
+  },
+  modules: {
+    dashboard: false,
+    warehouses: false,
+    human_capital: false,
+    projects: false,
+    administration: false,
+    operating_expenses: false,
+    quotes: false,
+    suppliers: false,
+    vehicles: false
   }
 }

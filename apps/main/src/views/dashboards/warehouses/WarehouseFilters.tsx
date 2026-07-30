@@ -13,16 +13,19 @@ import Box from '@mui/material/Box'
 type Props = {
   t: (key: string) => string
   values: {
-    year: string
     region: string
+    ciudad: string
+    estado: string
+    nivelOcupacion: string
   }
   onChange: (field: string, value: string) => void
   onSearch: () => void
-  onClear: () => void
-  regions?: Array<{ id: number; nombre: string }>
+  onClear?: () => void
+  regions?: string[]
+  cities?: string[]
 }
 
-const GeneralFilters = ({ t, values, onChange, onSearch, onClear, regions = [] }: Props) => {
+const WarehouseFilters = ({ t, values, onChange, onSearch, onClear, regions = [], cities = [] }: Props) => {
   return (
     <Card
       sx={{
@@ -39,7 +42,12 @@ const GeneralFilters = ({ t, values, onChange, onSearch, onClear, regions = [] }
           <Grid size={{ xs: 12 }} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Button
               variant='outlined'
-              onClick={onClear}
+              onClick={() => {
+                onChange('region', '')
+                onChange('ciudad', '')
+                onChange('estado', '')
+                onChange('nivelOcupacion', '')
+              }}
               sx={{
                 borderRadius: '10px',
                 minWidth: 40,
@@ -95,23 +103,7 @@ const GeneralFilters = ({ t, values, onChange, onSearch, onClear, regions = [] }
             </Box>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 4 }}>
-            <FormControl fullWidth size='small' sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}>
-              <InputLabel>{t('dashboard.general.year')}</InputLabel>
-              <Select
-                value={values.year}
-                label={t('dashboard.general.year')}
-                onChange={(e) => onChange('year', e.target.value)}
-              >
-                <MenuItem value=''>{t('filters.all')}</MenuItem>
-                <MenuItem value='2024'>2024</MenuItem>
-                <MenuItem value='2025'>2025</MenuItem>
-                <MenuItem value='2026'>2026</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <FormControl fullWidth size='small' sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}>
               <InputLabel>{t('filters.region')}</InputLabel>
               <Select
@@ -121,8 +113,56 @@ const GeneralFilters = ({ t, values, onChange, onSearch, onClear, regions = [] }
               >
                 <MenuItem value=''>{t('filters.all')}</MenuItem>
                 {regions.map((reg) => (
-                  <MenuItem key={reg.id} value={reg.id}>{reg.nombre}</MenuItem>
+                  <MenuItem key={reg} value={reg}>{reg}</MenuItem>
                 ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 3 }}>
+            <FormControl fullWidth size='small' sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}>
+              <InputLabel>{t('dashboard.warehouses.city')}</InputLabel>
+              <Select
+                value={values.ciudad}
+                label={t('dashboard.warehouses.city')}
+                onChange={(e) => onChange('ciudad', e.target.value)}
+              >
+                <MenuItem value=''>{t('filters.all')}</MenuItem>
+                {cities.map((city) => (
+                  <MenuItem key={city} value={city}>{city}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 2 }}>
+            <FormControl fullWidth size='small' sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}>
+              <InputLabel>{t('dashboard.warehouses.status')}</InputLabel>
+              <Select
+                value={values.estado}
+                label={t('dashboard.warehouses.status')}
+                onChange={(e) => onChange('estado', e.target.value)}
+              >
+                <MenuItem value=''>{t('filters.all')}</MenuItem>
+                <MenuItem value='Operativo'>{t('dashboard.warehouses.operational')}</MenuItem>
+                <MenuItem value='Inactivo'>{t('dashboard.warehouses.inactive')}</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 2 }}>
+            <FormControl fullWidth size='small' sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}>
+              <InputLabel>{t('filters.occupancyLevel')}</InputLabel>
+              <Select
+                value={values.nivelOcupacion}
+                label={t('filters.occupancyLevel')}
+                onChange={(e) => onChange('nivelOcupacion', e.target.value)}
+              >
+                <MenuItem value=''>{t('filters.all')}</MenuItem>
+                <MenuItem value='NORMAL'>{t('dashboard.warehouses.normal')}</MenuItem>
+                <MenuItem value='MEDIO'>{t('dashboard.warehouses.medium')}</MenuItem>
+                <MenuItem value='ALTO'>{t('dashboard.warehouses.high')}</MenuItem>
+                <MenuItem value='CRITICO'>{t('dashboard.warehouses.critical')}</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -132,4 +172,4 @@ const GeneralFilters = ({ t, values, onChange, onSearch, onClear, regions = [] }
   )
 }
 
-export default GeneralFilters
+export default WarehouseFilters

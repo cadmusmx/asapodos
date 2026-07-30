@@ -25,6 +25,7 @@ export type TenantLimitSettings = {
 export type TenantSettings = {
   branding: TenantBrandingSettings
   limits: TenantLimitSettings
+  modules?: Record<TenantModuleKey, boolean>
 }
 
 export type TenantSettingsResponse = {
