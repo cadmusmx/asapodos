@@ -16,17 +16,17 @@ type Props = {
 }
 
 const colorMap: Record<string, string> = {
-  primary: 'rgba(13,110,253,.12)',
-  success: 'rgba(25,135,84,.12)',
-  error: 'rgba(220,53,69,.12)',
-  warning: 'rgba(255,193,7,.15)'
+  primary: 'rgba(var(--mui-palette-primary-mainChannel) / 0.12)',
+  success: 'rgba(var(--mui-palette-success-mainChannel) / 0.12)',
+  error: 'rgba(var(--mui-palette-error-mainChannel) / 0.12)',
+  warning: 'rgba(var(--mui-palette-warning-mainChannel) / 0.15)'
 }
 
 const iconColorMap: Record<string, string> = {
-  primary: '#0d6efd',
-  success: '#198754',
-  error: '#dc3545',
-  warning: '#b45309'
+  primary: 'var(--mui-palette-primary-main)',
+  success: 'var(--mui-palette-success-main)',
+  error: 'var(--mui-palette-error-main)',
+  warning: 'var(--mui-palette-warning-main)'
 }
 
 const GeneralCounterCards = ({ t, data }: Props) => {
@@ -82,9 +82,8 @@ const GeneralCounterCards = ({ t, data }: Props) => {
           <div
             style={{
               borderRadius: 16,
-              border: '1px solid rgba(0,0,0,.06)',
-              boxShadow: '0 2px 12px rgba(15,23,42,.07)',
-              background: '#fff',
+              border: '1px solid var(--mui-palette-divider)',
+              background: 'var(--mui-palette-background-paper)',
               padding: '1.25rem',
               height: '100%'
             }}
@@ -109,7 +108,7 @@ const GeneralCounterCards = ({ t, data }: Props) => {
                 sx={{
                   fontSize: '1rem',
                   fontWeight: 700,
-                  color: '#1f2937',
+                  color: 'var(--mui-palette-text-primary)',
                   fontFamily: '"Carter One", system-ui'
                 }}
               >
@@ -126,9 +125,8 @@ const GeneralCounterCards = ({ t, data }: Props) => {
                       gap: 8,
                       padding: '8px 12px',
                       borderRadius: 10,
-                      background: '#fff',
-                      border: '2px solid #e5e7eb',
-                      boxShadow: '0 1px 4px rgba(0,0,0,.06)'
+                      background: 'var(--mui-palette-background-paper)',
+                      border: '2px solid var(--mui-palette-divider)'
                     }}
                   >
                     <div
@@ -148,11 +146,11 @@ const GeneralCounterCards = ({ t, data }: Props) => {
                     </div>
                     <div>
                       <Typography
-                        sx={{ fontSize: '1.6rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}
+                        sx={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--mui-palette-text-primary)', lineHeight: 1 }}
                       >
                         {item.value.toLocaleString()}
                       </Typography>
-                      <Typography sx={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                      <Typography sx={{ fontSize: '0.75rem', color: 'var(--mui-palette-text-secondary)' }}>
                         {item.label}
                       </Typography>
                     </div>

@@ -62,6 +62,7 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchKey, setSearchKey] = useState(0)
   const [modalTotalExpenseOpen, setModalTotalExpenseOpen] = useState(false)
   const [modalBudgetVsActualOpen, setModalBudgetVsActualOpen] = useState(false)
   const [modalTopEmployeesOpen, setModalTopEmployeesOpen] = useState(false)
@@ -105,9 +106,10 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
     }
   }
 
-  const fetchData = async (currentFilters?: typeof filters) => {
+  const fetchData = async (currentFilters?: typeof filters, signal?: AbortSignal) => {
     const activeFilters = currentFilters ?? filters
     try {
+      setLoading(true)
       const params = new URLSearchParams()
       if (activeFilters.fechaInicio) params.set('fechaInicio', activeFilters.fechaInicio)
       if (activeFilters.fechaFin) params.set('fechaFin', activeFilters.fechaFin)
@@ -117,11 +119,12 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
       if (activeFilters.departamento) params.set('departamento', activeFilters.departamento)
       if (activeFilters.responsable) params.set('responsable', activeFilters.responsable)
 
-      const response = await fetch(`/api/projects/dashboard?${params.toString()}`)
+      const response = await fetch(`/api/projects/dashboard?${params.toString()}`, { signal })
       if (!response.ok) throw new Error('Failed to fetch dashboard data')
       const result = await response.json()
       setData(result.data)
     } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
@@ -129,17 +132,18 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
     fetchCatalogs()
-    fetchData()
-  }, [])
+    fetchData(undefined, controller.signal)
+    return () => controller.abort()
+  }, [searchKey])
 
   const handleFilterChange = (field: string, value: string) => {
     setFilters(prev => ({ ...prev, [field]: value }))
   }
 
   const handleSearch = () => {
-    setLoading(true)
-    fetchData(filters)
+    setSearchKey(prev => prev + 1)
   }
 
   const handleClear = () => {
@@ -153,8 +157,11 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
       responsable: ''
     }
     setFilters(emptyFilters)
-    setLoading(true)
-    fetchData(emptyFilters)
+    setSearchKey(prev => prev + 1)
+  }
+
+  const handleReload = () => {
+    setSearchKey(prev => prev + 1)
   }
 
   if (loading) {
@@ -190,6 +197,7 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
           onChange={handleFilterChange}
           onSearch={handleSearch}
           onClear={handleClear}
+          onReload={handleReload}
           catalogs={catalogs}
         />
       </Grid>
@@ -200,7 +208,7 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
           sx={{
             fontSize: '0.85rem',
             fontWeight: 700,
-            color: '#9ca3af',
+            color: 'var(--mui-palette-text-disabled)',
             textTransform: 'uppercase',
             letterSpacing: 1.2,
             mb: 2,
@@ -223,7 +231,7 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
           iconColor='#0d6efd'
           iconClass='fa-solid fa-circle-dollar-to-slot'
           action={
-            <IconButton size='small' onClick={() => setModalTotalExpenseOpen(true)} sx={{ color: '#6b7280' }}>
+            <IconButton size='small' onClick={() => setModalTotalExpenseOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }
@@ -241,12 +249,12 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
           iconColor='#198754'
           iconClass='fa-solid fa-scale-balanced'
           action={
-            <IconButton size='small' onClick={() => setModalBudgetVsActualOpen(true)} sx={{ color: '#6b7280' }}>
+            <IconButton size='small' onClick={() => setModalBudgetVsActualOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }
         >
-          <BudgetVsActualChart t={t} data={data.proyectosPorcentaje} />
+          <BudgetVsActualChart t={t} data={data.proyectosPorcentaje} height={320} />
         </KpiCard>
       </Grid>
 
@@ -259,7 +267,7 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
           iconColor='#b45309'
           iconClass='fa-solid fa-user-tie'
           action={
-            <IconButton size='small' onClick={() => setModalTopEmployeesOpen(true)} sx={{ color: '#6b7280' }}>
+            <IconButton size='small' onClick={() => setModalTopEmployeesOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }

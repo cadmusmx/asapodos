@@ -57,6 +57,7 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
   const [catalogs, setCatalogs] = useState<CatalogData>({ areas: [], departments: [], positions: [], regions: [] })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchKey, setSearchKey] = useState(0)
   const [modalOpen, setModalOpen] = useState(false)
   const [filters, setFilters] = useState({
     activo: '',
@@ -95,8 +96,9 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
     }
   }
 
-  const fetchData = async () => {
+  const fetchData = async (signal?: AbortSignal) => {
     try {
+      setLoading(true)
       const params = new URLSearchParams()
       if (filters.activo) params.set('active', filters.activo === 'A' ? 'active' : 'inactive')
       if (filters.area) params.set('area', String(filters.area))
@@ -104,11 +106,12 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
       if (filters.puesto) params.set('puesto', String(filters.puesto))
       if (filters.region) params.set('region', String(filters.region))
 
-      const response = await fetch(`/api/human-capital/dashboard?${params.toString()}`)
+      const response = await fetch(`/api/human-capital/dashboard?${params.toString()}`, { signal })
       if (!response.ok) throw new Error('Failed to fetch dashboard data')
       const result = await response.json()
       setData(result.data)
     } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
@@ -116,17 +119,18 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
     fetchCatalogs()
-    fetchData()
-  }, [])
+    fetchData(controller.signal)
+    return () => controller.abort()
+  }, [searchKey])
 
   const handleFilterChange = (field: string, value: string | number) => {
     setFilters(prev => ({ ...prev, [field]: value }))
   }
 
   const handleSearch = () => {
-    setLoading(true)
-    fetchData()
+    setSearchKey(prev => prev + 1)
   }
 
   const handleClear = () => {
@@ -137,8 +141,11 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
       puesto: '',
       region: ''
     })
-    setLoading(true)
-    fetchData()
+    setSearchKey(prev => prev + 1)
+  }
+
+  const handleReload = () => {
+    setSearchKey(prev => prev + 1)
   }
 
   if (loading) {
@@ -177,6 +184,7 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
           onChange={handleFilterChange}
           onSearch={handleSearch}
           onClear={handleClear}
+          onReload={handleReload}
         />
       </Grid>
 
@@ -187,7 +195,7 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
           sx={{
             fontSize: '0.85rem',
             fontWeight: 700,
-            color: '#9ca3af',
+            color: 'var(--mui-palette-text-disabled)',
             textTransform: 'uppercase',
             letterSpacing: 1.2,
             mb: 2,
@@ -250,7 +258,7 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
           iconColor='#b45309'
           iconClass='fa-solid fa-briefcase'
           action={
-            <IconButton size='small' onClick={() => setModalOpen(true)} sx={{ color: '#6b7280' }}>
+              <IconButton size='small' onClick={() => setModalOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }

@@ -22,7 +22,18 @@ const StatusChart = ({ t, data }: Props) => {
     colors: ['var(--mui-palette-success-main)', 'var(--mui-palette-text-disabled)'],
     stroke: { width: 0 },
     legend: { show: true, position: 'bottom' },
-    tooltip: { theme: 'false' },
+    tooltip: {
+      custom: ({ series, seriesIndex, w }) => {
+        const label = w.globals.labels[seriesIndex] as string
+        const value = series[seriesIndex] as number
+        const total = (series as number[]).reduce((a, b) => a + b, 0)
+        const pct = ((value / total) * 100).toFixed(1)
+        return `<div style="padding:8px 12px;background:var(--mui-palette-background-paper);color:var(--mui-palette-text-primary);border-radius:8px;font-size:13px;border:1px solid var(--mui-palette-divider);">
+          <strong>${label}</strong><br/>
+          ${value.toLocaleString()} (${pct}%)
+        </div>`
+      }
+    },
     dataLabels: { enabled: false },
     labels: [t('dashboard.warehouses.operational'), t('dashboard.warehouses.inactive')],
     states: {

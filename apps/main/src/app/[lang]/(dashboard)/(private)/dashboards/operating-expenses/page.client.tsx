@@ -60,6 +60,7 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
   const [catalogs, setCatalogs] = useState<CatalogData>({ projects: [], regions: [], departments: [], employees: [], expenseTypes: [] })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchKey, setSearchKey] = useState(0)
   const [modalExpensesMonthOpen, setModalExpensesMonthOpen] = useState(false)
   const [modalByPersonOpen, setModalByPersonOpen] = useState(false)
   const [modalByProjectOpen, setModalByProjectOpen] = useState(false)
@@ -107,22 +108,20 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
     }
   }
 
-  const fetchData = async (currentFilters?: typeof filters) => {
+  const fetchData = async (currentFilters?: typeof filters, signal?: AbortSignal) => {
     const activeFilters = currentFilters ?? filters
     try {
+      setLoading(true)
       const params = new URLSearchParams()
       Object.entries(activeFilters).forEach(([key, value]) => {
         if (value) params.set(key, value)
       })
-      const response = await fetch(`/api/operating-expenses/dashboard?${params.toString()}`)
-      console.log('[Opexp] status:', response.status)
-      const text = await response.text()
-      console.log('[Opexp] body:', text.slice(0, 500))
-      if (!response.ok) throw new Error(`Failed: ${response.status} ${text}`)
-      const result = JSON.parse(text)
+      const response = await fetch(`/api/operating-expenses/dashboard?${params.toString()}`, { signal })
+      if (!response.ok) throw new Error('Failed to fetch dashboard data')
+      const result = await response.json()
       setData(result.data)
     } catch (err) {
-      console.error('[Opexp] fetchData error:', err)
+      if (err instanceof Error && err.name === 'AbortError') return
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
@@ -130,17 +129,18 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
     fetchCatalogs()
-    fetchData()
-  }, [])
+    fetchData(undefined, controller.signal)
+    return () => controller.abort()
+  }, [searchKey])
 
   const handleFilterChange = (field: string, value: string) => {
     setFilters(prev => ({ ...prev, [field]: value }))
   }
 
   const handleSearch = () => {
-    setLoading(true)
-    fetchData(filters)
+    setSearchKey(prev => prev + 1)
   }
 
   const handleClear = () => {
@@ -155,8 +155,11 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
       solicitante: ''
     }
     setFilters(emptyFilters)
-    setLoading(true)
-    fetchData(emptyFilters)
+    setSearchKey(prev => prev + 1)
+  }
+
+  const handleReload = () => {
+    setSearchKey(prev => prev + 1)
   }
 
   if (loading) {
@@ -195,6 +198,7 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
           onChange={handleFilterChange}
           onSearch={handleSearch}
           onClear={handleClear}
+          onReload={handleReload}
         />
       </Grid>
 
@@ -205,7 +209,7 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
           sx={{
             fontSize: '0.85rem',
             fontWeight: 700,
-            color: '#9ca3af',
+            color: 'var(--mui-palette-text-disabled)',
             textTransform: 'uppercase',
             letterSpacing: 1.2,
             mb: 2,
@@ -229,7 +233,7 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
           iconColor='#198754'
           iconClass='fa-solid fa-circle-dollar-to-slot'
           action={
-            <IconButton size='small' onClick={() => setModalExpensesMonthOpen(true)} sx={{ color: '#6b7280' }}>
+            <IconButton size='small' onClick={() => setModalExpensesMonthOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }
@@ -260,7 +264,7 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
           iconColor='#0d6efd'
           iconClass='fa-solid fa-building'
           action={
-            <IconButton size='small' onClick={() => setModalPaymentsOpen(true)} sx={{ color: '#6b7280' }}>
+            <IconButton size='small' onClick={() => setModalPaymentsOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }
@@ -278,7 +282,7 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
           iconColor='#b45309'
           iconClass='fa-solid fa-user-tie'
           action={
-            <IconButton size='small' onClick={() => setModalByPersonOpen(true)} sx={{ color: '#6b7280' }}>
+            <IconButton size='small' onClick={() => setModalByPersonOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }
@@ -323,7 +327,7 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
           iconColor='#20c997'
           iconClass='fa-solid fa-chart-pie'
           action={
-            <IconButton size='small' onClick={() => setModalByProjectOpen(true)} sx={{ color: '#6b7280' }}>
+            <IconButton size='small' onClick={() => setModalByProjectOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }

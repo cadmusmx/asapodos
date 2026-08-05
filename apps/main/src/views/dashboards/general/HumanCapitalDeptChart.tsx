@@ -32,7 +32,7 @@ const HumanCapitalDeptChart = ({ t, data, height = 180 }: Props) => {
         const value = series[seriesIndex] as number
         const total = (series as number[]).reduce((a, b) => a + b, 0)
         const pct = ((value / total) * 100).toFixed(1)
-        return `<div style="padding:8px 12px;background:#1f2937;color:#fff;border-radius:8px;font-size:13px;">
+        return `<div style="padding:8px 12px;background:var(--mui-palette-background-paper);color:var(--mui-palette-text-primary);border-radius:8px;font-size:13px;border:1px solid var(--mui-palette-divider);">
           <strong>${label}</strong><br/>
           ${value.toLocaleString()} empleados (${pct}%)
         </div>`
@@ -57,14 +57,14 @@ const HumanCapitalDeptChart = ({ t, data, height = 180 }: Props) => {
               fontWeight: 700,
               fontSize: '22px',
               formatter: (value: string) => Number(value).toLocaleString(),
-              color: '#1f2937'
+              color: 'var(--mui-palette-text-primary)'
             },
             total: {
               show: true,
               fontSize: '12px',
               fontWeight: 600,
               label: t('dashboard.general.total'),
-              color: '#6b7280',
+              color: 'var(--mui-palette-text-secondary)',
               formatter: () => {
                 const total = data.reduce((acc, d) => acc + d.count, 0)
                 return total.toLocaleString()

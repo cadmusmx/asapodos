@@ -52,6 +52,7 @@ const FleetsDashboard = ({ dictionary }: Props) => {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchKey, setSearchKey] = useState(0)
   const [modalRequestsOpen, setModalRequestsOpen] = useState(false)
   const [filters, setFilters] = useState({
     fechaInicio: '',
@@ -66,15 +67,16 @@ const FleetsDashboard = ({ dictionary }: Props) => {
     return key.split('.').reduce((obj, k) => obj?.[k], dictionary) as unknown as string ?? key
   }
 
-  const fetchData = async (filterParams?: string) => {
+  const fetchData = async (filterParams?: string, signal?: AbortSignal) => {
     try {
       setLoading(true)
       const url = filterParams ? `/api/fleets/dashboard${filterParams}` : '/api/fleets/dashboard'
-      const response = await fetch(url)
+      const response = await fetch(url, { signal })
       if (!response.ok) throw new Error('Failed to fetch dashboard data')
       const result = await response.json()
       setData(result.data)
     } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
@@ -101,9 +103,11 @@ const FleetsDashboard = ({ dictionary }: Props) => {
   }
 
   useEffect(() => {
-    fetchData()
+    const controller = new AbortController()
+    fetchData(undefined, controller.signal)
     fetchCatalogs()
-  }, [])
+    return () => controller.abort()
+  }, [searchKey])
 
   const handleFilterChange = (field: string, value: string) => {
     setFilters(prev => ({ ...prev, [field]: value }))
@@ -117,7 +121,7 @@ const FleetsDashboard = ({ dictionary }: Props) => {
     if (filters.region) params.append('region', filters.region)
     if (filters.vehicleType) params.append('vehicleType', filters.vehicleType)
     const queryString = params.toString()
-    fetchData(queryString ? `?${queryString}` : '')
+    setSearchKey(prev => prev + 1)
   }
 
   const handleClear = () => {
@@ -128,7 +132,11 @@ const FleetsDashboard = ({ dictionary }: Props) => {
       region: '',
       vehicleType: ''
     })
-    fetchData()
+    setSearchKey(prev => prev + 1)
+  }
+
+  const handleReload = () => {
+    setSearchKey(prev => prev + 1)
   }
 
   if (loading) {
@@ -163,12 +171,13 @@ const FleetsDashboard = ({ dictionary }: Props) => {
           onChange={handleFilterChange}
           onSearch={handleSearch}
           onClear={handleClear}
+          onReload={handleReload}
           regions={catalogs.regions}
           vehicleTypes={catalogs.vehicleTypes}
         />
       </Grid>
       <Grid size={{ xs: 12 }}>
-        <Typography variant='h6' sx={{ fontWeight: 600, mb: 2, color: '#1f2937' }}>
+        <Typography variant='h6' sx={{ fontWeight: 600, mb: 2, color: 'var(--mui-palette-text-primary)' }}>
           {t('dashboard.fleets.kpiCards')}
         </Typography>
       </Grid>
@@ -180,7 +189,7 @@ const FleetsDashboard = ({ dictionary }: Props) => {
           iconColor='#0d6efd'
           iconClass='ri-bar-chart-line'
           action={
-            <IconButton size='small' onClick={() => setModalRequestsOpen(true)} sx={{ color: '#6b7280' }}>
+              <IconButton size='small' onClick={() => setModalRequestsOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }

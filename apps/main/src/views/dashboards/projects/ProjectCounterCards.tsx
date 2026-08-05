@@ -16,9 +16,9 @@ type Props = {
 
 const ProjectCounterCards = ({ t, counters }: Props) => {
   const items = [
-    { label: t('dashboard.projects.totalProjects'), value: counters.total, gradient: 'linear-gradient(135deg, #0d6efd, #0056b3)', icon: 'ri-briefcase-line' },
-    { label: t('dashboard.projects.active'), value: counters.activos, gradient: 'linear-gradient(135deg, #198754, #14532d)', icon: 'ri-checkbox-circle-line' },
-    { label: t('dashboard.projects.pending'), value: counters.inactivos, gradient: 'linear-gradient(135deg, #ffc107, #b45309)', icon: 'ri-time-line' }
+    { label: t('dashboard.projects.totalProjects'), value: counters.total, color: 'var(--mui-palette-primary-main)', icon: 'ri-briefcase-line' },
+    { label: t('dashboard.projects.active'), value: counters.activos, color: 'var(--mui-palette-success-main)', icon: 'ri-checkbox-circle-line' },
+    { label: t('dashboard.projects.pending'), value: counters.inactivos, color: 'var(--mui-palette-warning-main)', icon: 'ri-time-line' }
   ]
 
   return (
@@ -28,8 +28,7 @@ const ProjectCounterCards = ({ t, counters }: Props) => {
           <Card
             sx={{
               borderRadius: '14px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 8px rgba(15,23,42,.05)',
+              border: '1px solid var(--mui-palette-divider)',
               height: '100%'
             }}
           >
@@ -40,7 +39,7 @@ const ProjectCounterCards = ({ t, counters }: Props) => {
                     width: 48,
                     height: 48,
                     borderRadius: 10,
-                    background: item.gradient,
+                    background: item.color,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -54,11 +53,11 @@ const ProjectCounterCards = ({ t, counters }: Props) => {
                 <div>
                   <Typography
                     variant='body2'
-                    sx={{ color: '#6b7280', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}
+                    sx={{ color: 'var(--mui-palette-text-secondary)', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}
                   >
                     {item.label}
                   </Typography>
-                  <Typography variant='h4' sx={{ fontWeight: 700, color: '#1f2937', lineHeight: 1.2 }}>
+                  <Typography variant='h4' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1.2 }}>
                     {item.value.toLocaleString()}
                   </Typography>
                 </div>

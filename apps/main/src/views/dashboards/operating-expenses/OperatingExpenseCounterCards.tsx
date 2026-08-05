@@ -24,8 +24,7 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
         <Card
           sx={{
             borderRadius: '14px',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 2px 8px rgba(15,23,42,.05)',
+            border: '1px solid var(--mui-palette-divider)',
             height: '100%'
           }}
         >
@@ -36,7 +35,7 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
                   width: 48,
                   height: 48,
                   borderRadius: 10,
-                  background: 'linear-gradient(135deg, #0d6efd, #0056b3)',
+                  background: 'var(--mui-palette-primary-main)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -50,11 +49,11 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
               <div>
                 <Typography
                   variant='body2'
-                  sx={{ color: '#6b7280', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}
+                  sx={{ color: 'var(--mui-palette-text-secondary)', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}
                 >
                   {t('dashboard.expenses.totalRequests')}
                 </Typography>
-                <Typography variant='h4' sx={{ fontWeight: 700, color: '#1f2937', lineHeight: 1.2 }}>
+                <Typography variant='h4' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1.2 }}>
                   {counters.total}
                 </Typography>
               </div>
@@ -67,8 +66,7 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
         <Card
           sx={{
             borderRadius: '14px',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 2px 8px rgba(15,23,42,.05)',
+            border: '1px solid var(--mui-palette-divider)',
             height: '100%'
           }}
         >
@@ -79,7 +77,7 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
                   width: 48,
                   height: 48,
                   borderRadius: 10,
-                  background: 'linear-gradient(135deg, #198754, #14532d)',
+                  background: 'var(--mui-palette-success-main)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -93,11 +91,11 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
               <div>
                 <Typography
                   variant='body2'
-                  sx={{ color: '#6b7280', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}
+                  sx={{ color: 'var(--mui-palette-text-secondary)', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}
                 >
                   {t('dashboard.expenses.accepted')}
                 </Typography>
-                <Typography variant='h4' sx={{ fontWeight: 700, color: '#1f2937', lineHeight: 1.2 }}>
+                <Typography variant='h4' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1.2 }}>
                   {counters.aceptadas}
                 </Typography>
               </div>
@@ -110,8 +108,7 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
         <Card
           sx={{
             borderRadius: '14px',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 2px 8px rgba(15,23,42,.05)',
+            border: '1px solid var(--mui-palette-divider)',
             height: '100%'
           }}
         >
@@ -122,7 +119,7 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
                   width: 48,
                   height: 48,
                   borderRadius: 10,
-                  background: 'linear-gradient(135deg, #ffc107, #b45309)',
+                  background: 'var(--mui-palette-warning-main)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -136,11 +133,11 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
               <div>
                 <Typography
                   variant='body2'
-                  sx={{ color: '#6b7280', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}
+                  sx={{ color: 'var(--mui-palette-text-secondary)', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}
                 >
                   {t('dashboard.expenses.pending')}
                 </Typography>
-                <Typography variant='h4' sx={{ fontWeight: 700, color: '#1f2937', lineHeight: 1.2 }}>
+                <Typography variant='h4' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1.2 }}>
                   {counters.pendientes}
                 </Typography>
               </div>
@@ -153,8 +150,7 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
         <Card
           sx={{
             borderRadius: '14px',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 2px 8px rgba(15,23,42,.05)',
+            border: '1px solid var(--mui-palette-divider)',
             height: '100%'
           }}
         >
@@ -165,7 +161,7 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
                   width: 48,
                   height: 48,
                   borderRadius: 10,
-                  background: 'linear-gradient(135deg, #dc3545, #880e4f)',
+                  background: 'var(--mui-palette-error-main)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -179,11 +175,11 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
               <div>
                 <Typography
                   variant='body2'
-                  sx={{ color: '#6b7280', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}
+                  sx={{ color: 'var(--mui-palette-text-secondary)', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}
                 >
                   {t('dashboard.expenses.rejected')}
                 </Typography>
-                <Typography variant='h4' sx={{ fontWeight: 700, color: '#1f2937', lineHeight: 1.2 }}>
+                <Typography variant='h4' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1.2 }}>
                   {counters.rechazadas}
                 </Typography>
               </div>
@@ -196,8 +192,7 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
         <Card
           sx={{
             borderRadius: '14px',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 2px 8px rgba(15,23,42,.05)',
+            border: '1px solid var(--mui-palette-divider)',
             height: '100%'
           }}
         >
@@ -208,7 +203,7 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
                   width: 48,
                   height: 48,
                   borderRadius: 10,
-                  background: 'linear-gradient(135deg, #20c997, #0f766e)',
+                  background: 'var(--mui-palette-info-main)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -222,11 +217,11 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
               <div>
                 <Typography
                   variant='body2'
-                  sx={{ color: '#6b7280', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}
+                  sx={{ color: 'var(--mui-palette-text-secondary)', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}
                 >
                   {t('dashboard.expenses.paid')}
                 </Typography>
-                <Typography variant='h4' sx={{ fontWeight: 700, color: '#1f2937', lineHeight: 1.2 }}>
+                <Typography variant='h4' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1.2 }}>
                   {counters.pagadas}
                 </Typography>
               </div>
@@ -239,8 +234,7 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
         <Card
           sx={{
             borderRadius: '14px',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 2px 8px rgba(15,23,42,.05)',
+            border: '1px solid var(--mui-palette-divider)',
             height: '100%'
           }}
         >
@@ -251,7 +245,7 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
                   width: 48,
                   height: 48,
                   borderRadius: 10,
-                  background: 'linear-gradient(135deg, #6f42c1, #4c1d95)',
+                  background: 'var(--mui-palette-secondary-main)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -265,11 +259,11 @@ const OperatingExpenseCounterCards = ({ t, counters }: Props) => {
               <div>
                 <Typography
                   variant='body2'
-                  sx={{ color: '#6b7280', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}
+                  sx={{ color: 'var(--mui-palette-text-secondary)', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}
                 >
                   {t('dashboard.expenses.paidAmount')}
                 </Typography>
-                <Typography variant='h4' sx={{ fontWeight: 700, color: '#1f2937', lineHeight: 1.2 }}>
+                <Typography variant='h4' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1.2 }}>
                   ${counters.montoPagadas.toLocaleString()}
                 </Typography>
               </div>

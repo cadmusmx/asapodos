@@ -44,8 +44,7 @@ const RequestsByMonthChart = ({ t, data, height = 220 }: Props) => {
       }
     },
     stroke: {
-      width: 2,
-      colors: ['var(--mui-palette-background-paper)']
+      width: 0
     },
     legend: { show: false },
     grid: {

@@ -30,10 +30,10 @@ const ChartModal = ({ open, onClose, title, children }: Props) => {
       }}
     >
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 2 }}>
-        <Typography variant='h6' sx={{ fontWeight: 700, color: '#1f2937' }}>
+        <Typography variant='h6' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)' }}>
           {title}
         </Typography>
-        <IconButton onClick={onClose} size='small' sx={{ color: '#6b7280' }}>
+        <IconButton onClick={onClose} size='small' sx={{ color: 'var(--mui-palette-text-secondary)' }}>
           <i className='ri-close-line' style={{ fontSize: '1.25rem' }} />
         </IconButton>
       </DialogTitle>
@@ -48,11 +48,11 @@ const ChartModal = ({ open, onClose, title, children }: Props) => {
           variant='outlined'
           sx={{
             borderRadius: '10px',
-            borderColor: '#e5e7eb',
-            color: '#6b7280',
+            borderColor: 'var(--mui-palette-divider)',
+            color: 'var(--mui-palette-text-secondary)',
             '&:hover': {
-              borderColor: '#d1d5db',
-              background: 'rgba(0,0,0,.02)'
+              borderColor: 'var(--mui-palette-action-hover)',
+              background: 'var(--mui-palette-action-hover)'
             }
           }}
         >

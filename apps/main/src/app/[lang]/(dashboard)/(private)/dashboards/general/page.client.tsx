@@ -156,6 +156,10 @@ const GeneralDashboard = ({ dictionary }: Props) => {
     setSearchKey(prev => prev + 1)
   }
 
+  const handleReload = () => {
+    setSearchKey(prev => prev + 1)
+  }
+
   if (loading) {
     return (
       <Card>
@@ -194,10 +198,10 @@ const GeneralDashboard = ({ dictionary }: Props) => {
         >
           <i className={badge.icon} style={{ fontSize: '1rem', color: badge.color }} />
           <Box>
-            <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: '#1f2937', lineHeight: 1 }}>
+            <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1 }}>
               {typeof badge.value === 'number' ? badge.value.toLocaleString() : badge.value}
             </Typography>
-            <Typography sx={{ fontSize: '0.65rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <Typography sx={{ fontSize: '0.65rem', color: 'var(--mui-palette-text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {badge.label}
             </Typography>
           </Box>
@@ -219,13 +223,13 @@ const GeneralDashboard = ({ dictionary }: Props) => {
       onModalOpen?: () => void
     }>
   ) => (
-    <Card sx={{ borderRadius: '16px', border: '1px solid rgba(0,0,0,.06)', boxShadow: '0 2px 12px rgba(15,23,42,.07)', height: '100%' }}>
+    <Card sx={{ borderRadius: '16px', border: '1px solid var(--mui-palette-divider)', height: '100%' }}>
       <CardContent sx={{ p: '1rem !important' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
           <Box sx={{ width: 40, height: 40, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', background: iconBg, color: iconColor }}>
             <i className={icon} />
           </Box>
-          <Typography variant='h6' sx={{ fontSize: '1rem', fontWeight: 700, color: '#1f2937' }}>
+          <Typography variant='h6' sx={{ fontSize: '1rem', fontWeight: 700, color: 'var(--mui-palette-text-primary)' }}>
             {title}
           </Typography>
         </Box>
@@ -235,11 +239,11 @@ const GeneralDashboard = ({ dictionary }: Props) => {
         {charts.map((chart, idx) => (
           <Box key={idx} sx={{ mb: idx < charts.length - 1 ? 2 : 0 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-              <Typography variant='caption' sx={{ color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.65rem' }}>
+              <Typography variant='caption' sx={{ color: 'var(--mui-palette-text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.65rem' }}>
                 {chart.label}
               </Typography>
               {chart.modalTitle && chart.onModalOpen && (
-                <IconButton size='small' onClick={chart.onModalOpen} sx={{ color: '#6b7280', p: 0.25 }}>
+                <IconButton size='small' onClick={chart.onModalOpen} sx={{ color: 'var(--mui-palette-text-secondary)', p: 0.25 }}>
                   <i className='ri-eye-line' style={{ fontSize: '1rem' }} />
                 </IconButton>
               )}
@@ -286,7 +290,7 @@ const GeneralDashboard = ({ dictionary }: Props) => {
         </div>
       </div>
 
-      <GeneralFilters t={t} values={filters} onChange={handleFilterChange} onSearch={handleSearch} onClear={handleClear} regions={catalogs.regions} />
+      <GeneralFilters t={t} values={filters} onChange={handleFilterChange} onSearch={handleSearch} onClear={handleClear} onReload={handleReload} regions={catalogs.regions} />
 
       {/* ROW 1 */}
       <Grid container spacing={3} sx={{ mb: 3 }}>

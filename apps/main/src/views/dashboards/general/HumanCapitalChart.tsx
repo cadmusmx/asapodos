@@ -20,10 +20,21 @@ const HumanCapitalChart = ({ t, data }: Props) => {
     chart: {
       sparkline: { enabled: true }
     },
-    colors: ['var(--mui-palette-primary-main)', 'rgba(var(--mui-palette-primary-mainChannel) / 0.7)'],
+    colors: ['var(--mui-palette-primary-main)', 'var(--mui-palette-warning-main)'],
     stroke: { width: 0 },
     legend: { show: false },
-    tooltip: { theme: 'false' },
+    tooltip: {
+      custom: ({ series, seriesIndex, w }) => {
+        const label = w.globals.labels[seriesIndex] as string
+        const value = series[seriesIndex] as number
+        const total = (series as number[]).reduce((a, b) => a + b, 0)
+        const pct = ((value / total) * 100).toFixed(1)
+        return `<div style="padding:8px 12px;background:var(--mui-palette-background-paper);color:var(--mui-palette-text-primary);border-radius:8px;font-size:13px;border:1px solid var(--mui-palette-divider);">
+          <strong>${label}</strong><br/>
+          ${value.toLocaleString()} (${pct}%)
+        </div>`
+      }
+    },
     dataLabels: { enabled: false },
     labels: [t('dashboard.general.active'), t('dashboard.general.inactive')],
     states: {

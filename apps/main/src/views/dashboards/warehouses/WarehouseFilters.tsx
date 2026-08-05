@@ -21,11 +21,12 @@ type Props = {
   onChange: (field: string, value: string) => void
   onSearch: () => void
   onClear?: () => void
+  onReload?: () => void
   regions?: string[]
   cities?: string[]
 }
 
-const WarehouseFilters = ({ t, values, onChange, onSearch, onClear, regions = [], cities = [] }: Props) => {
+const WarehouseFilters = ({ t, values, onChange, onSearch, onClear, onReload, regions = [], cities = [] }: Props) => {
   return (
     <Card
       sx={{
@@ -33,7 +34,7 @@ const WarehouseFilters = ({ t, values, onChange, onSearch, onClear, regions = []
         border: '1px solid',
         borderColor: 'divider',
         boxShadow: 'none',
-        background: 'linear-gradient(180deg, #fafbfc 0%, #fff 100%)',
+        background: 'var(--mui-palette-background-paper)',
         mb: 3
       }}
     >
@@ -74,29 +75,51 @@ const WarehouseFilters = ({ t, values, onChange, onSearch, onClear, regions = []
                 width: 40,
                 height: 40,
                 p: 0,
-                background: 'linear-gradient(135deg, #0d6efd, #0056b3)',
-                boxShadow: '0 2px 8px rgba(13,110,253,0.3)',
+                background: 'linear-gradient(135deg, var(--mui-palette-primary-main), var(--mui-palette-primary-dark))',
+                boxShadow: '0 2px 8px rgba(var(--mui-palette-primary-mainChannel) / 0.3)',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #0056b3, #003d80)',
-                  boxShadow: '0 4px 12px rgba(13,110,253,0.4)'
+                  background: 'linear-gradient(135deg, var(--mui-palette-primary-dark), var(--mui-palette-primary-dark))',
+                  boxShadow: '0 4px 12px rgba(var(--mui-palette-primary-mainChannel) / 0.4)'
                 }
               }}
             >
               <i className='ri-search-line' style={{ fontSize: '1.1rem' }} />
             </Button>
+            {onReload && (
+              <Button
+                variant='outlined'
+                onClick={onReload}
+                sx={{
+                  borderRadius: '10px',
+                  minWidth: 40,
+                  width: 40,
+                  height: 40,
+                  p: 0,
+                  borderColor: 'divider',
+                  color: 'text.secondary',
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                    background: 'primary.main +08',
+                    color: 'primary.main'
+                  }
+                }}
+              >
+                <i className='ri-refresh-line' style={{ fontSize: '1.1rem' }} />
+              </Button>
+            )}
             <Box
               sx={{
                 width: 32,
                 height: 32,
                 borderRadius: '8px',
-                background: 'linear-gradient(135deg, #0d6efd22, #0d6efd11)',
+                background: 'linear-gradient(135deg, rgba(var(--mui-palette-primary-mainChannel) / 0.13), rgba(var(--mui-palette-primary-mainChannel) / 0.07))',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 ml: 1
               }}
             >
-              <i className='ri-filter-3-line' style={{ fontSize: '1rem', color: '#0d6efd' }} />
+              <i className='ri-filter-3-line' style={{ fontSize: '1rem', color: 'var(--mui-palette-primary-main)' }} />
             </Box>
             <Box component='span' sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 0.8 }}>
               {t('filters.filters')}

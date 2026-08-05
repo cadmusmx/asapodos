@@ -29,19 +29,19 @@ const EmployeeCounterCards = ({ t, counters }: Props) => {
   ]
 
   const colorMap: Record<string, string> = {
-    primary: 'rgba(13,110,253,.12)',
-    success: 'rgba(25,135,84,.12)',
-    error: 'rgba(220,53,69,.12)',
-    warning: 'rgba(255,193,7,.15)',
-    info: 'rgba(32,201,151,.12)'
+    primary: 'rgba(var(--mui-palette-primary-mainChannel) / 0.12)',
+    success: 'rgba(var(--mui-palette-success-mainChannel) / 0.12)',
+    error: 'rgba(var(--mui-palette-error-mainChannel) / 0.12)',
+    warning: 'rgba(var(--mui-palette-warning-mainChannel) / 0.15)',
+    info: 'rgba(var(--mui-palette-info-mainChannel) / 0.12)'
   }
 
   const iconColorMap: Record<string, string> = {
-    primary: '#0d6efd',
-    success: '#198754',
-    error: '#dc3545',
-    warning: '#b45309',
-    info: '#20c997'
+    primary: 'var(--mui-palette-primary-main)',
+    success: 'var(--mui-palette-success-main)',
+    error: 'var(--mui-palette-error-main)',
+    warning: 'var(--mui-palette-warning-main)',
+    info: 'var(--mui-palette-info-main)'
   }
 
   return (
@@ -53,12 +53,10 @@ const EmployeeCounterCards = ({ t, counters }: Props) => {
               textAlign: 'center',
               p: 2,
               borderRadius: '20px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 6px 18px rgba(15,23,42,.08)',
-              transition: 'transform .22s ease, box-shadow .22s ease',
+              border: '1px solid var(--mui-palette-divider)',
+              transition: 'transform .22s ease',
               '&:hover': {
-                transform: 'translateY(-3px)',
-                boxShadow: '0 12px 24px rgba(15,23,42,.10)'
+                transform: 'translateY(-3px)'
               }
             }}
           >
@@ -81,13 +79,13 @@ const EmployeeCounterCards = ({ t, counters }: Props) => {
               </div>
               <Typography
                 variant='h6'
-                sx={{ fontWeight: 800, color: '#1f2937', fontSize: '1rem', mb: 0.35 }}
+                sx={{ fontWeight: 800, color: 'var(--mui-palette-text-primary)', fontSize: '1rem', mb: 0.35 }}
               >
                 {item.label}
               </Typography>
               <Typography
                 variant='h4'
-                sx={{ fontWeight: 900, color: '#0f172a', lineHeight: 1.05, display: 'block', mb: 0.25, fontSize: '2rem' }}
+                sx={{ fontWeight: 900, color: 'var(--mui-palette-text-primary)', lineHeight: 1.05, display: 'block', mb: 0.25, fontSize: '2rem' }}
               >
                 {item.value.toLocaleString()}
               </Typography>

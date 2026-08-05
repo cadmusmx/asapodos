@@ -31,7 +31,7 @@ const GenderDistributionChart = ({ t, data }: Props) => {
         const pct = ((value / total) * 100).toFixed(1)
 
 
-        return `<div style="padding:8px 12px;background:#1f2937;color:#fff;border-radius:8px;font-size:13px;">
+        return `<div style="padding:8px 12px;background:var(--mui-palette-background-paper);color:var(--mui-palette-text-primary);border-radius:8px;font-size:13px;border:1px solid var(--mui-palette-divider);">
           <strong>${label}</strong><br/>
           ${value.toLocaleString()} (${pct}%)
         </div>`

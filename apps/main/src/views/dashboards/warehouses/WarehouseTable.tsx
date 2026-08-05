@@ -121,7 +121,6 @@ const WarehouseTable = ({ t, data }: Props) => {
             <Button variant='contained' size='small' onClick={handleExport} startIcon={<i className='ri-file-excel-line' />}>
               {t('dashboard.warehouses.exportExcel')}
             </Button>
-            <OptionsMenu iconClassName='text-textPrimary' options={['Refresh', 'Update']} />
           </div>
         }
       />

@@ -34,7 +34,7 @@ export const GET = withPermission(
       const tc = Prisma.sql`TenantID = CAST(${tenantId} AS uniqueidentifier)`
       const regionCondition = region ? Prisma.sql`AND IdRegion = ${Number(region)}` : Prisma.sql``
 
-      const [hcActivos, hcInactivos, hcPorDepto, movMetrics] = await Promise.all([
+      const [hcActivos, hcInactivos, hcPorDepto, movMetrics, altasBajas] = await Promise.all([
         prisma.$queryRaw<Array<{ total: bigint }>>(
           Prisma.sql`SELECT COUNT_BIG(1) as total FROM GASOCO_Cat_Usuarios WHERE ${tc} ${regionCondition} AND Estatus = 'A'`
         ),
@@ -46,6 +46,13 @@ export const GET = withPermission(
         ),
         prisma.$queryRaw<Array<{ total: bigint; palets: bigint; arribos: bigint; salidas: bigint }>>(
           Prisma.sql`SELECT COUNT_BIG(1) as total, SUM(CASE WHEN tipo = 'ENTRADA' THEN 1 ELSE 0 END) as palets, SUM(CASE WHEN Estatus = 'ARRIBO' THEN 1 ELSE 0 END) as arribos, SUM(CASE WHEN Estatus = 'SALIDA' THEN 1 ELSE 0 END) as salidas FROM GASOAL_MovimientosLote WHERE YEAR(fecha) = ${year}`
+        ),
+        safeQuery(
+          'altasBajas',
+          () => prisma.$queryRaw<Array<{ month: string; year: string; type: string; count: number }>>(
+            Prisma.sql`SELECT DATENAME(MONTH, u.FechaAlta) as month, CAST(YEAR(u.FechaAlta) AS VARCHAR(4)) as year, CASE WHEN u.Estatus = 'A' THEN 'Altas' ELSE 'Bajas' END as type, COUNT(*) as count FROM GASOCO_Cat_Usuarios u WHERE ${tc} ${regionCondition} AND YEAR(u.FechaAlta) = ${year} GROUP BY DATENAME(MONTH, u.FechaAlta), CAST(YEAR(u.FechaAlta) AS VARCHAR(4)), CASE WHEN u.Estatus = 'A' THEN 'Altas' ELSE 'Bajas' END ORDER BY year, DATENAME(MONTH, u.FechaAlta)`
+          ),
+          []
         )
       ])
 
@@ -132,7 +139,7 @@ export const GET = withPermission(
             activos: Number(hcActivos[0]?.total ?? 0),
             inactivos: Number(hcInactivos[0]?.total ?? 0),
             porDepto: hcPorDepto.map(d => ({ key: d.key, count: Number(d.count) })),
-            altasBajas: []
+            altasBajas: altasBajas.map(a => ({ month: a.month, year: a.year, type: a.type, count: a.count }))
           },
           inventario: {
             total: Number(movMetrics[0]?.total ?? 0),

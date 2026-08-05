@@ -24,43 +24,43 @@ const WarehouseCounterCards = ({ t, counters }: Props) => {
     {
       label: t('dashboard.warehouses.totalWarehouses'),
       value: counters.totalAlmacenes,
-      color: '#0d6efd',
-      iconBg: 'rgba(13,110,253,.12)',
+      color: 'var(--mui-palette-primary-main)',
+      iconBg: 'rgba(var(--mui-palette-primary-mainChannel) / 0.12)',
       icon: 'ri-store-2-line'
     },
     {
       label: t('dashboard.warehouses.operational'),
       value: counters.operativos,
-      color: '#28a745',
-      iconBg: 'rgba(40,167,69,.12)',
+      color: 'var(--mui-palette-success-main)',
+      iconBg: 'rgba(var(--mui-palette-success-mainChannel) / 0.12)',
       icon: 'ri-checkbox-circle-line'
     },
     {
       label: t('dashboard.warehouses.totalCapacity'),
       value: `${counters.capacidadTotal.toLocaleString()} m²`,
-      color: '#17a2b8',
-      iconBg: 'rgba(23,162,184,.12)',
+      color: 'var(--mui-palette-info-main)',
+      iconBg: 'rgba(var(--mui-palette-info-mainChannel) / 0.12)',
       icon: 'ri-expand-width-line'
     },
     {
       label: t('dashboard.warehouses.occupiedSpace'),
       value: `${counters.espacioOcupado.toLocaleString()} m²`,
-      color: '#b45309',
-      iconBg: 'rgba(255,193,7,.25)',
+      color: 'var(--mui-palette-warning-main)',
+      iconBg: 'rgba(var(--mui-palette-warning-mainChannel) / 0.25)',
       icon: 'ri-bar-chart-box-line'
     },
     {
       label: t('dashboard.warehouses.availableSpace'),
       value: `${counters.espacioDisponible.toLocaleString()} m²`,
-      color: '#20c997',
-      iconBg: 'rgba(32,201,151,.12)',
+      color: 'var(--mui-palette-info-main)',
+      iconBg: 'rgba(var(--mui-palette-info-mainChannel) / 0.12)',
       icon: 'ri-file-chart-line'
     },
     {
       label: t('dashboard.warehouses.occupancyRate'),
       value: `${counters.ocupacionPorcentaje}%`,
-      color: counters.ocupacionPorcentaje >= 80 ? '#dc3545' : '#6f42c1',
-      iconBg: counters.ocupacionPorcentaje >= 80 ? 'rgba(220,53,69,.12)' : 'rgba(111,66,193,.12)',
+      color: counters.ocupacionPorcentaje >= 80 ? 'var(--mui-palette-error-main)' : 'var(--mui-palette-secondary-main)',
+      iconBg: counters.ocupacionPorcentaje >= 80 ? 'rgba(var(--mui-palette-error-mainChannel) / 0.12)' : 'rgba(var(--mui-palette-secondary-mainChannel) / 0.12)',
       icon: 'ri-pie-chart-2-line'
     }
   ]
@@ -72,13 +72,11 @@ const WarehouseCounterCards = ({ t, counters }: Props) => {
           <Card
             sx={{
               borderRadius: '16px',
-              border: '1px solid rgba(0,0,0,.06)',
-              boxShadow: '0 2px 12px rgba(15,23,42,.07)',
+              border: '1px solid var(--mui-palette-divider)',
               borderTop: `3px solid ${item.color}`,
-              transition: 'box-shadow .2s, transform .2s',
+              transition: 'transform .2s',
               height: '100%',
               '&:hover': {
-                boxShadow: '0 8px 28px rgba(13,110,253,.14)',
                 transform: 'translateY(-3px)'
               }
             }}
@@ -100,7 +98,7 @@ const WarehouseCounterCards = ({ t, counters }: Props) => {
               >
                 <i className={item.icon} />
               </div>
-              <Typography variant='h5' sx={{ fontWeight: 700, color: '#1f2937' }}>
+              <Typography variant='h5' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)' }}>
                 {typeof item.value === 'number' ? item.value.toLocaleString() : item.value}
               </Typography>
               <Typography variant='body2' color='text.secondary' sx={{ fontSize: '0.8rem' }}>

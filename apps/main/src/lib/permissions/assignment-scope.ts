@@ -25,14 +25,17 @@ export async function resolveAssignmentScope(
   tenantId: string,
   userId: number,
 ): Promise<AssignmentScope | null> {
-  const actorRows = await tx.$queryRaw<Array<{ IdDepartamento: number | null }>>`
-    SELECT IdDepartamento
-    FROM dbo.GASOCO_Cat_Usuarios
-    WHERE IdUsuario = ${userId}
-      AND TenantID = CAST(${tenantId} AS uniqueidentifier)
+  const actorRows = await tx.$queryRaw<Array<{ DepartmentID: number | null }>>`
+    SELECT e.DepartmentID
+    FROM dbo.GASOCO_Cat_Usuarios u
+    INNER JOIN HumanCapital.Employees e
+      ON e.TenantID = u.TenantID
+    AND e.EmployeeID = u.EmployeeID
+    WHERE u.IdUsuario = ${userId}
+      AND u.TenantID = CAST(${tenantId} AS uniqueidentifier)
   `;
 
-  const actorDept = actorRows[0]?.IdDepartamento ?? null;
+  const actorDept = actorRows[0]?.DepartmentID ?? null;
 
   if (actorDept === null) {
     return null;

@@ -23,36 +23,36 @@ const FleetCounterCards = ({ t, counters }: Props) => {
     {
       label: t('dashboard.fleets.totalVehicles'),
       value: counters.total,
-      color: '#0d6efd',
-      iconBg: 'rgba(13,110,253,.12)',
+      color: 'var(--mui-palette-primary-main)',
+      iconBg: 'rgba(var(--mui-palette-primary-mainChannel) / 0.12)',
       icon: 'ri-truck-line'
     },
     {
       label: t('dashboard.fleets.active'),
       value: counters.active,
-      color: '#28a745',
-      iconBg: 'rgba(40,167,69,.12)',
+      color: 'var(--mui-palette-success-main)',
+      iconBg: 'rgba(var(--mui-palette-success-mainChannel) / 0.12)',
       icon: 'ri-checkbox-circle-line'
     },
     {
       label: t('dashboard.fleets.inactive'),
       value: counters.inactive,
-      color: '#6c757d',
-      iconBg: 'rgba(108,117,125,.12)',
+      color: 'var(--mui-palette-text-secondary)',
+      iconBg: 'rgba(var(--mui-palette-grey-500Channel) / 0.12)',
       icon: 'ri-close-line'
     },
     {
       label: t('dashboard.fleets.totalKms'),
       value: counters.totalKms.toLocaleString(),
-      color: '#17a2b8',
-      iconBg: 'rgba(23,162,184,.12)',
+      color: 'var(--mui-palette-info-main)',
+      iconBg: 'rgba(var(--mui-palette-info-mainChannel) / 0.12)',
       icon: 'ri-gauge-line'
     },
     {
       label: t('dashboard.fleets.totalFuel'),
       value: `$${counters.totalFuel.toLocaleString()}`,
-      color: '#b45309',
-      iconBg: 'rgba(255,193,7,.25)',
+      color: 'var(--mui-palette-warning-main)',
+      iconBg: 'rgba(var(--mui-palette-warning-mainChannel) / 0.25)',
       icon: 'ri-flashlight-line'
     }
   ]
@@ -64,13 +64,11 @@ const FleetCounterCards = ({ t, counters }: Props) => {
           <Card
             sx={{
               borderRadius: '16px',
-              border: '1px solid rgba(0,0,0,.06)',
-              boxShadow: '0 2px 12px rgba(15,23,42,.07)',
+              border: '1px solid var(--mui-palette-divider)',
               borderTop: `3px solid ${item.color}`,
-              transition: 'box-shadow .2s, transform .2s',
+              transition: 'transform .2s',
               height: '100%',
               '&:hover': {
-                boxShadow: '0 8px 28px rgba(13,110,253,.14)',
                 transform: 'translateY(-3px)'
               }
             }}
@@ -92,7 +90,7 @@ const FleetCounterCards = ({ t, counters }: Props) => {
               >
                 <i className={item.icon} />
               </div>
-              <Typography variant='h5' sx={{ fontWeight: 700, color: '#1f2937' }}>
+              <Typography variant='h5' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)' }}>
                 {typeof item.value === 'number' ? item.value.toLocaleString() : item.value}
               </Typography>
               <Typography variant='body2' color='text.secondary' sx={{ fontSize: '0.8rem' }}>
