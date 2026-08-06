@@ -23,6 +23,7 @@ export const GET = withPermission(
     const { searchParams } = new URL(req.url)
 
     const activeParam = searchParams.get('active')
+    const areaId = searchParams.get('area')
     const deptId = searchParams.get('department')
     const puestoId = searchParams.get('puesto')
     const regionId = searchParams.get('region')
@@ -46,6 +47,7 @@ export const GET = withPermission(
         } else if (activeParam === 'inactive') {
           conditions.push(Prisma.sql`e.IsActive = 0`)
         }
+        if (areaId) conditions.push(Prisma.sql`ed.AreaID = ${Number(areaId)}`)   // ← vuelve, re-fuenteada
         if (deptId) conditions.push(Prisma.sql`e.DepartmentID = ${Number(deptId)}`)
         if (puestoId) conditions.push(Prisma.sql`e.PositionID = ${Number(puestoId)}`)
         if (regionId) conditions.push(Prisma.sql`ed.RegionID = ${Number(regionId)}`)
@@ -143,6 +145,16 @@ export const GET = withPermission(
         ORDER BY [count] DESC`
       )
 
+      const porArea = await prisma.$queryRaw<CountByKey[]>(
+        Prisma.sql`
+        SELECT ISNULL(a.Name, 'Sin área') as [key], COUNT(e.EmployeeID) as [count]
+        ${employeeBase}
+        LEFT JOIN HumanCapital.Areas a ON a.TenantID = e.TenantID AND a.AreaID = ed.AreaID
+        ${whereClause([Prisma.sql`e.IsActive = 1`])}
+        GROUP BY a.Name
+        ORDER BY [count] DESC`
+      )
+
       return NextResponse.json({
         ok: true,
         data: {
@@ -158,7 +170,8 @@ export const GET = withPermission(
           porRegion,
           porPuesto,
           antiguedad,
-          porGenero
+          porGenero,
+          porArea
         }
       })
     })
