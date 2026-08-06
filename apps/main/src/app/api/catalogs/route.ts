@@ -40,31 +40,43 @@ export const GET = withPermission(
         }
 
         case 'departments': {
-          const depts = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
-            SELECT IdDepartamento as id, NombreDepartamento as nombre
-            FROM GASOCO_RH_Departamento
-            ORDER BY NombreDepartamento
-          `
+          const depts = await withTenantContext(tenantId, async tx =>
+            tx.$queryRaw<Array<{ id: number; nombre: string }>>`
+              SELECT DepartmentID as id, Name as nombre
+              FROM HumanCapital.Departments
+              WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
+                AND IsActive = 1
+              ORDER BY Name
+            `
+          )
           result = depts || []
           break
         }
 
         case 'areas': {
-          const areas = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
-            SELECT IdArea as id, NombreArea as nombre
-            FROM GASOCO_RH_Area
-            ORDER BY NombreArea
-          `
+          const areas = await withTenantContext(tenantId, async tx =>
+            tx.$queryRaw<Array<{ id: number; nombre: string }>>`
+              SELECT AreaID as id, Name as nombre
+              FROM HumanCapital.Areas
+              WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
+                AND IsActive = 1
+              ORDER BY Name
+            `
+          )
           result = areas || []
           break
         }
 
         case 'positions': {
-          const puestos = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
-            SELECT IdPuesto as id, NombrePuesto as nombre
-            FROM GASOCO_RH_Puesto
-            ORDER BY NombrePuesto
-          `
+          const puestos = await withTenantContext(tenantId, async tx =>
+            tx.$queryRaw<Array<{ id: number; nombre: string }>>`
+              SELECT PositionID as id, Name as nombre
+              FROM HumanCapital.Positions
+              WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
+                AND IsActive = 1
+              ORDER BY Name
+            `
+          )
           result = puestos || []
           break
         }
@@ -93,13 +105,18 @@ export const GET = withPermission(
         }
 
         case 'employees': {
-          const empleados = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
-            SELECT IdUsuario as id, ISNULL(Nombre, '') as nombre
-            FROM GASOCO_Cat_Usuarios
-            WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
-            AND Estatus = 'A'
-            ORDER BY Nombre
-          `
+          const empleados = await withTenantContext(tenantId, async tx =>
+            tx.$queryRaw<Array<{ id: number; nombre: string }>>`
+              SELECT u.IdUsuario as id,
+                     LTRIM(RTRIM(e.FirstName + ' ' + e.LastName)) as nombre
+              FROM dbo.GASOCO_Cat_Usuarios u
+              INNER JOIN HumanCapital.Employees e
+                ON e.TenantID = u.TenantID AND e.EmployeeID = u.EmployeeID
+              WHERE u.TenantID = CAST(${tenantId} AS uniqueidentifier)
+                AND e.IsActive=1
+              ORDER BY e.FirstName, e.LastName
+            `
+          )
           result = empleados || []
           break
         }
