@@ -25,7 +25,6 @@ type DeptRow = {
  *   - actor sin depto -> fail-closed (lista vacía, 200).
  *
  * Solo deptos CON usuarios activos (elegir uno vacío daría lista vacía).
- * GASOCO_Cat_Usuarios sin RLS -> filtro TenantID obligatorio.
  */
 export const GET = withPermission(
   'permissions_access',
@@ -42,17 +41,18 @@ export const GET = withPermission(
         // Deptos DISTINTOS con al menos un usuario activo, dentro del alcance.
         const scopeCondition = scope.hasFullScope
           ? Prisma.sql`1 = 1`
-          : Prisma.sql`u.IdDepartamento = ${scope.actorDept}`;
+          : Prisma.sql`e.DepartmentID = ${scope.actorDept}`;
 
         const rows = await tx.$queryRaw<DeptRow[]>`
-          SELECT DISTINCT u.IdDepartamento, d.NombreDepartamento
+          SELECT DISTINCT e.DepartmentID AS IdDepartamento, d.Name AS NombreDepartamento
           FROM dbo.GASOCO_Cat_Usuarios u
-          LEFT JOIN dbo.GASOCO_RH_Departamento d ON d.IdDepartamento = u.IdDepartamento
+          INNER JOIN HumanCapital.Employees e ON e.TenantID = u.TenantID AND e.EmployeeID = u.EmployeeID
+          LEFT JOIN HumanCapital.Departments d ON d.TenantID = e.TenantID AND d.DepartmentID = e.DepartmentID
           WHERE u.TenantID = CAST(${tenantId} AS uniqueidentifier)
             AND u.Estatus = 'A'
-            AND u.IdDepartamento IS NOT NULL
+            AND e.DepartmentID IS NOT NULL
             AND ${scopeCondition}
-          ORDER BY d.NombreDepartamento
+          ORDER BY d.Name
         `;
 
         return rows;

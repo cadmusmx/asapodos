@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable padding-line-between-statements */
-/* eslint-disable newline-before-return */
-/* eslint-disable @typescript-eslint/consistent-type-imports */
-
 import { NextResponse } from 'next/server';
 
 import { Prisma } from '@prisma/client';
@@ -29,7 +24,6 @@ type GrantInput = { viewCode: string; permMask: number };
 type ApplyBody = {
   idDepartamento: number;
   idPuesto: number | null;
-  idPerfil: number | null;
   grants: GrantInput[];
   mode: 'OR' | 'SET';
   dryRun: boolean;
@@ -68,7 +62,6 @@ function parseApplyBody(
   };
 
   const idPuesto = normOptInt(b.idPuesto, 'idPuesto');
-  const idPerfil = normOptInt(b.idPerfil, 'idPerfil');
 
   const mode = b.mode;
 
@@ -137,7 +130,6 @@ function parseApplyBody(
     body: {
       idDepartamento: idDepartamento as number,
       idPuesto,
-      idPerfil,
       grants,
       mode: mode as 'OR' | 'SET',
       dryRun: b.dryRun === true,
@@ -233,23 +225,22 @@ export const POST = withPermission(
         const scopeConds: Prisma.Sql[] = [
           Prisma.sql`u.TenantID = CAST(${tenantId} AS uniqueidentifier)`,
           Prisma.sql`u.Estatus = 'A'`,
-          Prisma.sql`u.IdDepartamento = ${body.idDepartamento}`,
+          Prisma.sql`e.DepartmentID = ${body.idDepartamento}`,
         ];
 
-        if (body.idPuesto !== null) scopeConds.push(Prisma.sql`u.IdPuesto = ${body.idPuesto}`);
-        if (body.idPerfil !== null) scopeConds.push(Prisma.sql`u.IdPerfil = ${body.idPerfil}`);
+        if (body.idPuesto !== null) scopeConds.push(Prisma.sql`e.PositionID = ${body.idPuesto}`); // rama idPerfil eliminada
 
         const afectados = await tx.$queryRaw<Array<{
           IdUsuario: number;
           Nombre: string | null;
           IdPuesto: number | null;
-          IdPerfil: number | null;
         }>>(
           Prisma.sql`
-            SELECT u.IdUsuario, u.Nombre, u.IdPuesto, u.IdPerfil
+            SELECT u.IdUsuario, LTRIM(RTRIM(e.FirstName + ' ' + e.LastName)) AS Nombre, e.PositionID AS IdPuesto
             FROM dbo.GASOCO_Cat_Usuarios u
+            INNER JOIN HumanCapital.Employees e ON e.TenantID = u.TenantID AND e.EmployeeID = u.EmployeeID
             WHERE ${Prisma.join(scopeConds, ' AND ')}
-            ORDER BY u.Nombre
+            ORDER BY e.FirstName, e.LastName
           `,
         );
 
@@ -373,7 +364,7 @@ export const POST = withPermission(
             : operations.map(op => ({ idUsuario: op.idUsuario, viewCode: op.viewCode, oldMask: op.actual, newMask: op.nuevo })),
           payload: {
             scope,
-            target: { idDepartamento: body.idDepartamento, idPuesto: body.idPuesto, idPerfil: body.idPerfil },
+            target: { idDepartamento: body.idDepartamento, idPuesto: body.idPuesto },
             mode: body.mode,
             dryRun: body.dryRun,
             applied: body.dryRun ? null : applied,

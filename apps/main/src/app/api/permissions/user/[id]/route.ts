@@ -51,9 +51,10 @@ export const GET = withPermission(
 
         // Depto del TARGET: existencia + validación de alcance del actor.
         const targetRows = await tx.$queryRaw<TargetRow[]>`
-          SELECT IdDepartamento
-          FROM dbo.GASOCO_Cat_Usuarios
-          WHERE IdUsuario = ${targetId} AND TenantID = CAST(${tenantId} AS uniqueidentifier)
+          SELECT e.DepartmentID AS IdDepartamento
+          FROM dbo.GASOCO_Cat_Usuarios u
+          INNER JOIN HumanCapital.Employees e ON e.TenantID = u.TenantID AND e.EmployeeID = u.EmployeeID
+          WHERE u.IdUsuario = ${targetId} AND u.TenantID = CAST(${tenantId} AS uniqueidentifier)
         `;
 
         if (targetRows.length === 0) {

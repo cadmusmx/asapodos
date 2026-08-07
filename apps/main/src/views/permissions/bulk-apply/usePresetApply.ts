@@ -12,7 +12,6 @@ import type {
   ApplyMode,
   ApplyPreview,
   DepartmentView,
-  PerfilFacet,
   PresetApplyRequest,
   PresetApplyResponse,
   PresetApplySnapshot,
@@ -29,7 +28,7 @@ const APPLY_URL = '/api/permissions/presets/apply';
 function snapshotKey(s: PresetApplySnapshot): string {
   const grants = [...s.grants].sort((a, b) => a.viewCode.localeCompare(b.viewCode));
 
-  return JSON.stringify({ d: s.idDepartamento, pu: s.idPuesto, pe: s.idPerfil, m: s.mode, g: grants });
+  return JSON.stringify({ d: s.idDepartamento, pu: s.idPuesto, m: s.mode, g: grants });
 }
 
 type PostResult =
@@ -66,10 +65,8 @@ export interface UsePresetApply {
   // Alcance
   idDepartamento: number | null;
   idPuesto: number | null;
-  idPerfil: number | null;
   setDepartamento: (id: number | null) => void;
   setPuesto: (id: number | null) => void;
-  setPerfil: (id: number | null) => void;
 
   // Vistas asignables del plan (nivel tenant; se cargan una vez al montar)
   views: DepartmentView[];
@@ -78,7 +75,6 @@ export interface UsePresetApply {
 
   // Facetas de alcance del departamento (seam facets)
   puestos: PuestoFacet[];
-  perfiles: PerfilFacet[];
   facetsLoading: boolean;
 
   // Máscaras de trabajo
@@ -119,7 +115,6 @@ export function usePresetApply(): UsePresetApply {
   const [viewsError, setViewsError] = useState<string | null>(null);
 
   const [puestos, setPuestos] = useState<PuestoFacet[]>([]);
-  const [perfiles, setPerfiles] = useState<PerfilFacet[]>([]);
   const [facetsLoading, setFacetsLoading] = useState(false);
 
   const [workingMasks, setWorkingMasks] = useState<Record<string, number>>({});
@@ -180,7 +175,6 @@ export function usePresetApply(): UsePresetApply {
   useEffect(() => {
     if (idDepartamento === null) {
       setPuestos([]);
-      setPerfiles([]);
 
       return;
     }
@@ -194,13 +188,11 @@ export function usePresetApply(): UsePresetApply {
         const res = await fetchDepartmentFacets(idDepartamento, controller.signal);
 
         setPuestos(res.puestos);
-        setPerfiles(res.perfiles);
       } catch (e) {
         if ((e as Error).name === 'AbortError') return;
 
-        // Silencioso: sin facetas, puesto/perfil quedan en "cualquiera".
+        // Silencioso: sin facetas, puesto queda en "cualquiera".
         setPuestos([]);
-        setPerfiles([]);
       } finally {
         setFacetsLoading(false);
       }
@@ -231,14 +223,6 @@ export function usePresetApply(): UsePresetApply {
   const setPuesto = useCallback(
     (id: number | null) => {
       setIdPuesto(id);
-      clearOutcome();
-    },
-    [clearOutcome]
-  );
-
-  const setPerfil = useCallback(
-    (id: number | null) => {
-      setIdPerfil(id);
       clearOutcome();
     },
     [clearOutcome]
@@ -349,15 +333,12 @@ export function usePresetApply(): UsePresetApply {
   return {
     idDepartamento,
     idPuesto,
-    idPerfil,
     setDepartamento,
     setPuesto,
-    setPerfil,
     views,
     viewsLoading,
     viewsError,
     puestos,
-    perfiles,
     facetsLoading,
     workingMasks,
     setMask,

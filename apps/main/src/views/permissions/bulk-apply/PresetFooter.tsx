@@ -11,7 +11,6 @@ type Props = {
   mode: ApplyMode;
   departamento: string;
   puesto: string | null;
-  perfil: string | null;
 };
 
 const wildcard = (v: string | null) => (v && v.trim() !== '' ? v : 'cualquiera');
@@ -20,8 +19,8 @@ const wildcard = (v: string | null) => (v && v.trim() !== '' ? v : 'cualquiera')
  * Este footer es ESTÁTICO por modo — nombra el riesgo, no lo cuantifica.
  * El conteo real de removals/usersInScope vive en el preview del dryRun.
  */
-const PresetFooter = ({ mode, departamento, puesto, perfil }: Props) => {
-  const scope = `departamento ${departamento} · perfil ${wildcard(perfil)} · puesto ${wildcard(puesto)}`;
+const PresetFooter = ({ mode, departamento, puesto }: Props) => {
+  const scope = `departamento ${departamento} · puesto ${wildcard(puesto)}`;
 
   if (mode === 'OR') {
     return (

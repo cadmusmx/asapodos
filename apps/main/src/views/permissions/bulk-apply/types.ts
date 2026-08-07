@@ -39,15 +39,9 @@ export interface PuestoFacet {
   nombre: string;
 }
 
-export interface PerfilFacet {
-  idPerfil: number;
-  nombre: string;
-}
-
 export interface DepartmentFacetsResponse {
   idDepartamento: number;
   puestos: PuestoFacet[];
-  perfiles: PerfilFacet[];
 }
 
 // ---------------------------------------------------------------------------
@@ -65,7 +59,6 @@ export interface PresetGrant {
 export interface PresetApplyRequest {
   idDepartamento: number;
   idPuesto: number | null;
-  idPerfil: number | null;
   grants: PresetGrant[];
   mode: ApplyMode;
   dryRun: boolean;
@@ -98,7 +91,6 @@ export interface ApplyScope {
 export interface ApplyTarget {
   idDepartamento: number;
   idPuesto: number | null;
-  idPerfil: number | null;
 }
 
 /**

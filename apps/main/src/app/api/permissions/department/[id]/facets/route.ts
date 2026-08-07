@@ -9,15 +9,15 @@ export const runtime = 'nodejs';
 
 /**
  * GET /api/permissions/department/[id]/facets
- * Opciones de PUESTO y PERFIL para acotar el alcance del modal, DEPENDIENTES del departamento:
- * los distintos puesto/perfil presentes entre los usuarios ACTIVOS de ese depto.
+ * Opciones de PUESTO para acotar el alcance del modal, DEPENDIENTES del departamento:
+ * los distintos puestos presentes entre los usuarios ACTIVOS de ese depto.
  * Así cada opción corresponde a ≥1 usuario (sin selecciones vacías).
  *
  * Mismo gate de alcance que department/[id]/views:
  * - no listar facetas de un depto fuera del alcance del actor.
  * - permissions_access no aplica aquí (no hay vistas).
  *
- * NULL: usuarios con IdPuesto/IdPerfil NULL NO producen opción — el filtro es "wildcard NULL", no "match NULL":
+ * NULL: usuarios con IdPuesto NULL NO producen opción — el filtro es "wildcard NULL", no "match NULL":
  *  no se puede targetear "sin puesto" (§ afectados).
  */
 export const GET = withPermission(
@@ -46,29 +46,18 @@ export const GET = withPermission(
         // LEFT JOIN + fallback al id (coherente con departments).
         // IS NOT NULL: NULL no es targeteable.
         const puestos = await tx.$queryRaw<Array<{ IdPuesto: number; NombrePuesto: string | null }>>`
-          SELECT DISTINCT u.IdPuesto, pue.NombrePuesto
+          SELECT DISTINCT e.PositionID AS IdPuesto, p.Name AS NombrePuesto
           FROM dbo.GASOCO_Cat_Usuarios u
-          LEFT JOIN dbo.GASOCO_RH_Puesto pue ON pue.IdPuesto = u.IdPuesto
+          INNER JOIN HumanCapital.Employees e ON e.TenantID = u.TenantID AND e.EmployeeID = u.EmployeeID
+          LEFT JOIN HumanCapital.Positions p ON p.TenantID = e.TenantID AND p.PositionID = e.PositionID
           WHERE u.TenantID = CAST(${tenantId} AS uniqueidentifier)
             AND u.Estatus = 'A'
-            AND u.IdDepartamento = ${deptId}
-            AND u.IdPuesto IS NOT NULL
-          ORDER BY pue.NombrePuesto
+            AND e.DepartmentID = ${deptId}
+            AND e.PositionID IS NOT NULL
+          ORDER BY p.Name
         `;
 
-        // Perfiles distintos.
-        const perfiles = await tx.$queryRaw<Array<{ IdPerfil: number; Descripcion: string | null }>>`
-          SELECT DISTINCT u.IdPerfil, per.Descripcion
-          FROM dbo.GASOCO_Cat_Usuarios u
-          LEFT JOIN dbo.GASOCO_Cat_Perfiles per ON per.Id = u.IdPerfil
-          WHERE u.TenantID = CAST(${tenantId} AS uniqueidentifier)
-            AND u.Estatus = 'A'
-            AND u.IdDepartamento = ${deptId}
-            AND u.IdPerfil IS NOT NULL
-          ORDER BY per.Descripcion
-        `;
-
-        return { status: 200 as const, puestos, perfiles };
+        return { status: 200 as const, puestos };
       });
 
       if (result.status === 403) {
@@ -81,11 +70,7 @@ export const GET = withPermission(
           puestos: result.puestos.map(p => ({
             idPuesto: p.IdPuesto,
             nombre: p.NombrePuesto ?? String(p.IdPuesto),
-          })),
-          perfiles: result.perfiles.map(p => ({
-            idPerfil: p.IdPerfil,
-            nombre: p.Descripcion ?? String(p.IdPerfil),
-          })),
+          }))
         },
         { status: 200 },
       );

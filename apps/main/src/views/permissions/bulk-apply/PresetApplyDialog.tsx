@@ -78,9 +78,6 @@ const PresetApplyContent = ({ onClose }: { onClose: () => void }) => {
   const puestoName =
     m.idPuesto !== null ? m.puestos.find(p => p.idPuesto === m.idPuesto)?.nombre ?? String(m.idPuesto) : null;
 
-  const perfilName =
-    m.idPerfil !== null ? m.perfiles.find(p => p.idPerfil === m.idPerfil)?.nombre ?? String(m.idPerfil) : null;
-
   const busy = m.previewLoading || m.committing;
   const done = m.applied !== null;
 
@@ -124,23 +121,6 @@ const PresetApplyContent = ({ onClose }: { onClose: () => void }) => {
                 </MenuItem>
               ))}
             </TextField>
-
-            <TextField
-              select
-              size='small'
-              label='Perfil'
-              value={m.idPerfil !== null ? String(m.idPerfil) : ''}
-              onChange={e => m.setPerfil(e.target.value === '' ? null : Number(e.target.value))}
-              disabled={m.facetsLoading || busy || done}
-              className='min-is-[160px]'
-            >
-              <MenuItem value=''>Cualquiera</MenuItem>
-              {m.perfiles.map(p => (
-                <MenuItem key={p.idPerfil} value={String(p.idPerfil)}>
-                  {p.nombre}
-                </MenuItem>
-              ))}
-            </TextField>
           </div>
 
           <Divider />
@@ -175,7 +155,7 @@ const PresetApplyContent = ({ onClose }: { onClose: () => void }) => {
 
           {/* Footer dinámico según modo + alcance resuelto */}
           {m.idDepartamento !== null && (
-            <PresetFooter mode={m.mode} departamento={deptName} puesto={puestoName} perfil={perfilName} />
+            <PresetFooter mode={m.mode} departamento={deptName} puesto={puestoName} />
           )}
 
           {/* Errores */}

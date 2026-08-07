@@ -188,14 +188,6 @@ const UsersMaster = ({ selectedId, onSelect }: Props) => {
           </Typography>
         )
       }),
-      columnHelper.accessor('perfil', {
-        header: 'Perfil',
-        cell: info => (
-          <Typography color='text.secondary'>
-            {info.getValue() ?? info.row.original.idPerfil ?? '—'}
-          </Typography>
-        )
-      }),
     ],
     []
   );

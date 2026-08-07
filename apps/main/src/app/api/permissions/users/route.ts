@@ -16,8 +16,6 @@ type UserRow = {
   Departamento: string | null;
   IdPuesto: number | null;
   Puesto: string | null;
-  IdPerfil: number | null;
-  Perfil: string | null;
 };
 
 /**
@@ -64,11 +62,9 @@ export const GET = withPermission(
 
         // Alcance territorial base.
         if (!scope.hasFullScope) {
-          // No privilegiado: SIEMPRE su depto, sin importar ?dept (no puede ampliar).
-          conditions.push(Prisma.sql`u.IdDepartamento = ${scope.actorDept}`);
+          conditions.push(Prisma.sql`e.DepartmentID = ${scope.actorDept}`);
         } else if (deptFilter !== null && Number.isInteger(deptFilter)) {
-          // Privilegiado + filtro: acota al depto pedido.
-          conditions.push(Prisma.sql`u.IdDepartamento = ${deptFilter}`);
+          conditions.push(Prisma.sql`e.DepartmentID = ${deptFilter}`);
         }
 
         // Privilegiado sin filtro: sin condición de depto.
@@ -77,36 +73,36 @@ export const GET = withPermission(
           const escaped = search.replace(/[|%_[]/g, c => `|${c}`);
           const pattern = `%${escaped}%`;
 
-          conditions.push(Prisma.sql`u.Nombre LIKE ${pattern} ESCAPE '|'`);
+          conditions.push(Prisma.sql`(e.FirstName + ' ' + e.LastName) LIKE ${pattern} ESCAPE '|'`);
         }
 
         const whereClause = Prisma.sql`WHERE ${Prisma.join(conditions, ' AND ')}`;
 
-        // Total (mismo WHERE, misma conexión/contexto).
+        // Base común: Users (para IdUsuario + Estatus) ⋈ Employees (depto/puesto/nombre)
+        const userBase = Prisma.sql`
+          FROM dbo.GASOCO_Cat_Usuarios u
+          INNER JOIN HumanCapital.Employees e ON e.TenantID = u.TenantID AND e.EmployeeID = u.EmployeeID`;
+
         const countResult = await tx.$queryRaw<Array<{ total: bigint }>>(
-          Prisma.sql`SELECT COUNT(*) AS total FROM dbo.GASOCO_Cat_Usuarios u ${whereClause}`
+          Prisma.sql`SELECT COUNT(*) AS total ${userBase} ${whereClause}`
         );
 
         const total = Number(countResult[0]?.total ?? 0);
 
-        // Página. JOIN a GASOCO_RH_Departamento (global) para el nombre.
         const rows = await tx.$queryRaw<UserRow[]>(
           Prisma.sql`
             SELECT
               u.IdUsuario,
-              u.Nombre,
-              u.IdDepartamento,
-              dep.NombreDepartamento AS Departamento,
-              u.IdPuesto,
-              pue.NombrePuesto AS Puesto,
-              u.IdPerfil,
-              per.Descripcion AS Perfil
-            FROM dbo.GASOCO_Cat_Usuarios u
-            LEFT JOIN dbo.GASOCO_RH_Departamento dep ON dep.IdDepartamento = u.IdDepartamento
-            LEFT JOIN dbo.GASOCO_RH_Puesto pue ON pue.IdPuesto = u.IdPuesto
-            LEFT JOIN dbo.GASOCO_Cat_Perfiles per ON per.Id = u.IdPerfil
+              LTRIM(RTRIM(e.FirstName + ' ' + e.LastName)) AS Nombre,
+              e.DepartmentID AS IdDepartamento,
+              dep.Name AS Departamento,
+              e.PositionID AS IdPuesto,
+              pue.Name AS Puesto
+            ${userBase}
+            LEFT JOIN HumanCapital.Departments dep ON dep.TenantID = e.TenantID AND dep.DepartmentID = e.DepartmentID
+            LEFT JOIN HumanCapital.Positions pue ON pue.TenantID = e.TenantID AND pue.PositionID = e.PositionID
             ${whereClause}
-            ORDER BY u.Nombre
+            ORDER BY e.FirstName, e.LastName
             OFFSET ${offset} ROWS FETCH NEXT ${pageSize} ROWS ONLY
           `
         );
@@ -125,9 +121,7 @@ export const GET = withPermission(
             idDepartamento: r.IdDepartamento,
             departamento: r.Departamento ?? null,
             idPuesto: r.IdPuesto,
-            puesto: r.Puesto ?? null,
-            idPerfil: r.IdPerfil,
-            perfil: r.Perfil ?? null,
+            puesto: r.Puesto ?? null
           }))
         },
         (_key, value) => (typeof value === 'bigint' ? Number(value) : value)
