@@ -9,7 +9,6 @@ import { Prisma } from '@prisma/client'
 import { PERM, withPermission } from '@gaso/shared'
 
 import { withTenantContext } from '@/lib/tenant-context'
-import { prisma } from '@/lib/prisma'
 
 export const runtime = 'nodejs'
 
@@ -30,15 +29,13 @@ export const GET = withPermission(
 
     const currentYear = new Date().getFullYear()
 
-    return withTenantContext(tenantId, async () => {
+    // TODAS las queries son HumanCapital / tenant-scoped → sobre `tx`, nunca sobre el pool.
+    return withTenantContext(tenantId, async (tx) => {
       const tenantCondition = Prisma.sql`e.TenantID = CAST(${tenantId} AS uniqueidentifier) AND e.TenantID <> '00000000-0000-0000-0000-000000000000'`
 
-      // Base común: Employees + expediente 1:1 (LEFT JOIN → empleado sin EmployeeData no desaparece).
-      // EmployeeData va SIEMPRE porque el filtro de región (ed.RegionID) puede aplicar a cualquier query.
       const employeeBase = Prisma.sql`
         FROM HumanCapital.Employees e
-        LEFT JOIN HumanCapital.EmployeeData ed
-          ON ed.TenantID = e.TenantID AND ed.EmployeeID = e.EmployeeID`
+        LEFT JOIN HumanCapital.EmployeeData ed ON ed.TenantID = e.TenantID AND ed.EmployeeID = e.EmployeeID`
 
       const buildConditions = (extra: Prisma.Sql[] = []) => {
         const conditions: Prisma.Sql[] = [tenantCondition, ...extra]
@@ -47,7 +44,7 @@ export const GET = withPermission(
         } else if (activeParam === 'inactive') {
           conditions.push(Prisma.sql`e.IsActive = 0`)
         }
-        if (areaId) conditions.push(Prisma.sql`ed.AreaID = ${Number(areaId)}`)   // ← vuelve, re-fuenteada
+        if (areaId) conditions.push(Prisma.sql`ed.AreaID = ${Number(areaId)}`)
         if (deptId) conditions.push(Prisma.sql`e.DepartmentID = ${Number(deptId)}`)
         if (puestoId) conditions.push(Prisma.sql`e.PositionID = ${Number(puestoId)}`)
         if (regionId) conditions.push(Prisma.sql`ed.RegionID = ${Number(regionId)}`)
@@ -56,33 +53,32 @@ export const GET = withPermission(
 
       const whereClause = (extra: Prisma.Sql[] = []) => Prisma.sql`WHERE ${Prisma.join(buildConditions(extra), ' AND ')}`
 
-      const totalResult = await prisma.$queryRaw<Array<{ total: bigint }>>(
+      const totalResult = await tx.$queryRaw<Array<{ total: bigint }>>(
         Prisma.sql`SELECT COUNT_BIG(1) as total ${employeeBase} ${whereClause()}`
       )
       const totalEmpleados = Number(totalResult[0]?.total ?? 0)
 
-      const activosResult = await prisma.$queryRaw<Array<{ total: bigint }>>(
+      const activosResult = await tx.$queryRaw<Array<{ total: bigint }>>(
         Prisma.sql`SELECT COUNT_BIG(1) as total ${employeeBase} ${whereClause([Prisma.sql`e.IsActive = 1`])}`
       )
       const totalActivos = Number(activosResult[0]?.total ?? 0)
 
-      const inactivosResult = await prisma.$queryRaw<Array<{ total: bigint }>>(
+      const inactivosResult = await tx.$queryRaw<Array<{ total: bigint }>>(
         Prisma.sql`SELECT COUNT_BIG(1) as total ${employeeBase} ${whereClause([Prisma.sql`e.IsActive = 0`])}`
       )
       const totalInactivos = Number(inactivosResult[0]?.total ?? 0)
 
-      // Altas/bajas = eventos por fecha (independientes de IsActive actual), simétricos.
-      const altasResult = await prisma.$queryRaw<Array<{ total: bigint }>>(
+      const altasResult = await tx.$queryRaw<Array<{ total: bigint }>>(
         Prisma.sql`SELECT COUNT_BIG(1) as total ${employeeBase} ${whereClause([Prisma.sql`YEAR(e.HireDate) = ${currentYear}`])}`
       )
       const totalAltas = Number(altasResult[0]?.total ?? 0)
 
-      const bajasResult = await prisma.$queryRaw<Array<{ total: bigint }>>(
+      const bajasResult = await tx.$queryRaw<Array<{ total: bigint }>>(
         Prisma.sql`SELECT COUNT_BIG(1) as total ${employeeBase} ${whereClause([Prisma.sql`e.TerminationDate IS NOT NULL`, Prisma.sql`YEAR(e.TerminationDate) = ${currentYear}`])}`
       )
       const totalBajas = Number(bajasResult[0]?.total ?? 0)
 
-      const porDepartamento = await prisma.$queryRaw<CountByKey[]>(
+      const porDepartamento = await tx.$queryRaw<CountByKey[]>(
         Prisma.sql`
         SELECT ISNULL(d.Name, 'Sin asignar') as [key], COUNT(e.EmployeeID) as [count]
         ${employeeBase}
@@ -92,7 +88,7 @@ export const GET = withPermission(
         ORDER BY [count] DESC`
       )
 
-      const movimientosPorMes = await prisma.$queryRaw<MonthlyCount[]>(
+      const movimientosPorMes = await tx.$queryRaw<MonthlyCount[]>(
         Prisma.sql`
         SELECT DATENAME(MONTH, e.HireDate) as month, CAST(YEAR(e.HireDate) AS VARCHAR(4)) as year, 'Alta' as type, COUNT(*) as count
         ${employeeBase}
@@ -106,7 +102,7 @@ export const GET = withPermission(
         ORDER BY year, month`
       )
 
-      const porRegion = await prisma.$queryRaw<CountByKey[]>(
+      const porRegion = await tx.$queryRaw<CountByKey[]>(
         Prisma.sql`
         SELECT ISNULL(r.NombreReg, 'Sin área') as [key], COUNT(e.EmployeeID) as [count]
         ${employeeBase}
@@ -116,7 +112,7 @@ export const GET = withPermission(
         ORDER BY [count] DESC`
       )
 
-      const porPuesto = await prisma.$queryRaw<CountByKey[]>(
+      const porPuesto = await tx.$queryRaw<CountByKey[]>(
         Prisma.sql`
         SELECT TOP 20 ISNULL(p.Name, 'Sin asignar') as [key], COUNT(e.EmployeeID) as [count]
         ${employeeBase}
@@ -126,7 +122,7 @@ export const GET = withPermission(
         ORDER BY [count] DESC`
       )
 
-      const antiguedad = await prisma.$queryRaw<SeniorityBucket[]>(
+      const antiguedad = await tx.$queryRaw<SeniorityBucket[]>(
         Prisma.sql`
         SELECT CASE WHEN DATEDIFF(YEAR, e.HireDate, GETDATE()) < 1 THEN 'Menos de 1 año' WHEN DATEDIFF(YEAR, e.HireDate, GETDATE()) BETWEEN 1 AND 3 THEN '1-3 años' WHEN DATEDIFF(YEAR, e.HireDate, GETDATE()) BETWEEN 3 AND 5 THEN '3-5 años' WHEN DATEDIFF(YEAR, e.HireDate, GETDATE()) BETWEEN 5 AND 10 THEN '5-10 años' ELSE 'Más de 10 años' END as bucket, COUNT(*) as count
         ${employeeBase}
@@ -135,7 +131,7 @@ export const GET = withPermission(
         ORDER BY bucket`
       )
 
-      const porGenero = await prisma.$queryRaw<CountByKey[]>(
+      const porGenero = await tx.$queryRaw<CountByKey[]>(
         Prisma.sql`
         SELECT ISNULL(s.nombreSexo, 'No especificado') as [key], COUNT(e.EmployeeID) as [count]
         ${employeeBase}
@@ -145,7 +141,7 @@ export const GET = withPermission(
         ORDER BY [count] DESC`
       )
 
-      const porArea = await prisma.$queryRaw<CountByKey[]>(
+      const porArea = await tx.$queryRaw<CountByKey[]>(
         Prisma.sql`
         SELECT ISNULL(a.Name, 'Sin área') as [key], COUNT(e.EmployeeID) as [count]
         ${employeeBase}
