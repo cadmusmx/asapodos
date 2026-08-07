@@ -20,8 +20,8 @@ export async function fetchAssignableViews(signal?: AbortSignal): Promise<Assign
 }
 
 /**
- * Lee las facetas (puesto/perfil) para acotar el alcance.
- * Dependientes del depto: solo puesto/perfil con ≥1 usuario activo.
+ * Lee las facetas (puesto) para acotar el alcance.
+ * Dependientes del depto: solo puesto con ≥1 usuario activo.
  * Mismo gate de alcance que views.
  */
 export async function fetchDepartmentFacets(

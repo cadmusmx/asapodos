@@ -28,9 +28,9 @@ export interface AssignableViewsResponse {
 }
 
 // ---------------------------------------------------------------------------
-// Lectura: facetas de alcance (puesto/perfil) por departamento
+// Lectura: facetas de alcance (puesto) por departamento
 // GET /api/permissions/department/[id]/facets
-// Dependientes del depto: cada opción = puesto/perfil de ≥1 usuario ACTIVO del depto.
+// Dependientes del depto: cada opción = puesto de ≥1 usuario ACTIVO del depto.
 // NULL no aparece (no es targeteable); ausencia de selección = comodín "cualquiera".
 // ---------------------------------------------------------------------------
 

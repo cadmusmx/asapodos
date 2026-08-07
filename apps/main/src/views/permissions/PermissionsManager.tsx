@@ -43,7 +43,7 @@ const PermissionsManager = ({ canEdit }: { canEdit: boolean }) => {
               {!canEdit && ' (solo lectura)'}
             </Typography>
           </div>
-          <Tooltip title={canEdit ? 'Aplica permisos a varios usuarios por departamento (y, próximamente, puesto/perfil)' : 'Requiere permiso de asignación'}>
+          <Tooltip title={canEdit ? 'Aplica permisos a varios usuarios por departamento y puesto' : 'Requiere permiso de asignación'}>
             <span>
               <Button variant='contained' startIcon={<i className="ri-group-line"></i>} onClick={() => setPresetOpen(true)} disabled={!canEdit}>
                 Aplicar en bloque

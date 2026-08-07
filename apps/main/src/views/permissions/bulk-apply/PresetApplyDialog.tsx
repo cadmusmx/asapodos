@@ -87,7 +87,7 @@ const PresetApplyContent = ({ onClose }: { onClose: () => void }) => {
 
       <DialogContent dividers>
         <div className='flex flex-col gap-4'>
-          {/* Alcance: departamento + ejes AND independientes puesto/perfil (comodín = "Cualquiera"). */}
+          {/* Alcance: departamento + ejes AND independientes puesto (comodín = "Cualquiera"). */}
           <div className='flex items-start gap-3 flex-wrap'>
             <TextField
               select

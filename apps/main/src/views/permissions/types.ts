@@ -8,8 +8,6 @@ export interface AssignableUser {
   departamento: string | null;
   idPuesto: number | null;
   puesto: string | null;
-  idPerfil: number | null;
-  perfil: string | null;
 }
 
 /** Departamento filtrable (GET /api/permissions/departments). */

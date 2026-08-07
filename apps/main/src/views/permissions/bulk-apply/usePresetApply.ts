@@ -108,7 +108,6 @@ export interface UsePresetApply {
 export function usePresetApply(): UsePresetApply {
   const [idDepartamento, setIdDepartamento] = useState<number | null>(null);
   const [idPuesto, setIdPuesto] = useState<number | null>(null);
-  const [idPerfil, setIdPerfil] = useState<number | null>(null);
 
   const [views, setViews] = useState<DepartmentView[]>([]);
   const [viewsLoading, setViewsLoading] = useState(false);
@@ -136,8 +135,8 @@ export function usePresetApply(): UsePresetApply {
   const snapshot = useMemo<PresetApplySnapshot | null>(() => {
     if (idDepartamento === null) return null;
 
-    return { idDepartamento, idPuesto, idPerfil, grants, mode };
-  }, [idDepartamento, idPuesto, idPerfil, grants, mode]);
+    return { idDepartamento, idPuesto, grants, mode };
+  }, [idDepartamento, idPuesto, grants, mode]);
 
   const currentKey = useMemo(() => (snapshot ? snapshotKey(snapshot) : null), [snapshot]);
 
@@ -169,7 +168,6 @@ export function usePresetApply(): UsePresetApply {
     return () => controller.abort();
   }, []);
 
-  // Facetas (puesto/perfil): SIGUEN dependiendo del depto.
   // Al cambiar de depto se recargan y se resetean los ejes (las opciones cambian).
   // Las vistas y los grants NO se tocan (son del plan, estables); el preview queda stale por el snapshot.
   useEffect(() => {
@@ -201,7 +199,6 @@ export function usePresetApply(): UsePresetApply {
     // Cambió el depto: resetea ejes de alcance y limpia el resultado/errores previos.
     // (No toca vistas ni grants; el preview se invalida solo vía snapshot.)
     setIdPuesto(null);
-    setIdPerfil(null);
     setApplied(null);
     setError(null);
     setFieldErrors([]);
