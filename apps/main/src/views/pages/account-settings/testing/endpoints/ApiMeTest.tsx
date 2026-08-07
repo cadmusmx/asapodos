@@ -1,7 +1,6 @@
 import Grid from '@mui/material/Grid2'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
-import Divider from '@mui/material/Divider'
 
 import type { MeResponse } from '@gaso/shared/types/me'
 
@@ -28,12 +27,9 @@ function MeDisplay({ state, data }: Props) {
             ['ID', data.user.id],
             ['Name', data.user.name],
             ['Email', data.user.email],
-            ['Admin', data.user.admin ? 'Yes' : 'No'],
             ['Area', data.user.area],
-            ['City Base', data.user.cityBase],
             ['Position', data.user.position],
             ['Region', data.user.region],
-            ['Company', data.user.company]
           ] as [string, unknown][]).map(([label, value]) => (
             <Box key={label} className='flex items-center justify-between'>
               <Typography variant='body2' color='text.secondary'>{label}</Typography>
@@ -65,24 +61,6 @@ function MeDisplay({ state, data }: Props) {
           ))}
         </Box>
 
-        <Divider className='my-4' />
-
-        <Typography variant='subtitle2' color='text.secondary' gutterBottom>
-          PROFILE
-        </Typography>
-        <Box className='flex flex-col gap-2'>
-          {([
-            ['ID', data.profile.id],
-            ['Name', data.profile.name]
-          ] as [string, unknown][]).map(([label, value]) => (
-            <Box key={label} className='flex items-center justify-between'>
-              <Typography variant='body2' color='text.secondary'>{label}</Typography>
-              <Typography variant='body2' className='font-medium'>
-                {String(value ?? 'null')}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
       </Grid>
       {/* data.permissions migrado por rbac */}
     </Grid>

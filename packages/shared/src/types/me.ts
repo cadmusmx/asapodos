@@ -5,14 +5,11 @@ export type MeResponse = {
   user: {
     id: number
     name: string
-    email: string
-    admin: boolean
+    email: string | null
     area: number | null
-    cityBase: number | null
     department: number | null
     position: number | null
     region: number | null
-    company: number | null
   }
   tenant: {
     id: string
@@ -25,19 +22,10 @@ export type MeResponse = {
       status: TenantSubscriptionStatus | null
     }
   }
-  profile: {
-    id: number | null
-    name: string | null
-  }
   settings: TenantSettings
   views: Record<string, { mask: number; label: string; menuGroup: string | null }>
   menuGroups: Record<string, boolean>
   planMenuGroups: PlanFeatureKey[]
-}
-
-export type ProfileRow = {
-  Id: number
-  Descripcion: string | null
 }
 
 export type TenantRow = {
@@ -50,13 +38,9 @@ export type TenantRow = {
 export type UserRow = {
   IdUsuario: number
   Nombre: string
-  Email: string
-  IdPerfil: number | null
-  isAdmin: number | null
+  Email: string | null   // Employees.Email puede ser NULL
   IdArea: number | null
-  IdBaseCiudad: number | null
   IdDepartamento: number | null
   IdPuesto: number | null
   IdRegion: number | null
-  IdEmpresa: number | null
 }

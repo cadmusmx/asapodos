@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from 'next/server'
 
 import {
@@ -12,7 +11,7 @@ import {
 } from '@gaso/shared'
 
 import type { PlanTier, TenantSubscriptionStatus } from '@gaso/shared/types/plan'
-import type { MeResponse, ProfileRow, TenantRow, UserRow } from '@gaso/shared/types/me'
+import type { MeResponse, TenantRow, UserRow } from '@gaso/shared/types/me'
 
 import type { TenantSettingsRow } from '@/lib/tenant-settings/normalize'
 import { normalizeTenantSettingsFromRow } from '@/lib/tenant-settings/normalize'
@@ -56,11 +55,20 @@ export async function GET(req: Request) {
 
   try {
     const result = await withTenantContext(tenantId, async tx => {
-      const [userRows, tenantRows, profileRows, settingsRows, subscriptionRows, resolvedViews, planModules] = await Promise.all([
+      const [userRows, tenantRows, settingsRows, subscriptionRows, resolvedViews, planModules] = await Promise.all([
         tx.$queryRaw<UserRow[]>`
-          SELECT IdUsuario, Nombre, Email, IdPerfil, isAdmin, IdArea, IdBaseCiudad, IdDepartamento, IdPuesto, IdRegion, IdEmpresa
-          FROM GASOCO_Cat_Usuarios
-          WHERE IdUsuario = ${userId} AND TenantID = CAST(${tenantId} AS uniqueidentifier)
+          SELECT
+            u.IdUsuario,
+            LTRIM(RTRIM(e.FirstName + ' ' + e.LastName)) AS Nombre,
+            e.Email,
+            e.DepartmentID AS IdDepartamento,
+            e.PositionID   AS IdPuesto,
+            ed.AreaID      AS IdArea,
+            ed.RegionID    AS IdRegion
+          FROM dbo.GASOCO_Cat_Usuarios u
+          INNER JOIN HumanCapital.Employees e ON e.TenantID = u.TenantID AND e.EmployeeID = u.EmployeeID
+          LEFT JOIN HumanCapital.EmployeeData ed ON ed.TenantID = e.TenantID AND ed.EmployeeID = e.EmployeeID
+          WHERE u.IdUsuario = ${userId} AND u.TenantID = CAST(${tenantId} AS uniqueidentifier)
         `,
         tx.$queryRaw<TenantRow[]>`
           SELECT
@@ -74,12 +82,6 @@ export async function GET(req: Request) {
             Dominio
           FROM Security.Tenants
           WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
-        `,
-        tx.$queryRaw<ProfileRow[]>`
-          SELECT p.Id, p.Descripcion
-          FROM GASOCO_Cat_Perfiles p
-          INNER JOIN GASOCO_Cat_Usuarios u ON u.IdPerfil = p.Id
-          WHERE u.IdUsuario = ${userId} AND u.TenantID = CAST(${tenantId} AS uniqueidentifier)
         `,
         tx.$queryRaw<TenantSettingsRow[]>`
           SELECT BrandingJson, LimitsJson
@@ -107,8 +109,6 @@ export async function GET(req: Request) {
 
       const tenant = tenantRows[0]
 
-      const profile = profileRows[0] ?? null
-
       const views: MeResponse['views'] = {}
       const menuGroups: Record<string, boolean> = {}
 
@@ -126,13 +126,10 @@ export async function GET(req: Request) {
           id: user.IdUsuario,
           name: user.Nombre,
           email: user.Email,
-          admin: user.isAdmin === 1,
           area: user.IdArea ?? null,
-          cityBase: user.IdBaseCiudad ?? null,
           department: user.IdDepartamento ?? null,
           position: user.IdPuesto ?? null,
           region: user.IdRegion ?? null,
-          company: user.IdEmpresa ?? null
         },
         tenant: {
           id: tenantId,
@@ -146,9 +143,6 @@ export async function GET(req: Request) {
           }
         },
         settings,
-        profile: profile
-          ? { id: profile.Id, name: profile.Descripcion ?? null }
-          : { id: null, name: null },
         views,
         menuGroups,
         planMenuGroups: Array.from(planModules),
@@ -157,18 +151,15 @@ export async function GET(req: Request) {
       return body
     })
 
-    /* writeTransactionLog({
+    writeTransactionLog({
       tenantId,
       tableName: 'Api.Me',
       action: 'READ',
       userId,
       appUser: result.user.email ?? null,
       idOrigin,
-      newData: {
-        profileId: result.profile.id,
-        hasTenantSettings: true
-      }
-    }).catch(() => { }) */
+      newData: { hasTenantSettings: true }
+    }).catch(() => { })
 
     return NextResponse.json(result)
   } catch (e) {
