@@ -1,161 +1,66 @@
-// Next Imports
 import { NextResponse } from 'next/server'
 
-// Third-party Imports
-import { getServerSession } from 'next-auth'
+import { writeAuthAudit, withPermission, PERM, withTenantContext } from '@gaso/shared'
 
-// Tools
-import {
-    prisma,
-    writeAuthAudit,
-    getTenantFromHeaders,
-    setTenantContext,
-    authOptions
-} from '@gaso/shared'
+type RouteContext = { params: Promise<{ id: string }> }
 
-type RouteContext = {
-    params: Promise<{
-        id: string
-    }>
-}
-
-type SessionUser = {
-    id?: number | string
-    name?: string | null
-    email?: string | null
-    admin?: boolean
-    tenantId?: string | null
-    tenantSlug?: string | null
-}
-
-export async function POST(req: Request, context: RouteContext) {
+// Columna isAdmin quedo fuera, usamos withPermission (podemos cambiar la viewCode)
+export const POST = withPermission(
+  'permissions_access',
+  async (req, { auth, tenantId }, context: RouteContext) => {
     try {
-        const session = await getServerSession(authOptions)
+      const { id } = await context.params
+      const targetUserId = Number(id)
 
-        if (!session?.user) {
-            return NextResponse.json(
-                {
-                    ok: false,
-                    message: ['Unauthorized']
-                },
-                {
-                    status: 401
-                }
-            )
+      if (!Number.isInteger(targetUserId) || targetUserId <= 0) {
+        return NextResponse.json({ ok: false, message: ['Invalid user id'] }, { status: 400 })
+      }
+
+      const body = await req.json().catch(() => ({}))
+      const reason = String(body.reason ?? 'Admin MFA reset').trim()
+
+      const result = await withTenantContext(tenantId, async (tx) => {
+        const targetRows = await tx.$queryRaw<Array<{ IdUsuario: number; Usuario: string }>>`
+          SELECT IdUsuario, Usuario
+          FROM dbo.GASOCO_Cat_Usuarios
+          WHERE IdUsuario = ${targetUserId} AND TenantID = CAST(${tenantId} AS uniqueidentifier) AND Estatus = 'A'
+        `
+
+        const targetUser = targetRows[0]
+
+        if (!targetUser) return null
+
+        const updatedRows = await tx.$executeRaw`
+          UPDATE Security.UserMfaFactors
+          SET IsEnabled = 0, IsVerified = 0, DisabledAt = SYSUTCDATETIME(),
+              UpdatedAt = SYSUTCDATETIME(), UpdatedBy = ${auth.email ?? String(auth.userId)}
+          WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
+            AND IdUsuario = ${targetUser.IdUsuario} AND FactorType = 'TOTP' AND IsEnabled = 1
+        `
+
+
+        return { targetUser, updatedRows }
+      })
+
+      if (!result) {
+        return NextResponse.json({ ok: false, message: ['User not found for current tenant'] }, { status: 404 })
+      }
+
+      await writeAuthAudit({
+        eventType: 'MFA_RESET', eventStatus: 'SUCCESS', tenantId,
+        username: result.targetUser.Usuario, userId: result.targetUser.IdUsuario, email: null, reason,
+        metadata: {
+          targetUserId: result.targetUser.IdUsuario, targetUsername: result.targetUser.Usuario,
+          factorType: 'TOTP', performedBy: auth.email ?? String(auth.userId), updatedRows: result.updatedRows
         }
+      })
 
-        const sessionUser = session.user as SessionUser
-
-        if (sessionUser.admin !== true) {
-            return NextResponse.json(
-                {
-                    ok: false,
-                    message: ['Forbidden']
-                },
-                {
-                    status: 403
-                }
-            )
-        }
-
-        const { id } = await context.params
-        const targetUserId = Number(id)
-
-        if (!Number.isInteger(targetUserId) || targetUserId <= 0) {
-            return NextResponse.json(
-                {
-                    ok: false,
-                    message: ['Invalid user id']
-                },
-                {
-                    status: 400
-                }
-            )
-        }
-
-        const { id: tenantId, slug: tenantSlug } = getTenantFromHeaders(req.headers)
-
-        await setTenantContext(tenantId)
-
-        const body = await req.json().catch(() => ({}))
-        const reason = String(body.reason ?? 'Admin MFA reset').trim()
-
-        const targetUser = await prisma.gASOCO_Cat_Usuarios.findFirst({
-            select: {
-                IdUsuario: true,
-                EmployeeID: true,
-                Usuario: true,
-                TenantID: true
-            },
-            where: {
-                IdUsuario: targetUserId,
-                TenantID: tenantId,
-                Estatus: 'A'
-            }
-        })
-
-        if (!targetUser) {
-            return NextResponse.json(
-                {
-                    ok: false,
-                    message: ['User not found for current tenant']
-                },
-                {
-                    status: 404
-                }
-            )
-        }
-
-        const updatedRows = await prisma.$executeRaw`
-      UPDATE Security.UserMfaFactors
-      SET
-        IsEnabled = 0,
-        IsVerified = 0,
-        DisabledAt = SYSUTCDATETIME(),
-        UpdatedAt = SYSUTCDATETIME(),
-        UpdatedBy = ${sessionUser.email ?? sessionUser.name ?? 'admin'}
-      WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
-        AND IdUsuario = ${targetUser.IdUsuario}
-        AND FactorType = 'TOTP'
-        AND IsEnabled = 1
-    `
-
-        await writeAuthAudit({
-            eventType: 'MFA_RESET',
-            eventStatus: 'SUCCESS',
-            tenantId,
-            tenantSlug,
-            username: targetUser.Usuario,
-            userId: targetUser.IdUsuario,
-            email: null,
-            reason,
-            metadata: {
-                targetUserId: targetUser.IdUsuario,
-                targetUsername: targetUser.Usuario,
-                factorType: 'TOTP',
-                performedBy: sessionUser.email ?? sessionUser.name ?? null,
-                updatedRows
-            }
-        })
-
-        return NextResponse.json({
-            ok: true,
-            message: ['MFA reset completed'],
-            updatedRows
-        })
+      return NextResponse.json({ ok: true, message: ['MFA reset completed'], updatedRows: result.updatedRows })
     } catch (error) {
-        console.error('[MFA_RESET_ERROR]', {
-            message: error instanceof Error ? error.message : 'Unknown error'
-        })
+      console.error('[MFA_RESET_ERROR]', { message: error instanceof Error ? error.message : 'Unknown error' })
 
-        return NextResponse.json(
-            {
-                ok: false,
-                message: ['Server error while resetting MFA']
-            },
-            {
-                status: 500
-            }
-        )
+      return NextResponse.json({ ok: false, message: ['Server error while resetting MFA'] }, { status: 500 })
     }
-}
+  },
+  { bit: PERM.W }
+)

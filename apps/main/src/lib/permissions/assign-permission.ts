@@ -1,8 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable padding-line-between-statements */
-/* eslint-disable newline-before-return */
-
-import { describeMask, ForbiddenError, isCanonical, PERM, resolveUserViews, ValidationError, withTenantContext, getEnabledMenuGroups } from '@gaso/shared';
+import { ForbiddenError, isCanonical, PERM, resolveUserViews, ValidationError, withTenantContext, getEnabledMenuGroups } from '@gaso/shared';
 import type { ErpModuleKey } from '@gaso/shared';
 
 import type { Prisma } from '@prisma/client';
@@ -26,9 +22,6 @@ import type { Prisma } from '@prisma/client';
  *
  * Devuelve { old, new, target } para que el ENDPOINT audite tras el commit (commit -> audit).
  * El servicio NO audita por dentro.
- *
- * Corre en el contexto del tenant del request (admin.TenantID == header) -> nunca cruza tenant,
- * así que el @read_only/throw latente del pool no aplica aquí.
  */
 
 export interface AssignPermissionInput {
@@ -138,11 +131,12 @@ async function resolveActorContext(
   tenantId: string, // ya .toLowerCase() por el wrapper
   actorIdUsuario: number
 ): Promise<ActorContext> {
-  // A1) existencia + depto. GASOCO_Cat_Usuarios SIN RLS -> filtro TenantID obligatorio.
+  // A1) existencia + depto.
   const actorRows = await tx.$queryRaw<ActorRow[]>`
-    SELECT IdUsuario, IdDepartamento
-    FROM dbo.GASOCO_Cat_Usuarios
-    WHERE IdUsuario = ${actorIdUsuario} AND TenantID = CAST(${tenantId} AS uniqueidentifier)
+    SELECT u.IdUsuario, e.DepartmentID AS IdDepartamento
+    FROM dbo.GASOCO_Cat_Usuarios u
+    INNER JOIN HumanCapital.Employees e ON e.TenantID = u.TenantID AND e.EmployeeID = u.EmployeeID
+    WHERE u.IdUsuario = ${actorIdUsuario} AND u.TenantID = CAST(${tenantId} AS uniqueidentifier)
   `;
 
   const actor = actorRows[0];
@@ -224,9 +218,10 @@ async function applyOneChange(
 
   // I4) target en vivo. SIN RLS -> filtro TenantID. No revelamos "no existe" vs "otro tenant".
   const targetRows = await tx.$queryRaw<UsuarioRow[]>`
-    SELECT IdUsuario, IdDepartamento
-    FROM dbo.GASOCO_Cat_Usuarios
-    WHERE IdUsuario = ${targetIdUsuario} AND TenantID = CAST(${tenantId} AS uniqueidentifier)
+    SELECT u.IdUsuario, e.DepartmentID AS IdDepartamento
+    FROM dbo.GASOCO_Cat_Usuarios u
+    INNER JOIN HumanCapital.Employees e ON e.TenantID = u.TenantID AND e.EmployeeID = u.EmployeeID
+    WHERE u.IdUsuario = ${targetIdUsuario} AND u.TenantID = CAST(${tenantId} AS uniqueidentifier)
   `;
 
   const target = targetRows[0];

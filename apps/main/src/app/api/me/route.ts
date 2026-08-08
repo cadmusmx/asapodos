@@ -1,3 +1,5 @@
+// apps\main\src\app\api\me\route.ts
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from 'next/server'
 
 import {
@@ -151,7 +153,7 @@ export async function GET(req: Request) {
       return body
     })
 
-    writeTransactionLog({
+    /* writeTransactionLog({
       tenantId,
       tableName: 'Api.Me',
       action: 'READ',
@@ -159,7 +161,7 @@ export async function GET(req: Request) {
       appUser: result.user.email ?? null,
       idOrigin,
       newData: { hasTenantSettings: true }
-    }).catch(() => { })
+    }).catch(() => { }) */
 
     return NextResponse.json(result)
   } catch (e) {

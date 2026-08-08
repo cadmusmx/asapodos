@@ -1,4 +1,3 @@
-// apps\admin\src\app\api\admin\auth-mfa\setup\verify\route.ts
 import { NextResponse } from 'next/server'
 
 import { authenticator } from '@otplib/preset-default'
