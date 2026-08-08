@@ -1,3 +1,4 @@
+// apps\main\src\app\api\login\route.ts
 // Third-party Imports
 import { NextResponse } from 'next/server'
 
@@ -16,7 +17,8 @@ import {
   markMfaFailed,
   deleteMfaChallenge,
   writeAuthAudit,
-  getPlatformRole
+  getPlatformRole,
+  withTenantContext
 } from '@gaso/shared'
 
 export async function POST(req: Request) {
@@ -53,29 +55,11 @@ export async function POST(req: Request) {
     }
 
     const user = await prisma.gASOCO_Cat_Usuarios.findFirst({
-      select: {
-        IdUsuario: true,
-        Nombre: true,
-        Email: true,
-        IdPerfil: true,
-        isAdmin: true,
-        IdArea: true,
-        IdBaseCiudad: true,
-        IdRegion: true,
-        IdPuesto: true,
-        IdEmpresa: true,
-        TenantID: true
-      },
+      select: { IdUsuario: true, EmployeeID: true, TenantID: true },
       where: {
-        Usuario: {
-          equals: username
-        },
-        Password: {
-          equals: password
-        },
-        Estatus: {
-          equals: 'A'
-        }
+        Usuario: { equals: username },
+        Password: { equals: password },
+        Estatus: { equals: 'A' }
       }
     })
 
@@ -95,6 +79,35 @@ export async function POST(req: Request) {
       )
     }
 
+    const emp = await withTenantContext(tenantId, async (tx) => {
+      const rows = await tx.$queryRaw<Array<{
+        Nombre: string | null; Email: string | null
+        IdDepartamento: number | null; IdPuesto: number | null
+        IdArea: number | null; IdRegion: number | null; IsActive: boolean
+      }>>`
+        SELECT
+          LTRIM(RTRIM(e.FirstName + ' ' + e.LastName)) AS Nombre,
+          e.Email,
+          e.DepartmentID AS IdDepartamento,
+          e.PositionID   AS IdPuesto,
+          ed.AreaID      AS IdArea,
+          ed.RegionID    AS IdRegion,
+          e.IsActive
+        FROM HumanCapital.Employees e
+        LEFT JOIN HumanCapital.EmployeeData ed ON ed.TenantID = e.TenantID AND ed.EmployeeID = e.EmployeeID
+        WHERE e.TenantID = CAST(${tenantId} AS uniqueidentifier) AND e.EmployeeID = ${user.EmployeeID}
+      `
+
+      return rows[0] ?? null
+    })
+
+    // Gate de empleo (decisión — borra el if para puro-cuenta):
+    if (!emp || !emp.IsActive) {
+      await writeAuthAudit({ eventType: 'LOGIN_FAILED', eventStatus: 'FAILED', tenantId, tenantSlug, username, userId: user.IdUsuario, reason: 'EMPLOYEE_INACTIVE' })
+
+      return NextResponse.json({ message: ['User or Password is invalid'] }, { status: 401, statusText: 'Unauthorized Access' })
+    }
+
     if (!challengeId || !mfaCode) {
       await writeAuthAudit({
         eventType: 'MFA_FAILED',
@@ -103,7 +116,7 @@ export async function POST(req: Request) {
         tenantSlug,
         username,
         userId: user.IdUsuario,
-        email: user.Email ?? null,
+        email: emp.Email ?? null,
         reason: 'MISSING_MFA'
       })
 
@@ -135,7 +148,7 @@ export async function POST(req: Request) {
         tenantSlug,
         username,
         userId: user.IdUsuario,
-        email: user.Email ?? null,
+        email: emp.Email ?? null,
         reason: errorMessages[challengeResult.error!] || 'MFA validation failed'
       })
 
@@ -160,7 +173,7 @@ export async function POST(req: Request) {
         tenantSlug,
         username,
         userId: user.IdUsuario,
-        email: user.Email ?? null,
+        email: emp.Email ?? null,
         reason: 'MFA_FACTOR_NOT_CONFIGURED'
       })
 
@@ -187,7 +200,7 @@ export async function POST(req: Request) {
         tenantSlug,
         username,
         userId: user.IdUsuario,
-        email: user.Email ?? null,
+        email: emp.Email ?? null,
         reason: 'INVALID_MFA_CODE',
         metadata: {
           attempts: challengeResult.challenge!.attempts + 1,
@@ -215,7 +228,7 @@ export async function POST(req: Request) {
       tenantSlug,
       username,
       userId: user.IdUsuario,
-      email: user.Email ?? null
+      email: emp.Email ?? null
     })
 
     await writeAuthAudit({
@@ -225,7 +238,7 @@ export async function POST(req: Request) {
       tenantSlug,
       username,
       userId: user.IdUsuario,
-      email: user.Email ?? null
+      email: emp.Email ?? null
     })
 
     // Clean up the challenge after successful login
@@ -235,19 +248,15 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       id: user.IdUsuario,
-      name: user.Nombre,
-      email: user.Email,
-      admin: user.isAdmin === 1 ? true : false,
-      area: user.IdArea,
-      cityBase: user.IdBaseCiudad,
-      company: user.IdEmpresa,
-      profile: user.IdPerfil,
-      position: user.IdPuesto,
-      region: user.IdRegion,
+      employeeId: user.EmployeeID,
+      name: emp.Nombre ?? '',
+      email: emp.Email,
+      area: emp.IdArea,
+      department: emp.IdDepartamento,
+      position: emp.IdPuesto,
+      region: emp.IdRegion,
       image: 'https://gaso-erp.com/dist/img/gasologo.png',
-      tenantId,
-      tenantSlug,
-      tenantName,
+      tenantId, tenantSlug, tenantName,
       platformRole
     })
   } catch (e: unknown) {

@@ -112,13 +112,11 @@ export const authOptions: NextAuthOptions = {
     jwt: (async ({ token, user }: any) => {
       if (user) {
         token.id = user.id as number
+        token.employeeId = user.employeeId
         token.name = user.name
         token.email = user.email
-        token.company = user.company
-        token.profile = user.profile
-        token.admin = user.admin
         token.area = user.area
-        token.cityBase = user.IdBaseCiudad
+        token.department = user.department
         token.position = user.position
         token.region = user.region
         token.image = user.image
@@ -144,13 +142,11 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as number
+        session.user.employeeId = token.employeeId as number
         session.user.name = token.name as string
         session.user.email = token.email as string
-        session.user.company = token.company as number
-        session.user.profile = token.profile as number
-        session.user.admin = token.admin as boolean
         session.user.area = token.area as number
-        session.user.cityBase = token.cityBase as number
+        session.user.department = token.department as number
         session.user.position = token.position as number
         session.user.region = token.region as number
         session.user.image = token.image as string

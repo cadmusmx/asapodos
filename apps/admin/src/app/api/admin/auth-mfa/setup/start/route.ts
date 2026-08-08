@@ -1,3 +1,4 @@
+// apps\admin\src\app\api\admin\auth-mfa\setup\start\route.ts
 import { NextResponse } from 'next/server'
 
 import { authenticator } from '@otplib/preset-default'
@@ -6,7 +7,8 @@ import {
   prisma,
   writeAuthAudit,
   getUserTotpSecret,
-  setTenantContext
+  setTenantContext,
+  withTenantContext
 } from '@gaso/shared'
 
 function maskEmail(email: string | null | undefined) {
@@ -70,13 +72,7 @@ export async function POST(req: Request) {
     }
 
     const user = await prisma.gASOCO_Cat_Usuarios.findFirst({
-      select: {
-        IdUsuario: true,
-        Usuario: true,
-        Nombre: true,
-        Email: true,
-        TenantID: true
-      },
+      select: { IdUsuario: true, EmployeeID: true, TenantID: true },
       where: {
         Usuario: { equals: username },
         Password: { equals: password },
@@ -100,6 +96,25 @@ export async function POST(req: Request) {
       )
     }
 
+    const emp = await withTenantContext(tenantId, async (tx) => {
+      const rows = await tx.$queryRaw<Array<{
+        Nombre: string | null; Email: string | null
+        IdDepartamento: number | null; IdPuesto: number | null
+        IdArea: number | null; IdRegion: number | null; IsActive: boolean
+      }>>`
+        SELECT e.Email, e.IsActive
+        FROM HumanCapital.Employees e
+        WHERE e.TenantID = CAST(${tenantId} AS uniqueidentifier) AND e.EmployeeID = ${user.EmployeeID}
+      `
+      return rows[0] ?? null
+    })
+
+    if (!emp || !emp.IsActive) {
+      await writeAuthAudit({ eventType: 'LOGIN_FAILED', eventStatus: 'FAILED', tenantId, username, userId: user.IdUsuario, reason: 'EMPLOYEE_INACTIVE' })
+
+      return NextResponse.json({ message: ['User or Password is invalid'] }, { status: 401, statusText: 'Unauthorized Access' })
+    }
+
     const existingVerifiedSecret = await getUserTotpSecret({
       tenantId,
       userId: user.IdUsuario
@@ -116,7 +131,7 @@ export async function POST(req: Request) {
 
     const secret = authenticator.generateSecret()
     const issuer = 'Gaso-SaaS Admin'
-    const accountName = user.Email ?? username
+    const accountName = emp.Email ?? username
 
     const otpauthUrl = authenticator.keyuri(accountName, issuer, secret)
 
@@ -166,7 +181,7 @@ export async function POST(req: Request) {
         'GoogleAuthenticator',
         ${secret},
         NULL,
-        ${maskEmail(user.Email)},
+        ${maskEmail(emp.Email)},
         1,
         0,
         SYSUTCDATETIME(),
@@ -192,7 +207,7 @@ export async function POST(req: Request) {
       tenantSlug: 'gaso-admin-platform',
       username,
       userId: user.IdUsuario,
-      email: user.Email ?? null,
+      email: emp.Email ?? null,
       metadata: {
         setupId,
         factorType: 'TOTP',

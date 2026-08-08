@@ -83,9 +83,8 @@ export async function POST(req: Request, context: RouteContext) {
         const targetUser = await prisma.gASOCO_Cat_Usuarios.findFirst({
             select: {
                 IdUsuario: true,
+                EmployeeID: true,
                 Usuario: true,
-                Nombre: true,
-                Email: true,
                 TenantID: true
             },
             where: {
@@ -128,12 +127,11 @@ export async function POST(req: Request, context: RouteContext) {
             tenantSlug,
             username: targetUser.Usuario,
             userId: targetUser.IdUsuario,
-            email: targetUser.Email ?? null,
+            email: null,
             reason,
             metadata: {
                 targetUserId: targetUser.IdUsuario,
                 targetUsername: targetUser.Usuario,
-                targetEmail: targetUser.Email,
                 factorType: 'TOTP',
                 performedBy: sessionUser.email ?? sessionUser.name ?? null,
                 updatedRows

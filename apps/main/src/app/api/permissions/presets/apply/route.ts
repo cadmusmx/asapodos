@@ -228,7 +228,7 @@ export const POST = withPermission(
           Prisma.sql`e.DepartmentID = ${body.idDepartamento}`,
         ];
 
-        if (body.idPuesto !== null) scopeConds.push(Prisma.sql`e.PositionID = ${body.idPuesto}`); // rama idPerfil eliminada
+        if (body.idPuesto !== null) scopeConds.push(Prisma.sql`e.PositionID = ${body.idPuesto}`);
 
         const afectados = await tx.$queryRaw<Array<{
           IdUsuario: number;

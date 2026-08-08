@@ -15,9 +15,9 @@ export const MOBILE_TOKEN_TTL_SECONDS = Number(process.env.MOBILE_JWT_TTL_SECOND
 export interface MobileTokenClaims {
   sub: string; // IdUsuario como string
   tenantId: string;
+  employeeId: number | null;
   name?: string | null;
   email?: string | null;
-  admin?: boolean;
 }
 
 export async function signMobileToken(
@@ -28,7 +28,6 @@ export async function signMobileToken(
     tenantId: claims.tenantId,
     name: claims.name ?? null,
     email: claims.email ?? null,
-    admin: claims.admin ?? false
   })
     .setProtectedHeader({ alg: ALG })
     .setSubject(claims.sub)

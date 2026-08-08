@@ -1,3 +1,4 @@
+// apps\admin\src\app\api\admin\auth-mfa\start\route.ts
 import { NextResponse } from 'next/server'
 
 import {
@@ -6,7 +7,8 @@ import {
   getUserTotpSecret,
   createMfaChallenge,
   getPlatformRole,
-  setTenantContext
+  setTenantContext,
+  withTenantContext
 } from '@gaso/shared'
 
 type TenantRow = {
@@ -65,12 +67,7 @@ export async function POST(req: Request) {
     }
 
     const user = await prisma.gASOCO_Cat_Usuarios.findFirst({
-      select: {
-        IdUsuario: true,
-        Nombre: true,
-        Email: true,
-        TenantID: true
-      },
+      select: { IdUsuario: true, EmployeeID: true, TenantID: true },
       where: {
         Usuario: { equals: username },
         Password: { equals: password },
@@ -94,6 +91,26 @@ export async function POST(req: Request) {
       )
     }
 
+    const emp = await withTenantContext(tenantId, async (tx) => {
+      const rows = await tx.$queryRaw<Array<{
+        Nombre: string | null; Email: string | null
+        IdDepartamento: number | null; IdPuesto: number | null
+        IdArea: number | null; IdRegion: number | null; IsActive: boolean
+      }>>`
+        SELECT e.Email, e.IsActive
+        FROM HumanCapital.Employees e
+        WHERE e.TenantID = CAST(${tenantId} AS uniqueidentifier) AND e.EmployeeID = ${user.EmployeeID}
+      `
+
+      return rows[0] ?? null
+    })
+
+    if (!emp || !emp.IsActive) {
+      await writeAuthAudit({ eventType: 'LOGIN_FAILED', eventStatus: 'FAILED', tenantId, username, userId: user.IdUsuario, reason: 'EMPLOYEE_INACTIVE' })
+
+      return NextResponse.json({ message: ['User or Password is invalid'] }, { status: 401, statusText: 'Unauthorized Access' })
+    }
+
     const platformRole = await getPlatformRole(user.IdUsuario)
 
     if (!platformRole) {
@@ -104,7 +121,7 @@ export async function POST(req: Request) {
         tenantSlug: 'gaso-admin-platform',
         username,
         userId: user.IdUsuario,
-        email: user.Email ?? null,
+        email: emp.Email ?? null,
         reason: 'NOT_PLATFORM_ADMIN'
       })
 
@@ -121,7 +138,7 @@ export async function POST(req: Request) {
       tenantSlug: 'gaso-admin-platform',
       username,
       userId: user.IdUsuario,
-      email: user.Email ?? null
+      email: emp.Email ?? null
     })
 
     const userTotpSecret = await getUserTotpSecret({
@@ -137,7 +154,7 @@ export async function POST(req: Request) {
         tenantSlug: 'gaso-admin-platform',
         username,
         userId: user.IdUsuario,
-        email: user.Email ?? null,
+        email: emp.Email ?? null,
         reason: 'MFA_FACTOR_NOT_CONFIGURED'
       })
 
@@ -155,7 +172,7 @@ export async function POST(req: Request) {
       tenantName: 'Gaso Admin Platform',
       username,
       userId: user.IdUsuario,
-      email: user.Email ?? null
+      email: emp.Email ?? null
     })
 
     await safeWriteAudit({
@@ -165,7 +182,7 @@ export async function POST(req: Request) {
       tenantSlug: 'gaso-admin-platform',
       username,
       userId: user.IdUsuario,
-      email: user.Email ?? null,
+      email: emp.Email ?? null,
       metadata: { challengeId }
     })
 

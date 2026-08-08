@@ -1,3 +1,4 @@
+// apps\admin\src\app\api\admin\auth-mfa\setup\verify\route.ts
 import { NextResponse } from 'next/server'
 
 import { authenticator } from '@otplib/preset-default'
@@ -53,13 +54,7 @@ export async function POST(req: Request) {
     await setTenantContext(tenantId)
 
     const user = await prisma.gASOCO_Cat_Usuarios.findFirst({
-      select: {
-        IdUsuario: true,
-        Usuario: true,
-        Nombre: true,
-        Email: true,
-        TenantID: true
-      },
+      select: { IdUsuario: true, EmployeeID: true, TenantID: true },
       where: {
         Usuario: { equals: username },
         Password: { equals: password },
@@ -114,7 +109,6 @@ export async function POST(req: Request) {
         tenantSlug: 'gaso-admin-platform',
         username,
         userId: user.IdUsuario,
-        email: user.Email ?? null,
         reason: 'MFA_SETUP_FACTOR_NOT_FOUND'
       })
 
@@ -149,7 +143,6 @@ export async function POST(req: Request) {
         tenantSlug: 'gaso-admin-platform',
         username,
         userId: user.IdUsuario,
-        email: user.Email ?? null,
         reason: 'INVALID_MFA_SETUP_CODE',
         metadata: { setupId, factorType: 'TOTP' }
       })
@@ -184,7 +177,6 @@ export async function POST(req: Request) {
       tenantSlug: 'gaso-admin-platform',
       username,
       userId: user.IdUsuario,
-      email: user.Email ?? null,
       reason: 'MFA_SETUP_VERIFIED',
       metadata: {
         setupId,

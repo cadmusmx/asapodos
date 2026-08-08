@@ -1,18 +1,20 @@
+// apps\main\src\app\api\admin\login\route.ts
 import { NextResponse } from 'next/server'
 
 import { authenticator } from '@otplib/preset-default'
 
-import { 
-  prisma, 
-  getTotpSecretForLogin, 
-  markTotpFactorFailedAttempt, 
-  markTotpFactorUsed, 
+import {
+  prisma,
+  getTotpSecretForLogin,
+  markTotpFactorFailedAttempt,
+  markTotpFactorUsed,
   validateMfaChallenge,
   markMfaSuccess,
   markMfaFailed,
   deleteMfaChallenge,
-  writeAuthAudit, 
-  getPlatformRole 
+  writeAuthAudit,
+  getPlatformRole,
+  withTenantContext
 } from '@gaso/shared'
 
 export async function POST(req: Request) {
@@ -25,30 +27,11 @@ export async function POST(req: Request) {
     const mfaCode = String(body.mfaCode ?? '').trim()
 
     const user = await prisma.gASOCO_Cat_Usuarios.findFirst({
-      select: {
-        IdUsuario: true,
-        Nombre: true,
-        Email: true,
-        IdPerfil: true,
-        isAdmin: true,
-        IdArea: true,
-        IdBaseCiudad: true,
-        IdRegion: true,
-        IdPuesto: true,
-        IdEmpresa: true,
-        TenantID: true,
-        Estatus: true
-      },
+      select: { IdUsuario: true, EmployeeID: true, TenantID: true },
       where: {
-        Usuario: {
-          equals: username
-        },
-        Password: {
-          equals: password
-        },
-        Estatus: {
-          equals: 'A'
-        }
+        Usuario: { equals: username },
+        Password: { equals: password },
+        Estatus: { equals: 'A' }
       }
     })
 
@@ -68,6 +51,34 @@ export async function POST(req: Request) {
       )
     }
 
+    const emp = await withTenantContext(user.TenantID, async (tx) => {
+      const rows = await tx.$queryRaw<Array<{
+        Nombre: string | null; Email: string | null
+        IdDepartamento: number | null; IdPuesto: number | null
+        IdArea: number | null; IdRegion: number | null; IsActive: boolean
+      }>>`
+        SELECT
+          LTRIM(RTRIM(e.FirstName + ' ' + e.LastName)) AS Nombre,
+          e.Email,
+          e.DepartmentID AS IdDepartamento,
+          e.PositionID   AS IdPuesto,
+          ed.AreaID      AS IdArea,
+          ed.RegionID    AS IdRegion,
+          e.IsActive
+        FROM HumanCapital.Employees e
+        LEFT JOIN HumanCapital.EmployeeData ed ON ed.TenantID = e.TenantID AND ed.EmployeeID = e.EmployeeID
+        WHERE e.TenantID = CAST(${user.TenantID} AS uniqueidentifier) AND e.EmployeeID = ${user.EmployeeID}
+      `
+
+      return rows[0] ?? null
+    })
+
+    if (!emp) {
+      await writeAuthAudit({ eventType: 'LOGIN_FAILED', eventStatus: 'FAILED', tenantId: 'PLATFORM', tenantSlug: 'platform', username, userId: user.IdUsuario, reason: 'EMPLOYEE_NOT_FOUND' })
+
+      return NextResponse.json({ message: ['Invalid credentials'] }, { status: 401 })
+    }
+
     const platformRole = await getPlatformRole(user.IdUsuario)
 
     if (!platformRole) {
@@ -78,7 +89,7 @@ export async function POST(req: Request) {
         tenantSlug: 'platform',
         username,
         userId: user.IdUsuario,
-        email: user.Email ?? null,
+        email: emp.Email ?? null,
         reason: 'NOT_PLATFORM_ADMIN'
       })
 
@@ -96,7 +107,7 @@ export async function POST(req: Request) {
         tenantSlug: 'platform',
         username,
         userId: user.IdUsuario,
-        email: user.Email ?? null,
+        email: emp.Email ?? null,
         reason: 'MISSING_MFA'
       })
 
@@ -128,7 +139,7 @@ export async function POST(req: Request) {
         tenantSlug: 'platform',
         username,
         userId: user.IdUsuario,
-        email: user.Email ?? null,
+        email: emp.Email ?? null,
         reason: errorMessages[challengeResult.error!] || 'MFA validation failed'
       })
 
@@ -153,7 +164,7 @@ export async function POST(req: Request) {
         tenantSlug: 'platform',
         username,
         userId: user.IdUsuario,
-        email: user.Email ?? null,
+        email: emp.Email ?? null,
         reason: 'MFA_FACTOR_NOT_CONFIGURED'
       })
 
@@ -180,7 +191,7 @@ export async function POST(req: Request) {
         tenantSlug: 'platform',
         username,
         userId: user.IdUsuario,
-        email: user.Email ?? null,
+        email: emp.Email ?? null,
         reason: 'INVALID_MFA_CODE',
         metadata: {
           attempts: challengeResult.challenge!.attempts + 1,
@@ -208,7 +219,7 @@ export async function POST(req: Request) {
       tenantSlug: 'platform',
       username,
       userId: user.IdUsuario,
-      email: user.Email ?? null
+      email: emp.Email ?? null
     })
 
     await writeAuthAudit({
@@ -218,7 +229,7 @@ export async function POST(req: Request) {
       tenantSlug: 'platform',
       username,
       userId: user.IdUsuario,
-      email: user.Email ?? null
+      email: emp.Email ?? null
     })
 
     // Clean up the challenge after successful login
@@ -226,15 +237,13 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       id: user.IdUsuario,
-      name: user.Nombre,
-      email: user.Email,
-      admin: user.isAdmin === 1 ? true : false,
-      area: user.IdArea,
-      cityBase: user.IdBaseCiudad,
-      company: user.IdEmpresa,
-      profile: user.IdPerfil,
-      position: user.IdPuesto,
-      region: user.IdRegion,
+      employeeId: user.EmployeeID,
+      name: emp.Nombre,
+      email: emp.Email,
+      area: emp.IdArea,
+      position: emp.IdPuesto,
+      region: emp.IdRegion,
+      department: emp.IdDepartamento,
       image: 'https://gaso-erp.com/dist/img/gasologo.png',
       tenantId: null,
       tenantSlug: null,

@@ -67,8 +67,8 @@ export const GET = withPermission<RouteCtx>(
 
       const rows = await withTenantContext(tenantId, tx =>
         tx.$queryRaw<Array<Record<string, unknown>>>`
-          SELECT VM.*, U.Nombre AS Responsable, pro.Proyecto, tm.Tipo AS TipoMaterial,
-                 al.Nombre AS AlmacenDestino, USR.Nombre AS UsuarioEditor, ca.Carrier,
+          SELECT VM.*, LTRIM(RTRIM(UE.FirstName + ' ' + UE.LastName)) AS Responsable, pro.Proyecto, tm.Tipo AS TipoMaterial,
+                 al.Nombre AS AlmacenDestino, LTRIM(RTRIM(UEW.FirstName + ' ' + UEW.LastName)) AS UsuarioEditor, ca.Carrier,
                  ( SELECT pm.Id AS id, pm.Clave AS cl, cm.Motivo AS clt, pm.Piezas AS pzs
                      FROM dbo.GASOAL_VMPiezasMotivo pm
                      LEFT JOIN dbo.Cat_VMMotivo cm ON pm.Clave = cm.Id
@@ -90,7 +90,8 @@ export const GET = withPermission<RouteCtx>(
             INNER JOIN dbo.Cat_VMTiposMaterial tm ON VM.IdTipoMaterial = tm.Id
             INNER JOIN dbo.Cat_Carriers ca ON VM.IdCarrier = ca.Id
             INNER JOIN dbo.GASOCO_Cat_Usuarios U ON VM.IdUsuario = U.IdUsuario
-            LEFT JOIN dbo.GASOCO_Cat_Usuarios USR ON VM.IdUsuarioEditorWeb = USR.IdUsuario
+            INNER JOIN HumanCapital.Employees UE ON UE.TenantID = U.TenantID AND UE.EmployeeID = U.EmployeeID
+            LEFT JOIN HumanCapital.Employees UEW ON UEW.EmployeeID = VM.IdUsuarioEditorWeb
             WHERE VM.TenantID = ${tenantId} AND VM.Folio = ${folio}
         `,
       );

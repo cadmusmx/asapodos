@@ -1,3 +1,4 @@
+// apps\main\src\app\api\mobile\login\route.ts
 import { NextResponse } from 'next/server'
 
 import { authenticator } from '@otplib/preset-default'
@@ -14,7 +15,8 @@ import {
   markMfaSuccess,
   writeAuthAudit,
   ID_ORIGIN_WEB,
-  signMobileToken
+  signMobileToken,
+  withTenantContext
 } from '@gaso/shared'
 
 export const runtime = 'nodejs'
@@ -54,7 +56,7 @@ export async function POST(req: Request) {
 
     // Credenciales
     const user = await prisma.gASOCO_Cat_Usuarios.findFirst({
-      select: { IdUsuario: true, Nombre: true, Email: true, isAdmin: true, TenantID: true },
+      select: { IdUsuario: true, EmployeeID: true, TenantID: true },
       where: {
         Usuario: { equals: username },
         Password: { equals: password },
@@ -74,10 +76,39 @@ export async function POST(req: Request) {
       )
     }
 
+    const emp = await withTenantContext(tenantId, async (tx) => {
+      const rows = await tx.$queryRaw<Array<{
+        Nombre: string | null; Email: string | null
+        IdDepartamento: number | null; IdPuesto: number | null
+        IdArea: number | null; IdRegion: number | null; IsActive: boolean
+      }>>`
+        SELECT
+          LTRIM(RTRIM(e.FirstName + ' ' + e.LastName)) AS Nombre,
+          e.Email,
+          e.DepartmentID AS IdDepartamento,
+          e.PositionID   AS IdPuesto,
+          ed.AreaID      AS IdArea,
+          ed.RegionID    AS IdRegion,
+          e.IsActive
+        FROM HumanCapital.Employees e
+        LEFT JOIN HumanCapital.EmployeeData ed ON ed.TenantID = e.TenantID AND ed.EmployeeID = e.EmployeeID
+        WHERE e.TenantID = CAST(${tenantId} AS uniqueidentifier) AND e.EmployeeID = ${user.EmployeeID}
+      `
+
+      return rows[0] ?? null
+    })
+
+    // Gate de empleo (decisión — borra el if para puro-cuenta):
+    if (!emp || !emp.IsActive) {
+      await writeAuthAudit({ eventType: 'LOGIN_FAILED', eventStatus: 'FAILED', tenantId, tenantSlug, username, userId: user.IdUsuario, reason: 'EMPLOYEE_INACTIVE' })
+
+      return NextResponse.json({ message: ['User or Password is invalid'] }, { status: 401, statusText: 'Unauthorized Access' })
+    }
+
     if (!challengeId || !mfaCode) {
       await writeAuthAudit({
         eventType: 'MFA_FAILED', eventStatus: 'FAILED',
-        tenantId, tenantSlug, username, userId: user.IdUsuario, email: user.Email ?? null,
+        tenantId, tenantSlug, username, userId: user.IdUsuario, email: emp.Email ?? null,
         reason: 'MISSING_MFA', idOrigin
       })
 
@@ -110,7 +141,7 @@ export async function POST(req: Request) {
 
       await writeAuthAudit({
         eventType: 'MFA_FAILED', eventStatus: 'FAILED',
-        tenantId, tenantSlug, username, userId: user.IdUsuario, email: user.Email ?? null,
+        tenantId, tenantSlug, username, userId: user.IdUsuario, email: emp.Email ?? null,
         reason: challengeResult.error ?? 'MFA_VALIDATION_FAILED', idOrigin
       })
 
@@ -125,7 +156,7 @@ export async function POST(req: Request) {
     if (!userTotpSecret) {
       await writeAuthAudit({
         eventType: 'MFA_FAILED', eventStatus: 'FAILED',
-        tenantId, tenantSlug, username, userId: user.IdUsuario, email: user.Email ?? null,
+        tenantId, tenantSlug, username, userId: user.IdUsuario, email: emp.Email ?? null,
         reason: 'MFA_FACTOR_NOT_CONFIGURED', idOrigin
       })
 
@@ -143,7 +174,7 @@ export async function POST(req: Request) {
 
       await writeAuthAudit({
         eventType: 'MFA_FAILED', eventStatus: 'FAILED',
-        tenantId, tenantSlug, username, userId: user.IdUsuario, email: user.Email ?? null,
+        tenantId, tenantSlug, username, userId: user.IdUsuario, email: emp.Email ?? null,
         reason: 'INVALID_MFA_CODE',
         metadata: {
           attempts: challengeResult.challenge!.attempts + 1,
@@ -164,29 +195,25 @@ export async function POST(req: Request) {
 
     await writeAuthAudit({
       eventType: 'MFA_SUCCESS', eventStatus: 'SUCCESS',
-      tenantId, tenantSlug, username, userId: user.IdUsuario, email: user.Email ?? null, idOrigin
+      tenantId, tenantSlug, username, userId: user.IdUsuario, email: emp.Email ?? null, idOrigin
     })
     await writeAuthAudit({
       eventType: 'LOGIN_SUCCESS', eventStatus: 'SUCCESS',
-      tenantId, tenantSlug, username, userId: user.IdUsuario, email: user.Email ?? null, idOrigin
+      tenantId, tenantSlug, username, userId: user.IdUsuario, email: emp.Email ?? null, idOrigin
     })
-
-    // DIFF 2 vs /api/login: firmar JWT en vez de devolver el user para cookie.
-    const admin = Boolean(user.isAdmin)
 
     const { accessToken, expiresIn } = await signMobileToken({
       sub: String(user.IdUsuario),
       tenantId,
-      name: user.Nombre ?? null,
-      email: user.Email ?? null,
-      admin
+      employeeId: user.EmployeeID,
+      name: emp.Nombre ?? null,
+      email: emp.Email ?? null,
     })
 
     return NextResponse.json({
       id: user.IdUsuario,
-      name: user.Nombre,
-      email: user.Email,
-      admin,
+      name: emp.Nombre,
+      email: emp.Email,
       tenantId,
       tenantSlug,
       tenantName,

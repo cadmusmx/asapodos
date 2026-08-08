@@ -7,15 +7,13 @@ declare module 'next-auth' {
 
   interface User {
     id: number
+    employeeId: number // nuevo
     name: string
-    email: string
-    company: number
-    profile: number
-    admin: boolean
-    area: number
-    cityBase: number
-    position: number
-    region: number
+    email: string | null
+    area: number | null
+    department: number | null // + para paridad con /api/me
+    position: number | null
+    region: number | null
     image: string
     tenantId: string
     tenantSlug: string
@@ -27,6 +25,7 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
   interface JWT {
     id: number
+    employeeId: number // nuevo
     tenantId: string
     tenantSlug: string
     tenantName: string

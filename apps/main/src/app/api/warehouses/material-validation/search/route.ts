@@ -68,7 +68,7 @@ export const POST = withPermission(
       type Row = Record<string, unknown> & { TotalRows?: number | bigint };
 
       const rows = await withTenantContext(tenantId, tx => tx.$queryRaw<Row[]>`
-        SELECT VM.*, U.Nombre AS Responsable, pro.Proyecto, tm.Tipo AS TipoMaterial,
+        SELECT VM.*, LTRIM(RTRIM(UE.FirstName + ' ' + UE.LastName)) AS Responsable, pro.Proyecto, tm.Tipo AS TipoMaterial,
                al.Nombre AS AlmacenDestino, ca.Carrier,
                ( SELECT pm.Id AS id, pm.Clave AS cl, cm.Motivo AS clt, pm.Piezas AS pzs
                    FROM dbo.GASOAL_VMPiezasMotivo pm
@@ -92,6 +92,7 @@ export const POST = withPermission(
           INNER JOIN dbo.Cat_VMTiposMaterial tm ON VM.IdTipoMaterial = tm.Id
           INNER JOIN dbo.Cat_Carriers ca ON VM.IdCarrier = ca.Id
           INNER JOIN dbo.GASOCO_Cat_Usuarios U ON VM.IdUsuario = U.IdUsuario
+          INNER JOIN HumanCapital.Employees UE ON UE.TenantID = U.TenantID AND UE.EmployeeID = U.EmployeeID
           WHERE ${where}
           ORDER BY VM.FechaCaptura ${ordenSql}
           OFFSET (${pagina} - 1) * ${limite} ROWS FETCH NEXT ${limite} ROWS ONLY

@@ -10,7 +10,8 @@ import {
   setTenantContext,
   ID_ORIGIN_WEB,
   getUserTotpSecret,
-  writeAuthAudit
+  writeAuthAudit,
+  withTenantContext
 } from '@gaso/shared'
 
 function maskEmail(email: string | null | undefined) {
@@ -62,9 +63,8 @@ export async function POST(req: Request) {
     const user = await prisma.gASOCO_Cat_Usuarios.findFirst({
       select: {
         IdUsuario: true,
+        EmployeeID: true,
         Usuario: true,
-        Nombre: true,
-        Email: true,
         TenantID: true
       },
       where: {
@@ -103,6 +103,26 @@ export async function POST(req: Request) {
       )
     }
 
+    const emp = await withTenantContext(tenantId, async (tx) => {
+      const rows = await tx.$queryRaw<Array<{
+        Nombre: string | null; Email: string | null
+        IdDepartamento: number | null; IdPuesto: number | null
+        IdArea: number | null; IdRegion: number | null; IsActive: boolean
+      }>>`
+        SELECT e.Email, e.IsActive
+        FROM HumanCapital.Employees e
+        WHERE e.TenantID = CAST(${tenantId} AS uniqueidentifier) AND e.EmployeeID = ${user.EmployeeID}
+      `
+
+      return rows[0] ?? null
+    })
+
+    if (!emp || !emp.IsActive) {
+      await writeAuthAudit({ eventType: 'LOGIN_FAILED', eventStatus: 'FAILED', tenantId, tenantSlug, username, userId: user.IdUsuario, reason: 'EMPLOYEE_NOT_FOUND', idOrigin })
+
+      return NextResponse.json({ ok: false, message: ['User or Password is invalid'] }, { status: 401 })
+    }
+
     const existingVerifiedSecret = await getUserTotpSecret({
       tenantId,
       userId: user.IdUsuario
@@ -119,7 +139,7 @@ export async function POST(req: Request) {
 
     const secret = authenticator.generateSecret()
     const issuer = 'Gaso-SaaS'
-    const accountName = user.Email ?? username
+    const accountName = username
 
     const otpauthUrl = authenticator.keyuri(accountName, issuer, secret)
 
@@ -169,7 +189,7 @@ export async function POST(req: Request) {
         'GoogleAuthenticator',
         ${secret},
         NULL,
-        ${maskEmail(user.Email)},
+        ${maskEmail(emp.Email)},
         1,
         0,
         SYSUTCDATETIME(),
@@ -195,7 +215,7 @@ export async function POST(req: Request) {
       tenantSlug,
       username,
       userId: user.IdUsuario,
-      email: user.Email ?? null,
+      email: emp.Email ?? null,
       metadata: {
         setupId,
         factorType: 'TOTP',
