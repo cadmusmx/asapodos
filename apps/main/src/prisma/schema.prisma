@@ -1,11 +1,29 @@
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native"]
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "sqlserver"
   url      = env("DATABASE_URL")
+  schemas  = ["Audit", "HumanCapital", "Security", "dbo"]
+}
+
+model Areas {
+  AreaID       Int            @default(autoincrement())
+  TenantID     String         @db.UniqueIdentifier
+  Name         String         @db.NVarChar(150)
+  Description  String?        @db.NVarChar(500)
+  IsActive     Boolean        @default(true, map: "DF__Areas__IsActive__5E6AD939")
+  CreatedAt    DateTime       @default(dbgenerated("sysutcdatetime()"), map: "DF__Areas__CreatedAt__5F5EFD72")
+  UpdatedAt    DateTime       @default(dbgenerated("sysutcdatetime()"), map: "DF__Areas__UpdatedAt__605321AB")
+  CreatedBy    Int?
+  UpdatedBy    Int?
+  EmployeeData EmployeeData[]
+
+  @@id([TenantID, AreaID], map: "PK_HC_Areas")
+  @@unique([TenantID, Name], map: "UX_HC_Areas_Tenant_Name")
+  @@schema("HumanCapital")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -17,6 +35,17 @@ model Asignacion_Tarea_WO {
   Estatus          Int?      @db.TinyInt
 
   @@ignore
+  @@schema("dbo")
+}
+
+model AssignableDepartments {
+  TenantID       String      @db.UniqueIdentifier
+  IdDepartamento Int
+  Departments    Departments @relation(fields: [TenantID, IdDepartamento], references: [TenantID, DepartmentID], onUpdate: NoAction, map: "FK_AssignableDepartments_Depto")
+  Tenants        Tenants     @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_AssignableDepartments_Tenants")
+
+  @@id([TenantID, IdDepartamento], map: "PK_Security_AssignableDepartments")
+  @@schema("Security")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -26,6 +55,7 @@ model Autos_Catalogo_EstatusSolicitudesViaticos {
   nombreEstatus String? @db.VarChar(200)
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -35,6 +65,7 @@ model Autos_Catalogo_TipoSolicitudes {
   nombreSolicitud String? @db.VarChar(200)
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -48,6 +79,7 @@ model Autos_Plantilla_Detalle_JSON {
   estatusMovil Int?
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -71,6 +103,25 @@ model Autos_Solicitud_Viaticos {
   IdUsuarioGerente        Int?
 
   @@ignore
+  @@schema("dbo")
+}
+
+model BillingRecords {
+  BillingRecordId     String               @id(map: "PK_Security_BillingRecords") @default(dbgenerated("newid()"), map: "DF__BillingRe__Billi__0564AAC9") @db.UniqueIdentifier
+  TenantId            String               @db.UniqueIdentifier
+  SubscriptionId      String?              @db.UniqueIdentifier
+  Amount              Decimal              @db.Decimal(10, 2)
+  Currency            String               @default("USD", map: "DF__BillingRe__Curre__0658CF02") @db.NChar(3)
+  Status              String               @default("PENDING", map: "DF__BillingRe__Statu__074CF33B") @db.NVarChar(20)
+  PeriodStart         DateTime?
+  PeriodEnd           DateTime?
+  PaidAt              DateTime?
+  Notes               String?              @db.NVarChar(Max)
+  CreatedAt           DateTime             @default(dbgenerated("sysutcdatetime()"), map: "DF__BillingRe__Creat__08411774")
+  TenantSubscriptions TenantSubscriptions? @relation(fields: [SubscriptionId], references: [SubscriptionId], onDelete: NoAction, onUpdate: NoAction, map: "FK_BillingRecords_Subscriptions")
+  Tenants             Tenants              @relation(fields: [TenantId], references: [TenantID], onDelete: Cascade, onUpdate: NoAction, map: "FK_BillingRecords_Tenants")
+
+  @@schema("Security")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -83,6 +134,7 @@ model botonesIconosPlantillasArgos {
   tipoMantenimiento String? @db.VarChar(50)
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -92,6 +144,7 @@ model Cat_ActividadesAuto {
   Estatus   Boolean?
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -105,6 +158,7 @@ model Cat_Almacenes {
   Telefono    BigInt?
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -117,6 +171,7 @@ model Cat_Archivos_Empresa {
   activo    Boolean?
 
   @@ignore
+  @@schema("dbo")
 }
 
 model Cat_Argos_Hallazgos {
@@ -132,6 +187,8 @@ model Cat_Argos_Hallazgos {
   NombreUsuario     String?   @db.VarChar(255)
   FechaDespacho     DateTime?
   FechaFinalizacion DateTime?
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -148,6 +205,7 @@ model Cat_Autos {
   IdUsuario   Int?
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -156,6 +214,7 @@ model Cat_Baja {
   NombreBaja String? @db.VarChar(500)
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -178,6 +237,17 @@ model Cat_BBH {
   IdEstado          Int?
 
   @@ignore
+  @@schema("dbo")
+}
+
+model Cat_Carriers {
+  Id          Int           @id(map: "Cat_Carriers_PK") @default(autoincrement()) @db.SmallInt
+  Carrier     String        @unique(map: "Cat_VMCarrier_UNIQUE") @db.VarChar(150)
+  EsOtro      Boolean       @default(false, map: "DF__Cat_Carri__EsOtr__4420F751")
+  GASOAL_LM   GASOAL_LM[]
+  GASOAL_VMES GASOAL_VMES[]
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -197,6 +267,7 @@ model Cat_CheckInOut {
   tipoActividad       Int?
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -216,6 +287,7 @@ model Cat_CheckInOut_Argos {
   tipoActividad       Int?
 
   @@ignore
+  @@schema("dbo")
 }
 
 model Cat_Ciudades {
@@ -223,6 +295,8 @@ model Cat_Ciudades {
   Ciudad   String? @db.NChar(100)
   Status   Int?    @db.TinyInt
   IdEstado Int?
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -232,16 +306,21 @@ model Cat_ClasificacionWO {
   Estatus           Int    @db.TinyInt
 
   @@ignore
+  @@schema("dbo")
 }
 
 model cat_color {
   idColor     Int     @id(map: "PK__cat_colo__504A3B88096CE40F") @default(autoincrement())
   nombreColor String? @db.VarChar(200)
+
+  @@schema("dbo")
 }
 
 model cat_combustible {
   idCombustible   Int     @id(map: "PK__cat_comb__69F7A82A66FAED84") @default(autoincrement())
   tipoCombustible String? @db.VarChar(200)
+
+  @@schema("dbo")
 }
 
 model Cat_Cuadrillas {
@@ -255,6 +334,8 @@ model Cat_Cuadrillas {
   IdSitio         Int?
   IdUsuario       Int?
   Tipo_Cuadrilla  Tipo_Cuadrilla? @relation(fields: [IdTipoCuadrilla], references: [IdTipoCuadrilla], onDelete: NoAction, onUpdate: NoAction, map: "FK_Cat_Cuadrillas_IdTipoCuadrilla")
+
+  @@schema("dbo")
 }
 
 model Cat_Empresas {
@@ -267,12 +348,16 @@ model Cat_Empresas {
   FechaUltimaMod DateTime?
   Status         Int?      @db.TinyInt
   Paquete        Int?
+
+  @@schema("dbo")
 }
 
 model cat_empresasSeguros {
   idEmpresa             Int                 @id(map: "PK__cat_empr__75D2CED4780F16AB") @default(autoincrement())
   nombreEmpresasSeguros String?             @db.VarChar(200)
   GASOAL_Responsiva     GASOAL_Responsiva[]
+
+  @@schema("dbo")
 }
 
 model Cat_Estados {
@@ -282,12 +367,16 @@ model Cat_Estados {
   IdRegion Int?    @db.TinyInt
   Coords   String? @db.VarChar(100)
   Rv       Boolean @default(false, map: "DF__Cat_Estados__Rv__7A5D0C71")
+
+  @@schema("dbo")
 }
 
 model Cat_EstadoWO {
   IdEstatusWO     Int     @id(map: "PK__Cat_Esta__871CC66DF97A438E") @default(autoincrement())
   NombreEstatusWO String? @db.NVarChar(30)
   StatusWO        String? @db.NVarChar(30)
+
+  @@schema("dbo")
 }
 
 model Cat_EstadoWO_Sub {
@@ -295,11 +384,15 @@ model Cat_EstadoWO_Sub {
   NombreEstatusWOSub  String?  @db.VarChar(50)
   EstadoWOSubDetalles String?  @db.Text
   EstadoWOSub         Boolean? @default(true, map: "DF__Cat_Estad__Estat__168449D3")
+
+  @@schema("dbo")
 }
 
 model cat_estatus {
   idEstatus     Int     @id(map: "PK__cat_esta__DCBE18B6042051D5") @default(autoincrement())
   nombreEstatus String? @db.VarChar(200)
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -309,6 +402,7 @@ model Cat_FLM {
   Estatus Boolean?
 
   @@ignore
+  @@schema("dbo")
 }
 
 model cat_gps {
@@ -321,6 +415,8 @@ model cat_gps {
   FechaActivacion      String? @db.VarChar(20)
   historialRastreoJson String? @db.VarChar(Max)
   alertasRastreoJson   String? @db.VarChar(Max)
+
+  @@schema("dbo")
 }
 
 model Cat_Hallazgos {
@@ -334,6 +430,8 @@ model Cat_Hallazgos {
   HallazgosResumen String   @db.Text
   FechaCaptura     DateTime @db.SmallDateTime
   Estatus          Int      @default(0, map: "DF_Cat_Hallazgos_Estatus")
+
+  @@schema("dbo")
 }
 
 model Cat_Historico_RH {
@@ -344,24 +442,71 @@ model Cat_Historico_RH {
   Fecha         DateTime? @db.SmallDateTime
   ValorAnterior String?   @db.VarChar(200)
   ValorNuevo    String?   @db.VarChar(200)
+
+  @@schema("dbo")
 }
 
 model Cat_Linea {
   Id                Int                 @id(map: "Cat_Linea_PK") @default(autoincrement()) @db.SmallInt
   Text              String              @unique(map: "Cat_Linea_UNIQUE") @db.VarChar(150)
   GASOAL_Responsiva GASOAL_Responsiva[]
+
+  @@schema("dbo")
+}
+
+model Cat_LMTiposEvidencia {
+  Id                       Int                        @id(map: "Cat_LMTiposEvidencia_PK") @default(autoincrement())
+  Nombre                   String                     @unique(map: "Cat_LMTiposEvidencia_UNIQUE") @db.VarChar(80)
+  Activo                   Boolean                    @default(true, map: "DF_LMTiposEvidencia_Activo")
+  GASOAL_LMSitioEvidencias GASOAL_LMSitioEvidencias[]
+
+  @@schema("dbo")
+}
+
+model Cat_LMTiposIncidencia {
+  Id                        Int                         @id(map: "Cat_LMTiposIncidencia_PK") @default(autoincrement())
+  Nombre                    String                      @unique(map: "Cat_LMTiposIncidencia_UNIQUE") @db.VarChar(50)
+  Activo                    Boolean                     @default(true, map: "DF_LMTiposIncidencia_Activo")
+  GASOAL_LMSitioIncidencias GASOAL_LMSitioIncidencias[]
+
+  @@schema("dbo")
+}
+
+model Cat_LMTiposMaterial {
+  Id                     Int                      @id(map: "Cat_LMTiposMaterial_PK") @default(autoincrement())
+  Nombre                 String                   @unique(map: "Cat_LMTiposMaterial_UNIQUE") @db.VarChar(50)
+  Activo                 Boolean                  @default(true, map: "DF_LMTiposMaterial_Activo")
+  GASOAL_LMSitioMaterial GASOAL_LMSitioMaterial[]
+
+  @@schema("dbo")
+}
+
+model Cat_LMXdocks {
+  Id        Int         @id(map: "Cat_LMXdocks_PK") @default(autoincrement())
+  Nombre    String      @db.VarChar(50)
+  Activo    Boolean     @default(true, map: "DF_LMXdocks_Activo")
+  TenantID  String?     @db.UniqueIdentifier
+  Tenants   Tenants?    @relation(fields: [TenantID], references: [TenantID], onDelete: NoAction, onUpdate: NoAction, map: "Cat_LMXdocks_Tenant_FK")
+  GASOAL_LM GASOAL_LM[]
+
+  @@unique([TenantID, Nombre], map: "Cat_LMXdocks_UQ")
+  @@schema("dbo")
 }
 
 model Cat_MarcaAuto {
   IdMarca           Int                 @id(map: "Cat_MarcaAuto_PK") @default(autoincrement())
   Descripcion       String?             @db.VarChar(50)
   GASOAL_Responsiva GASOAL_Responsiva[]
+
+  @@schema("dbo")
 }
 
 model cat_marcaVehiculo {
   idMarca     Int     @id(map: "PK__cat_marc__703318127CBC68DE") @default(autoincrement())
   nombreMarca String? @db.VarChar(200)
   logoUrl     String? @db.VarChar(255)
+
+  @@schema("dbo")
 }
 
 model Cat_Modulos {
@@ -370,6 +515,17 @@ model Cat_Modulos {
   Status         Int?             @db.TinyInt
   Variable       String?          @db.VarChar(20)
   Cat_SubModulos Cat_SubModulos[]
+  PlanFeatures   PlanFeatures[]
+
+  @@schema("dbo")
+}
+
+model Cat_OriginTL {
+  Id             Int              @id(map: "Cat_OriginTL_PK") @default(autoincrement())
+  Nombre         String           @unique(map: "Cat_OriginTL_UNIQUE") @db.VarChar(100)
+  TransactionLog TransactionLog[]
+
+  @@schema("Audit")
 }
 
 model Cat_Paquetes {
@@ -377,6 +533,8 @@ model Cat_Paquetes {
   Descripcion       String?             @db.NVarChar(50)
   Status            Int?                @db.TinyInt
   Permisos_Paquetes Permisos_Paquetes[]
+
+  @@schema("dbo")
 }
 
 model Cat_Perfiles {
@@ -388,6 +546,8 @@ model Cat_Perfiles {
   FechaUltMod         DateTime?
   Status              Int?                  @db.TinyInt
   Usuarios_por_Perfil Usuarios_por_Perfil[]
+
+  @@schema("dbo")
 }
 
 model Cat_Plantillas {
@@ -400,6 +560,8 @@ model Cat_Plantillas {
   IdEmpresa              Int?
   EstructuraImpresionUrl String?  @db.NVarChar(200)
   PlantillaOrientacion   String?  @default("p", map: "DF__Cat_Plant__Plant__34F3C25A") @db.Char(8)
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -412,6 +574,7 @@ model Cat_Plantillas_Auto {
   Activo              Boolean?
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -424,6 +587,7 @@ model Cat_Plantillas_Auto_Web {
   Activo              Boolean?
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -437,6 +601,7 @@ model Cat_Plantillas_Respaldo {
   IdEmpresa           Int?
 
   @@ignore
+  @@schema("dbo")
 }
 
 model Cat_Plantillas_Web {
@@ -446,6 +611,8 @@ model Cat_Plantillas_Web {
   script              String?  @db.Text
   EstructuraImpresion String?  @db.Text
   Activo              Boolean?
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -460,6 +627,7 @@ model Cat_PlantillasHelix {
   IdWo_HelixRem       Int?
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -469,17 +637,22 @@ model Cat_PrioridadesSitio {
   Status      Int?    @db.TinyInt
 
   @@ignore
+  @@schema("dbo")
 }
 
 model cat_propietario {
   idPropietario     Int     @id(map: "PK__cat_prop__EB82759577DEE083") @default(autoincrement())
   nombrePropietario String? @db.VarChar(200)
+
+  @@schema("dbo")
 }
 
 model Cat_Puestos {
   IdPuesto Int     @id(map: "PK__Cat_Pues__ADAC6B9CA7D08425") @default(autoincrement())
   Nombre   String? @db.NVarChar(50)
   Status   Int?    @db.TinyInt
+
+  @@schema("dbo")
 }
 
 model Cat_Regiones {
@@ -488,17 +661,23 @@ model Cat_Regiones {
   Descripcion   String? @db.NVarChar(50)
   Status        Int?    @db.TinyInt
   AdyacentesReg String? @db.Text
+
+  @@schema("dbo")
 }
 
 model Cat_RVTipoVehiculo {
   Id                Int                 @id(map: "Cat_RVTipoVehiculo_PK") @default(autoincrement()) @db.SmallInt
   Text              String              @unique(map: "Cat_RVTipoVehiculo_UNIQUE") @db.VarChar(150)
   GASOAL_Responsiva GASOAL_Responsiva[]
+
+  @@schema("dbo")
 }
 
 model cat_sexo {
   idSexo     Int     @id(map: "PK__cat_sexo__C5AFCD4D25B873D3") @default(autoincrement())
   nombreSexo String? @db.VarChar(200)
+
+  @@schema("dbo")
 }
 
 model Cat_Sitios {
@@ -536,21 +715,28 @@ model Cat_Sitios {
   UsuariosAsignados String?   @db.NVarChar(Max)
   ExtraNote         String?   @db.VarChar(50)
   IdCFE             String?   @db.VarChar(50)
+
+  @@schema("dbo")
 }
 
 model Cat_SubEstadoWO {
   IdSubEstadoWO     Int      @id(map: "PK__Cat_SubE__1A0070D4907EDDE0")
   NombreSubEstadoWO String?  @db.NVarChar(30)
   StatusWO          Boolean?
+
+  @@schema("dbo")
 }
 
 model Cat_SubModulos {
-  IdSubModulo     Int          @id(map: "PK__Cat_SubM__A49BAFCB7233B3CD") @default(autoincrement())
+  IdSubModulo     Int            @id(map: "PK__Cat_SubM__A49BAFCB7233B3CD") @default(autoincrement())
   IdModulo        Int?
   IdSec           Int?
-  NombreSubModulo String?      @db.NVarChar(50)
-  Status          Int?         @db.TinyInt
-  Cat_Modulos     Cat_Modulos? @relation(fields: [IdModulo], references: [IdModulo], onDelete: NoAction, onUpdate: NoAction, map: "FK_Cat_SubModulos_IdModulo")
+  NombreSubModulo String?        @db.NVarChar(50)
+  Status          Int?           @db.TinyInt
+  Cat_Modulos     Cat_Modulos?   @relation(fields: [IdModulo], references: [IdModulo], onDelete: NoAction, onUpdate: NoAction, map: "FK_Cat_SubModulos_IdModulo")
+  PlanFeatures    PlanFeatures[]
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -565,23 +751,30 @@ model Cat_Tareas {
   IdEtapa             String?  @db.VarChar(4)
 
   @@ignore
+  @@schema("dbo")
 }
 
 model Cat_TipoResponsiva {
   Id                Int                 @id(map: "Cat_TipoResponsiva_PK") @default(autoincrement()) @db.SmallInt
   Tipo              String              @unique(map: "Cat_TipoResponsiva_UNIQUE") @db.VarChar(200)
   GASOAL_Responsiva GASOAL_Responsiva[]
+
+  @@schema("dbo")
 }
 
 model Cat_TipoSitio {
   IdTipoSitio Int     @id(map: "PK__Cat_Tipo__4FDB63B6B3AEBFFB") @default(autoincrement())
   Descripcion String? @db.NVarChar(30)
   Status      Int?    @db.TinyInt
+
+  @@schema("dbo")
 }
 
 model cat_tipoVehiculo {
   idTipoVehiculo Int     @id(map: "PK__cat_tipo__429A3B81CE181A64") @default(autoincrement())
   tipoVehiculo   String? @db.VarChar(200)
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -594,6 +787,7 @@ model Cat_url_googleDrive_Empresa {
   carpetaIdGoogleDrive        String? @db.VarChar(500)
 
   @@ignore
+  @@schema("dbo")
 }
 
 model Cat_Usuarios {
@@ -620,6 +814,8 @@ model Cat_Usuarios {
   IdFLM               Int?
   KomodoFlag          Boolean?
   Usuarios_por_Perfil Usuarios_por_Perfil[]
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -629,23 +825,54 @@ model Cat_VersionAuto {
   IdMarca     Int?
 
   @@ignore
+  @@schema("dbo")
 }
 
 model cat_vigencia {
   idVigencia      Int     @id(map: "PK__cat_vige__C0E57438B9D2E1E1") @default(autoincrement())
   estatusVigencia String? @db.VarChar(200)
+
+  @@schema("dbo")
 }
 
 model Cat_VMEFisico {
-  Clave                  String                   @id(map: "Cat_DevEntEFisico_PK") @db.Char(1)
+  Clave                  String                   @id(map: "Cat_VMEFisico_PK") @db.Char(1)
   Estado                 String                   @db.VarChar(50)
   GASOAL_VMPiezasEstadoF GASOAL_VMPiezasEstadoF[]
+
+  @@schema("dbo")
 }
 
 model Cat_VMMotivo {
-  Id                    Int                     @id(map: "Cat_DevEntMotivo_PK") @default(autoincrement()) @db.SmallInt
-  Motivo                String                  @unique(map: "Cat_DevEntMotivo_UNIQUE") @db.VarChar(50)
+  Id                    Int                     @id(map: "Cat_VMMotivo_PK") @default(autoincrement()) @db.SmallInt
+  Motivo                String                  @unique(map: "Cat_VMMotivo_UNIQUE") @db.VarChar(50)
   GASOAL_VMPiezasMotivo GASOAL_VMPiezasMotivo[]
+
+  @@schema("dbo")
+}
+
+model Cat_VMProyecto {
+  Id          Int           @id(map: "Cat_VMProyecto_PK") @default(dbgenerated("NEXT VALUE FOR [dbo].[Seq_Cat_VMProyecto]"), map: "DF_Cat_VMProyecto_Id") @db.SmallInt
+  Proyecto    String        @db.VarChar(100)
+  TenantID    String?       @db.UniqueIdentifier
+  Activo      Boolean       @default(true, map: "DF_Cat_VMProyecto_Activo")
+  Tenants     Tenants?      @relation(fields: [TenantID], references: [TenantID], onDelete: NoAction, onUpdate: NoAction, map: "Cat_VMProyecto_Tenant_FK")
+  GASOAL_VMES GASOAL_VMES[]
+
+  @@unique([TenantID, Proyecto], map: "Cat_VMProyecto_UQ")
+  @@schema("dbo")
+}
+
+model Cat_VMTiposMaterial {
+  Id          Int           @id(map: "Cat_VMTiposMaterial_PK") @default(autoincrement()) @db.SmallInt
+  Tipo        String        @db.VarChar(100)
+  TenantID    String?       @db.UniqueIdentifier
+  Activo      Boolean       @default(true, map: "DF_Cat_VMTiposMaterial_Activo")
+  Tenants     Tenants?      @relation(fields: [TenantID], references: [TenantID], onDelete: NoAction, onUpdate: NoAction, map: "Cat_VMTiposMaterial_Tenant_FK")
+  GASOAL_VMES GASOAL_VMES[]
+
+  @@unique([TenantID, Tipo], map: "Cat_VMTiposMaterial_UQ")
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -655,6 +882,7 @@ model Cat_WO_Delete_Movil {
   IdUsuario Int?
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -664,6 +892,7 @@ model Catalogo_Estatus_Tareas {
   Descripcion String? @db.VarChar(100)
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -673,11 +902,14 @@ model Catalogo_Tareas {
   Activa       Boolean?
 
   @@ignore
+  @@schema("dbo")
 }
 
 model CatSts_Historico {
   IdRegistro Int    @id(map: "PK__CatSts_H__FFA45A99C3B98DC5") @default(autoincrement())
   Nombre     String @db.VarChar(50)
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -690,11 +922,34 @@ model Control_Logueo {
   codigoUnico     Float?
 
   @@ignore
+  @@schema("dbo")
 }
 
 model Dash_Cat_Estatus {
   IdEstatus     Int    @id(map: "PK__Dash_Cat__B32BA1C7BD0F1368") @default(autoincrement())
   NombreEstatus String @db.VarChar(100)
+
+  @@schema("dbo")
+}
+
+model Departments {
+  DepartmentID          Int                    @default(autoincrement())
+  TenantID              String                 @db.UniqueIdentifier
+  Name                  String                 @db.NVarChar(150)
+  Description           String?                @db.NVarChar(500)
+  IsActive              Boolean                @default(true, map: "DF_HC_Departments_IsActive")
+  CreatedAt             DateTime               @default(dbgenerated("sysutcdatetime()"), map: "DF_HC_Departments_CreatedAt")
+  UpdatedAt             DateTime               @default(dbgenerated("sysutcdatetime()"), map: "DF_HC_Departments_UpdatedAt")
+  CreatedBy             Int?
+  UpdatedBy             Int?
+  AssignableDepartments AssignableDepartments?
+  Tenants               Tenants                @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_HC_Departments_Tenants")
+  Employees             Employees[]
+  Positions             Positions[]
+
+  @@id([TenantID, DepartmentID], map: "PK_HC_Departments")
+  @@unique([TenantID, Name], map: "UX_HC_Departments_Tenant_Name")
+  @@schema("HumanCapital")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -705,6 +960,110 @@ model Desgloce_Tarea {
   abreMapa    Boolean?
 
   @@ignore
+  @@schema("dbo")
+}
+
+model EmployeeContacts {
+  ContactID     Int       @default(autoincrement())
+  TenantID      String    @db.UniqueIdentifier
+  EmployeeID    Int
+  Name          String    @db.NVarChar(150)
+  Phone         String?   @db.NVarChar(50)
+  Relationship  String?   @db.NVarChar(50)
+  IsActive      Boolean   @default(true, map: "DF__EmployeeC__IsAct__08CB2759")
+  CreatedAt     DateTime  @default(dbgenerated("sysutcdatetime()"), map: "DF__EmployeeC__Creat__09BF4B92")
+  UpdatedAt     DateTime  @default(dbgenerated("sysutcdatetime()"), map: "DF__EmployeeC__Updat__0AB36FCB")
+  CreatedBy     Int?
+  UpdatedBy     Int?
+  EsPrioritario Boolean   @default(false, map: "DF__EmployeeC__EsPri__4D404D37")
+  Employees     Employees @relation(fields: [TenantID, EmployeeID], references: [TenantID, EmployeeID], onUpdate: NoAction, map: "FK_HC_EmployeeContacts_Employee")
+
+  @@id([TenantID, ContactID], map: "PK_HC_EmployeeContacts")
+  @@index([TenantID, EmployeeID], map: "IX_HC_EmployeeContacts_Emp")
+  @@schema("HumanCapital")
+}
+
+model EmployeeData {
+  TenantID                                                        String     @db.UniqueIdentifier
+  EmployeeID                                                      Int
+  CURP                                                            String?    @db.Char(18)
+  RFC                                                             String?    @db.Char(13)
+  NSS                                                             String?    @db.Char(11)
+  FechaNacimiento                                                 DateTime?  @db.Date
+  Sueldo                                                          Decimal?   @db.Decimal(12, 2)
+  TieneLicencia                                                   Boolean?
+  FechaCaducidadLicencia                                          DateTime?  @db.Date
+  FechaDC3                                                        DateTime?  @db.Date
+  SexoID                                                          Int?       @db.SmallInt
+  TipoSangreID                                                    Int?       @db.SmallInt
+  RegionID                                                        Int?
+  SupervisorEmployeeID                                            Int?
+  CreatedAt                                                       DateTime   @default(dbgenerated("sysutcdatetime()"), map: "DF__EmployeeD__Creat__487B981A")
+  UpdatedAt                                                       DateTime   @default(dbgenerated("sysutcdatetime()"), map: "DF__EmployeeD__Updat__496FBC53")
+  CreatedBy                                                       Int?
+  UpdatedBy                                                       Int?
+  AreaID                                                          Int?
+  Areas                                                           Areas?     @relation(fields: [TenantID, AreaID], references: [TenantID, AreaID], onUpdate: NoAction, map: "FK_HC_EmployeeData_Area")
+  Employees_EmployeeData_TenantID_EmployeeIDToEmployees           Employees  @relation("EmployeeData_TenantID_EmployeeIDToEmployees", fields: [TenantID, EmployeeID], references: [TenantID, EmployeeID], onUpdate: NoAction, map: "FK_HC_EmployeeData_Employee")
+  Employees_EmployeeData_TenantID_SupervisorEmployeeIDToEmployees Employees? @relation("EmployeeData_TenantID_SupervisorEmployeeIDToEmployees", fields: [TenantID, SupervisorEmployeeID], references: [TenantID, EmployeeID], onUpdate: NoAction, map: "FK_HC_EmployeeData_Supervisor")
+
+  @@id([TenantID, EmployeeID], map: "PK_HC_EmployeeData")
+  @@index([TenantID, SupervisorEmployeeID], map: "IX_HC_EmployeeData_Supervisor")
+  @@schema("HumanCapital")
+}
+
+model EmployeeFiles {
+  FileID       Int       @default(autoincrement())
+  TenantID     String    @db.UniqueIdentifier
+  EmployeeID   Int
+  DocumentType String    @db.NVarChar(50)
+  FilePath     String    @db.NVarChar(500)
+  IsActive     Boolean   @default(true, map: "DF__EmployeeF__IsAct__0406723C")
+  CreatedAt    DateTime  @default(dbgenerated("sysutcdatetime()"), map: "DF__EmployeeF__Creat__04FA9675")
+  UpdatedAt    DateTime  @default(dbgenerated("sysutcdatetime()"), map: "DF__EmployeeF__Updat__05EEBAAE")
+  CreatedBy    Int?
+  UpdatedBy    Int?
+  IsUrl        Boolean?  @default(false, map: "DF__EmployeeF__IsUrl__4C4C28FE")
+  Employees    Employees @relation(fields: [TenantID, EmployeeID], references: [TenantID, EmployeeID], onUpdate: NoAction, map: "FK_HC_EmployeeFiles_Employee")
+
+  @@id([TenantID, FileID], map: "PK_HC_EmployeeFiles")
+  @@index([TenantID, EmployeeID], map: "IX_HC_EmployeeFiles_Emp")
+  @@schema("HumanCapital")
+}
+
+model Employees {
+  EmployeeID                                                         Int                  @default(autoincrement())
+  TenantID                                                           String               @db.UniqueIdentifier
+  EmployeeNumber                                                     String?              @db.NVarChar(50)
+  FirstName                                                          String               @db.NVarChar(120)
+  LastName                                                           String               @db.NVarChar(120)
+  Email                                                              String?              @db.NVarChar(255)
+  Phone                                                              String?              @db.NVarChar(50)
+  DepartmentID                                                       Int?
+  PositionID                                                         Int?
+  EmploymentStatus                                                   String               @default("active", map: "DF_HC_Employees_Status") @db.VarChar(20)
+  HireDate                                                           DateTime?            @db.Date
+  TerminationDate                                                    DateTime?            @db.Date
+  IsActive                                                           Boolean              @default(true, map: "DF_HC_Employees_IsActive")
+  CreatedAt                                                          DateTime             @default(dbgenerated("sysutcdatetime()"), map: "DF_HC_Employees_CreatedAt")
+  UpdatedAt                                                          DateTime             @default(dbgenerated("sysutcdatetime()"), map: "DF_HC_Employees_UpdatedAt")
+  CreatedBy                                                          Int?
+  UpdatedBy                                                          Int?
+  EmployeeContacts                                                   EmployeeContacts[]
+  EmployeeData_EmployeeData_TenantID_EmployeeIDToEmployees           EmployeeData?        @relation("EmployeeData_TenantID_EmployeeIDToEmployees")
+  EmployeeData_EmployeeData_TenantID_SupervisorEmployeeIDToEmployees EmployeeData[]       @relation("EmployeeData_TenantID_SupervisorEmployeeIDToEmployees")
+  EmployeeFiles                                                      EmployeeFiles[]
+  Departments                                                        Departments?         @relation(fields: [TenantID, DepartmentID], references: [TenantID, DepartmentID], onUpdate: NoAction, map: "FK_HC_Employees_Departments")
+  Positions                                                          Positions?           @relation(fields: [TenantID, PositionID], references: [TenantID, PositionID], onUpdate: NoAction, map: "FK_HC_Employees_Positions")
+  Tenants                                                            Tenants              @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_HC_Employees_Tenants")
+  GASOCO_Cat_Usuarios                                                GASOCO_Cat_Usuarios?
+  VacationBalances                                                   VacationBalances[]
+  VacationRequests                                                   VacationRequests[]
+
+  @@id([TenantID, EmployeeID], map: "PK_HC_Employees")
+  @@index([TenantID, DepartmentID], map: "IX_HC_Employees_Tenant_Department")
+  @@index([TenantID, EmploymentStatus, IsActive], map: "IX_HC_Employees_Tenant_Status")
+  @@schema("HumanCapital")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -713,6 +1072,7 @@ model EstatusDocumento {
   EstatusDocumento String? @db.NVarChar(255)
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -721,6 +1081,7 @@ model EstatusFactura {
   EstatusFactura   String? @db.NVarChar(255)
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -729,12 +1090,15 @@ model GASO_Almacen_Recepcion {
   almacen    String? @db.VarChar(200)
 
   @@ignore
+  @@schema("dbo")
 }
 
 model GASOAL_Almacenes {
   Id                   Int     @id(map: "PK__GASOAL_A__3214EC07EFF195CA") @default(autoincrement())
   Almacenes_Gaso       String  @db.VarChar(100)
   Almacenes_Gaso_Otros String? @db.VarChar(100)
+
+  @@schema("dbo")
 }
 
 model GASOAL_Bines {
@@ -743,11 +1107,16 @@ model GASOAL_Bines {
   PasilloId       Int
   Activo          Boolean?        @default(true, map: "DF__GASOAL_Bi__Activ__3FA65AF7")
   GASOAL_Pasillos GASOAL_Pasillos @relation(fields: [PasilloId], references: [Id], onUpdate: NoAction, map: "FK__GASOAL_Bi__Pasil__409A7F30")
+
+  @@schema("dbo")
 }
 
 model GASOAL_Cat_Carrier {
-  Id     Int    @id(map: "PK__GASOAL_C__3214EC07A008FBDD") @default(autoincrement())
-  Nombre String @unique(map: "UQ__GASOAL_C__75E3EFCF20B070F5") @db.VarChar(50)
+  Id                      Int                       @id(map: "PK__GASOAL_C__3214EC07A008FBDD") @default(autoincrement())
+  Nombre                  String                    @unique(map: "UQ__GASOAL_C__75E3EFCF20B070F5") @db.VarChar(50)
+  GASOAL_SolicitudesGuias GASOAL_SolicitudesGuias[]
+
+  @@schema("dbo")
 }
 
 model GASOAL_Cat_EstatusPallet {
@@ -758,6 +1127,20 @@ model GASOAL_Cat_EstatusPallet {
   Activo                 Boolean                  @default(true, map: "DF__GASOAL_Ca__Activ__6379A719")
   Orden                  Int                      @default(1, map: "DF__GASOAL_Ca__Orden__646DCB52")
   GASOAL_MovimientosLote GASOAL_MovimientosLote[]
+
+  @@schema("dbo")
+}
+
+model GASOAL_Cat_Paqueterias {
+  IdPaqueteria            Int                       @id(map: "PK_GASOAL_Cat_Paqueterias") @default(autoincrement())
+  Codigo                  String                    @unique(map: "UQ_GASOAL_Cat_Paqueterias_Codigo") @db.VarChar(30)
+  Nombre                  String                    @unique(map: "UQ_GASOAL_Cat_Paqueterias_Nombre") @db.NVarChar(120)
+  Activo                  Boolean                   @default(true, map: "DF_GASOAL_Cat_Paqueterias_Activo")
+  FechaCreacion           DateTime                  @default(dbgenerated("sysdatetime()"), map: "DF_GASOAL_Cat_Paqueterias_FechaCreacion")
+  FechaActualizacion      DateTime?
+  GASOAL_SolicitudesGuias GASOAL_SolicitudesGuias[]
+
+  @@schema("dbo")
 }
 
 model GASOAL_Cat_TipoMaterial {
@@ -766,23 +1149,28 @@ model GASOAL_Cat_TipoMaterial {
   Activo       Boolean        @default(true, map: "DF_GASOAL_Cat_TipoMaterial_Activo")
   Orden        Int            @default(0, map: "DF_GASOAL_Cat_TipoMaterial_Orden")
   GASOAL_Palet GASOAL_Palet[]
+
+  @@schema("dbo")
 }
 
 model GASOAL_CatalogoAlmacenes {
-  Id                Int      @id(map: "PK__GASOAL_C__3214EC078380F9D5") @default(autoincrement())
-  Almacen           String   @db.VarChar(100)
-  Region            String   @db.VarChar(100)
-  Ciudad            String   @db.VarChar(100)
-  Capacidad         Int?
-  Direccion         String?  @db.VarChar(255)
-  Estado_Almacen    String?  @db.VarChar(50)
-  Responsable       String?  @db.VarChar(100)
-  Coordinador       String?  @db.VarChar(100)
-  Capacidad_Ocupada Int?
-  Telefono          String?  @db.VarChar(50)
-  Latitud           Decimal? @db.Decimal(10, 6)
-  Longitud          Decimal? @db.Decimal(10, 6)
-  EsEricsson        Int?
+  Id                      Int                       @id(map: "PK__GASOAL_C__3214EC078380F9D5") @default(autoincrement())
+  Almacen                 String                    @db.VarChar(100)
+  Region                  String                    @db.VarChar(100)
+  Ciudad                  String                    @db.VarChar(100)
+  Capacidad               Int?
+  Direccion               String?                   @db.VarChar(255)
+  Estado_Almacen          String?                   @db.VarChar(50)
+  Responsable             String?                   @db.VarChar(100)
+  Coordinador             String?                   @db.VarChar(100)
+  Capacidad_Ocupada       Int?
+  Telefono                String?                   @db.VarChar(50)
+  Latitud                 Decimal?                  @db.Decimal(10, 6)
+  Longitud                Decimal?                  @db.Decimal(10, 6)
+  EsEricsson              Int?
+  GASOAL_SolicitudesGuias GASOAL_SolicitudesGuias[]
+
+  @@schema("dbo")
 }
 
 model GASOAL_CatMaterialEricsson {
@@ -792,6 +1180,8 @@ model GASOAL_CatMaterialEricsson {
   Orden     Int       @default(0, map: "DF_GASOAL_CatMaterialEricsson_Orden")
   CreatedAt DateTime  @default(dbgenerated("sysdatetime()"), map: "DF_GASOAL_CatMaterialEricsson_CreatedAt")
   UpdatedAt DateTime?
+
+  @@schema("dbo")
 }
 
 model GASOAL_CatProyectosEricsson {
@@ -801,11 +1191,15 @@ model GASOAL_CatProyectosEricsson {
   Orden     Int       @default(0, map: "DF_GASOAL_CatProyectosEricsson_Orden")
   CreatedAt DateTime  @default(dbgenerated("sysdatetime()"), map: "DF_GASOAL_CatProyectosEricsson_CreatedAt")
   UpdatedAt DateTime?
+
+  @@schema("dbo")
 }
 
 model GASOAL_Definicion_Equipo {
   ID                    Int     @id(map: "PK__GASOAL_D__3214EC27723EAB15") @default(autoincrement())
   TipoDefinicion_Equipo String? @db.NVarChar(100)
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -814,6 +1208,7 @@ model GASOAL_Estado_Fisico {
   tipo_Estado String? @db.NVarChar(50)
 
   @@ignore
+  @@schema("dbo")
 }
 
 model GASOAL_Gasolina {
@@ -844,6 +1239,8 @@ model GASOAL_Gasolina {
   TicketGeneradorFoto String?   @db.VarChar(100)
   Rendimiento         Float?
   MotivoRechazo       String?   @db.VarChar(250)
+
+  @@schema("dbo")
 }
 
 model GASOAL_Historial_Capacidad {
@@ -851,6 +1248,8 @@ model GASOAL_Historial_Capacidad {
   Almacen            String?   @db.VarChar(100)
   FechaActualizacion DateTime? @default(now(), map: "DF__GASOAL_Hi__Fecha__59662CFA") @db.DateTime
   Capacidad_Ocupada  Int?
+
+  @@schema("dbo")
 }
 
 model GASOAL_Historial_RecepcionMercanciaAlmacen {
@@ -869,6 +1268,8 @@ model GASOAL_Historial_RecepcionMercanciaAlmacen {
   pasillo               String?   @db.VarChar(10)
   bin                   String?   @db.VarChar(20)
   Lote                  String?   @db.VarChar(50)
+
+  @@schema("dbo")
 }
 
 model GASOAL_Historico {
@@ -880,58 +1281,165 @@ model GASOAL_Historico {
   Fecha         DateTime? @default(now(), map: "DF__GASOAL_Hi__Fecha__2FFA0313") @db.SmallDateTime
   ValorAnterior String?   @db.NVarChar(Max)
   ValorNuevo    String?   @db.NVarChar(Max)
+
+  @@schema("dbo")
 }
 
 model GASOAL_InventarioEricsson_Items {
-  id_item                           Int       @id(map: "PK__GASOAL_I__87C9438B1181BF88") @default(autoincrement())
-  bodega                            String?   @db.NVarChar(50)
-  fecha_recibo_en_cross_dock        DateTime? @db.Date
-  folio_recibo_lsp                  String?   @db.NVarChar(80)
-  codigo                            String?   @db.NVarChar(80)
-  descripcion                       String?   @db.NVarChar(300)
+  id_item                           Int                              @id(map: "PK__GASOAL_I__87C9438B1181BF88") @default(autoincrement())
+  bodega                            String?                          @db.NVarChar(50)
+  fecha_recibo_en_cross_dock        DateTime?                        @db.Date
+  folio_recibo_lsp                  String?                          @db.NVarChar(80)
+  codigo                            String?                          @db.NVarChar(80)
+  descripcion                       String?                          @db.NVarChar(300)
   cantidad                          Int?
-  serial_number                     String?   @db.NVarChar(120)
-  id                                String?   @db.NVarChar(80)
-  nombre_sitio                      String?   @db.NVarChar(200)
-  region                            String?   @db.NVarChar(80)
-  proceso                           String?   @db.NVarChar(80)
-  asp_que_entrego                   String?   @db.NVarChar(150)
-  nombre_de_quien_entrego           String?   @db.NVarChar(150)
-  fecha_de_entrega_a_maqueta        DateTime? @db.Date
-  fecha_de_recepcion_de_maqueta     DateTime? @db.Date
-  resultado_de_prueba_en_maqueta    String?   @db.NVarChar(200)
-  fecha_de_entrega_asp              DateTime? @db.Date
-  asp_que_recibe                    String?   @db.NVarChar(150)
-  nombre_de_quien_recibe            String?   @db.NVarChar(150)
-  id_sitio_receptor                 String?   @db.NVarChar(80)
+  serial_number                     String?                          @db.NVarChar(120)
+  id                                String?                          @db.NVarChar(80)
+  nombre_sitio                      String?                          @db.NVarChar(200)
+  region                            String?                          @db.NVarChar(80)
+  proceso                           String?                          @db.NVarChar(80)
+  asp_que_entrego                   String?                          @db.NVarChar(150)
+  nombre_de_quien_entrego           String?                          @db.NVarChar(150)
+  fecha_de_entrega_a_maqueta        DateTime?                        @db.Date
+  fecha_de_recepcion_de_maqueta     DateTime?                        @db.Date
+  resultado_de_prueba_en_maqueta    String?                          @db.NVarChar(200)
+  fecha_de_entrega_asp              DateTime?                        @db.Date
+  asp_que_recibe                    String?                          @db.NVarChar(150)
+  nombre_de_quien_recibe            String?                          @db.NVarChar(150)
+  id_sitio_receptor                 String?                          @db.NVarChar(80)
   cantidad_entregada                Int?
-  nombre_sitio_receptor             String?   @db.NVarChar(200)
-  region_de_sitio_receptor          String?   @db.NVarChar(120)
-  iii                               String?   @db.NVarChar(80)
-  numero_de_pallet                  String?   @db.NVarChar(80)
-  peso_por_pallet_kg                Decimal?  @db.Decimal(10, 2)
-  largo_del_pallet_cms              Decimal?  @db.Decimal(10, 2)
-  ancho_del_pallet_cm               Decimal?  @db.Decimal(10, 2)
-  alto_delpallet_cm                 Decimal?  @db.Decimal(10, 2)
-  fecha_solicitud_eco               DateTime? @db.Date
-  ericsson_service_order_number_eco String?   @db.NVarChar(120)
-  fecha_aprobacion_eco              DateTime? @db.Date
-  proveedor                         String?   @db.NVarChar(150)
-  fecha_recoleccion                 DateTime? @db.Date
-  fecha_de_recepcion_de_certificado DateTime? @db.Date
-  salida                            String?   @db.NVarChar(80)
-  existencia_real                   String?   @db.NVarChar(80)
-  promedio_en_almacen               String?   @db.NVarChar(80)
-  created_at                        DateTime  @default(dbgenerated("sysutcdatetime()"), map: "DF__GASOAL_In__creat__16F94B1F")
-  created_by                        String?   @db.NVarChar(120)
-  is_active                         Boolean   @default(true, map: "DF__GASOAL_In__is_ac__17ED6F58")
+  nombre_sitio_receptor             String?                          @db.NVarChar(200)
+  region_de_sitio_receptor          String?                          @db.NVarChar(120)
+  iii                               String?                          @db.NVarChar(80)
+  numero_de_pallet                  String?                          @db.NVarChar(80)
+  peso_por_pallet_kg                Decimal?                         @db.Decimal(10, 2)
+  largo_del_pallet_cms              Decimal?                         @db.Decimal(10, 2)
+  ancho_del_pallet_cm               Decimal?                         @db.Decimal(10, 2)
+  alto_delpallet_cm                 Decimal?                         @db.Decimal(10, 2)
+  fecha_solicitud_eco               DateTime?                        @db.Date
+  ericsson_service_order_number_eco String?                          @db.NVarChar(120)
+  fecha_aprobacion_eco              DateTime?                        @db.Date
+  proveedor                         String?                          @db.NVarChar(150)
+  fecha_recoleccion                 DateTime?                        @db.Date
+  fecha_de_recepcion_de_certificado DateTime?                        @db.Date
+  salida                            String?                          @db.NVarChar(80)
+  existencia_real                   String?                          @db.NVarChar(80)
+  promedio_en_almacen               String?                          @db.NVarChar(80)
+  created_at                        DateTime                         @default(dbgenerated("sysutcdatetime()"), map: "DF__GASOAL_In__creat__16F94B1F")
+  created_by                        String?                          @db.NVarChar(120)
+  is_active                         Boolean                          @default(true, map: "DF__GASOAL_In__is_ac__17ED6F58")
   updated_at                        DateTime?
-  updated_by                        String?   @db.NVarChar(120)
+  updated_by                        String?                          @db.NVarChar(120)
+  GASOAL_SolicitudesGuiasDetalle    GASOAL_SolicitudesGuiasDetalle[]
 
   @@index([ericsson_service_order_number_eco], map: "IX_Ericsson_ECO")
   @@index([fecha_recibo_en_cross_dock, bodega, region, proceso], map: "IX_Ericsson_Filtros")
   @@index([proceso, region], map: "IX_Ericsson_ProcesoRegion")
   @@index([serial_number], map: "IX_Ericsson_Serial")
+  @@schema("dbo")
+}
+
+model GASOAL_LM {
+  Id                  Int                 @id(map: "GASOAL_LM_PK") @default(autoincrement())
+  TenantID            String              @db.UniqueIdentifier
+  Folio               String              @db.VarChar(30)
+  IdUsuario           Int
+  Fecha               DateTime            @db.Date
+  IdXdock             Int
+  NombreResponsable   String?             @db.VarChar(75)
+  UnidadPlaca         String              @db.VarChar(25)
+  NombreOperador      String              @db.VarChar(75)
+  HoraLlegada         DateTime            @db.Time
+  HoraInicioDescarga  DateTime            @db.Time
+  HoraSalida          DateTime            @db.Time
+  Confirmado          Boolean
+  RE                  Boolean             @default(true, map: "DF_LM_RE")
+  IdCarrier           Int                 @db.SmallInt
+  OtroCarrier         String?             @db.VarChar(150)
+  FechaCreacion       DateTime            @default(now(), map: "DF_LM_FechaCreacion") @db.DateTime
+  FechaEdicion        DateTime?
+  Documentos          String?             @db.NVarChar(Max)
+  Cat_Carriers        Cat_Carriers        @relation(fields: [IdCarrier], references: [Id], onUpdate: NoAction, map: "GASOAL_LM_Carrier_FK")
+  Tenants             Tenants             @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "GASOAL_LM_Tenant_FK")
+  GASOCO_Cat_Usuarios GASOCO_Cat_Usuarios @relation(fields: [IdUsuario], references: [IdUsuario], onUpdate: NoAction, map: "GASOAL_LM_Usuario_FK")
+  Cat_LMXdocks        Cat_LMXdocks        @relation(fields: [IdXdock], references: [Id], onUpdate: NoAction, map: "GASOAL_LM_Xdock_FK")
+  GASOAL_LMSitios     GASOAL_LMSitios[]
+
+  @@unique([TenantID, Folio], map: "GASOAL_LM_UQ_Folio")
+  @@index([TenantID, FechaCreacion(sort: Desc)], map: "IX_LM_Tenant_FechaCreacion")
+  @@index([TenantID, IdUsuario, Fecha(sort: Desc)], map: "IX_LM_Tenant_Usuario_Fecha")
+  @@index([TenantID, IdXdock, Fecha(sort: Desc)], map: "IX_LM_Tenant_Xdock_Fecha")
+  @@schema("dbo")
+}
+
+model GASOAL_LMSitioEvidencias {
+  Id                   Int                  @id(map: "GASOAL_LMSitioEvidencias_PK") @default(autoincrement())
+  IdLogisticaSitio     Int
+  IdTipoEvidencia      Int
+  Archivo              String               @db.VarChar(500)
+  MimeType             String               @db.VarChar(50)
+  Orden                Int?                 @db.TinyInt
+  Cat_LMTiposEvidencia Cat_LMTiposEvidencia @relation(fields: [IdTipoEvidencia], references: [Id], onUpdate: NoAction, map: "GASOAL_LMSitioEvidencias_Cat_FK")
+  GASOAL_LMSitios      GASOAL_LMSitios      @relation(fields: [IdLogisticaSitio], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "GASOAL_LMSitioEvidencias_Sitio_FK")
+
+  @@index([IdLogisticaSitio], map: "IX_LMSitioEvidencias_Sitio")
+  @@schema("dbo")
+}
+
+model GASOAL_LMSitioIncidencias {
+  Id                    Int                   @id(map: "GASOAL_LMSitioIncidencias_PK") @default(autoincrement())
+  IdLogisticaSitio      Int
+  IdTipoIncidencia      Int
+  Cat_LMTiposIncidencia Cat_LMTiposIncidencia @relation(fields: [IdTipoIncidencia], references: [Id], onUpdate: NoAction, map: "GASOAL_LMSitioIncidencias_Cat_FK")
+  GASOAL_LMSitios       GASOAL_LMSitios       @relation(fields: [IdLogisticaSitio], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "GASOAL_LMSitioIncidencias_Sitio_FK")
+
+  @@unique([IdLogisticaSitio, IdTipoIncidencia], map: "GASOAL_LMSitioIncidencias_UQ")
+  @@index([IdLogisticaSitio], map: "IX_LMSitioIncidencias_Sitio")
+  @@schema("dbo")
+}
+
+model GASOAL_LMSitioMaterial {
+  Id                  Int                 @id(map: "GASOAL_LMSitioMaterial_PK") @default(autoincrement())
+  IdLogisticaSitio    Int
+  IdTipoMaterial      Int
+  Cat_LMTiposMaterial Cat_LMTiposMaterial @relation(fields: [IdTipoMaterial], references: [Id], onUpdate: NoAction, map: "GASOAL_LMSitioMaterial_Cat_FK")
+  GASOAL_LMSitios     GASOAL_LMSitios     @relation(fields: [IdLogisticaSitio], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "GASOAL_LMSitioMaterial_Sitio_FK")
+
+  @@unique([IdLogisticaSitio, IdTipoMaterial], map: "GASOAL_LMSitioMaterial_UQ")
+  @@index([IdLogisticaSitio], map: "IX_LMSitioMaterial_Sitio")
+  @@schema("dbo")
+}
+
+model GASOAL_LMSitios {
+  Id                        Int                         @id(map: "GASOAL_LMSitios_PK") @default(autoincrement())
+  IdLogistica               Int
+  IdSitio                   String                      @db.VarChar(100)
+  NombreSitio               String                      @db.VarChar(200)
+  DescripcionMaterial       String                      @db.VarChar(250)
+  MaterialFaltante          Boolean
+  DescripcionFaltantes      String?                     @db.VarChar(500)
+  DescripcionIncidencias    String?                     @db.VarChar(500)
+  GASOAL_LMSitioEvidencias  GASOAL_LMSitioEvidencias[]
+  GASOAL_LMSitioIncidencias GASOAL_LMSitioIncidencias[]
+  GASOAL_LMSitioMaterial    GASOAL_LMSitioMaterial[]
+  GASOAL_LM                 GASOAL_LM                   @relation(fields: [IdLogistica], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "GASOAL_LMSitios_LM_FK")
+  GASOAL_LMSitioTarimas     GASOAL_LMSitioTarimas[]
+
+  @@unique([IdLogistica, IdSitio, NombreSitio], map: "GASOAL_LMSitios_UQ")
+  @@index([IdLogistica], map: "IX_LMSitios_IdLogistica")
+  @@schema("dbo")
+}
+
+model GASOAL_LMSitioTarimas {
+  Id               Int             @id(map: "GASOAL_LMSitioTarimas_PK") @default(autoincrement())
+  IdLogisticaSitio Int
+  TarimaFoto       String          @db.VarChar(500)
+  PapeletaFoto     String          @db.VarChar(500)
+  Orden            Int?            @db.TinyInt
+  GASOAL_LMSitios  GASOAL_LMSitios @relation(fields: [IdLogisticaSitio], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "GASOAL_LMSitioTarimas_Sitio_FK")
+
+  @@index([IdLogisticaSitio], map: "IX_LMSitioTarimas_Sitio")
+  @@schema("dbo")
 }
 
 model GASOAL_LoteItems {
@@ -945,6 +1453,7 @@ model GASOAL_LoteItems {
 
   @@index([ArticuloId], map: "IX_LoteItems_Art")
   @@index([LoteId], map: "IX_LoteItems_LoteId")
+  @@schema("dbo")
 }
 
 model GASOAL_Lotes {
@@ -961,6 +1470,8 @@ model GASOAL_Lotes {
   DetalleJsonLote                          String?                                    @db.NVarChar(Max)
   GASOAL_LoteItems                         GASOAL_LoteItems[]
   GASOAL_Reporte_RecepcionMercanciaAlmacen GASOAL_Reporte_RecepcionMercanciaAlmacen[]
+
+  @@schema("dbo")
 }
 
 model GASOAL_MovimientosDocumentos {
@@ -975,6 +1486,7 @@ model GASOAL_MovimientosDocumentos {
   CreatedAt   DateTime @default(dbgenerated("sysutcdatetime()"), map: "DF__GASOAL_Mo__Creat__2B0043CC")
 
   @@index([MovId, Sitio], map: "IX_GASOAL_MovDocs_MovId_Sitio")
+  @@schema("dbo")
 }
 
 model GASOAL_MovimientosLote {
@@ -999,6 +1511,7 @@ model GASOAL_MovimientosLote {
 
   @@index([folio, fecha(sort: Desc), id(sort: Desc)], map: "IX_MovLote_Folio_Fecha")
   @@index([tipo, fecha(sort: Desc), id(sort: Desc)], map: "IX_MovLote_Tipo_Fecha")
+  @@schema("dbo")
 }
 
 model GASOAL_MovimientosLote_Documentos {
@@ -1011,10 +1524,11 @@ model GASOAL_MovimientosLote_Documentos {
   SizeBytes  BigInt?
   UploadedBy Int?
   UploadedAt DateTime @default(dbgenerated("sysutcdatetime()"), map: "DF_MovDocs_UploadedAt")
-  IsActive   Boolean  @default(true, map: "DF_MovDocs_IsActive")
+  IsActive   Boolean
 
   @@index([Folio], map: "IX_MovDocs_Folio")
   @@index([MovId], map: "IX_MovDocs_MovId")
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1023,16 +1537,21 @@ model GASOAL_Nombre_Hardware {
   nombre_Harware String? @db.VarChar(200)
 
   @@ignore
+  @@schema("dbo")
 }
 
 model GASOAL_Origen {
   ID      Int     @id(map: "PK__GASOAL_O__3214EC27B3943DC1") @default(autoincrement())
   Puertos String? @db.NVarChar(100)
+
+  @@schema("dbo")
 }
 
 model GASOAL_Origenes {
   ID     Int     @id(map: "PK__GASOAL_O__3214EC2766ED5FF0") @default(autoincrement())
   Origen String? @db.NVarChar(100)
+
+  @@schema("dbo")
 }
 
 model GASOAL_Palet {
@@ -1049,6 +1568,7 @@ model GASOAL_Palet {
   @@unique([IdSitio, FolioPalet], map: "UX_GASOAL_Palet_IdSitio_FolioPalet")
   @@index([TipoMaterialId], map: "IX_GASOAL_Palet_TipoMaterialId")
   @@index([IdSitio, Id(sort: Desc)], map: "IX_Palet_IdSitio")
+  @@schema("dbo")
 }
 
 model GASOAL_Pasillos {
@@ -1056,11 +1576,15 @@ model GASOAL_Pasillos {
   Nombre       String         @unique(map: "UQ__GASOAL_P__75E3EFCFD0FB614A") @db.VarChar(10)
   Activo       Boolean?       @default(true, map: "DF__GASOAL_Pa__Activ__3CC9EE4C")
   GASOAL_Bines GASOAL_Bines[]
+
+  @@schema("dbo")
 }
 
 model GASOAL_ProcesosEricsson {
   Id      Int    @id(map: "PK__GASOAL_P__3214EC0738D77E96") @default(autoincrement())
   Proceso String @unique(map: "UX_GASOAL_ProcesosEricsson_Proceso") @db.NVarChar(80)
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1069,16 +1593,21 @@ model GASOAL_Proyecto_Origen {
   tipo_Proyecto String? @db.VarChar(50)
 
   @@ignore
+  @@schema("dbo")
 }
 
 model GASOAL_Puertos {
   ID      Int     @id(map: "PK__GASOAL_P__3214EC271E36C2F8") @default(autoincrement())
   Puertos String? @db.NVarChar(100)
+
+  @@schema("dbo")
 }
 
 model GASOAL_Region {
   ID       Int     @id(map: "PK__GASOAL_R__3214EC27A3AF5280") @default(autoincrement())
   Regiones String? @db.NVarChar(100)
+
+  @@schema("dbo")
 }
 
 model GASOAL_Reporte_RecepcionMercanciaAlmacen {
@@ -1123,6 +1652,8 @@ model GASOAL_Reporte_RecepcionMercanciaAlmacen {
   proceso               String?       @db.NVarChar(20)
   LoteJson              String?       @db.NVarChar(Max)
   GASOAL_Lotes          GASOAL_Lotes? @relation(fields: [LoteId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Lote_Articulo")
+
+  @@schema("dbo")
 }
 
 model GASOAL_Responsiva {
@@ -1164,6 +1695,155 @@ model GASOAL_Responsiva {
   Cat_MarcaAuto       Cat_MarcaAuto?       @relation(fields: [IdMarca], references: [IdMarca], onDelete: NoAction, onUpdate: NoAction, map: "GASOAL_Responsiva_Cat_MarcaAuto_FK")
   Cat_RVTipoVehiculo  Cat_RVTipoVehiculo?  @relation(fields: [IdTipoVeh], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "GASOAL_Responsiva_Cat_RVTipoVehiculo_FK")
   Cat_TipoResponsiva  Cat_TipoResponsiva   @relation(fields: [IdTipo], references: [Id], onUpdate: NoAction, map: "GASOAL_Responsiva_Cat_TipoResponsiva_FK")
+
+  @@schema("dbo")
+}
+
+model GASOAL_SolicitudesGuias {
+  IdSolicitudGuia                                                                       Int                                     @id(map: "PK_GASOAL_SolicitudesGuias") @default(autoincrement())
+  FechaCreacion                                                                         DateTime                                @default(dbgenerated("sysdatetime()"), map: "DF_GASOAL_SolicitudesGuias_FechaCreacion")
+  Folio                                                                                 String?                                 @unique(map: "UX_GASOAL_SolicitudesGuias_Folio") @db.VarChar(16)
+  IdXdock                                                                               Int
+  XdockNombre                                                                           String                                  @db.NVarChar(150)
+  TipoEscenario                                                                         String                                  @db.VarChar(20)
+  PorcentajeAplicado                                                                    Decimal                                 @db.Decimal(5, 2)
+  FechaHoraProgramada                                                                   DateTime
+  IdCarrier                                                                             Int
+  CarrierNombre                                                                         String                                  @db.NVarChar(100)
+  Sitio                                                                                 String                                  @db.NVarChar(200)
+  Destino                                                                               String                                  @db.NVarChar(300)
+  IdPaqueteria                                                                          Int
+  PaqueteriaNombre                                                                      String                                  @db.NVarChar(120)
+  NumeroGuia                                                                            String?                                 @db.NVarChar(120)
+  CostoEnvio                                                                            Decimal?                                @db.Decimal(18, 2)
+  CobroEricsson                                                                         Decimal?                                @db.Decimal(18, 2)
+  PersonalInvolucrado                                                                   String?                                 @db.NVarChar(500)
+  Observaciones                                                                         String?                                 @db.NVarChar(2000)
+  EstatusSolicitud                                                                      String                                  @default("SOLICITADA", map: "DF_GASOAL_SolicitudesGuias_Estatus") @db.VarChar(30)
+  EstatusSolicitudPago                                                                  String                                  @default("PENDIENTE", map: "DF_GASOAL_SolicitudesGuias_Pago") @db.VarChar(20)
+  FechaSolicitudPagoEnviada                                                             DateTime?
+  IdUsuarioSolicitante                                                                  Int
+  IdUsuarioAsignoGuia                                                                   Int?
+  FechaAsignacionGuia                                                                   DateTime?
+  IdUsuarioCancelo                                                                      Int?
+  FechaCancelacion                                                                      DateTime?
+  MotivoCancelacion                                                                     String?                                 @db.NVarChar(500)
+  FechaActualizacion                                                                    DateTime?
+  Activo                                                                                Boolean                                 @default(true, map: "DF_GASOAL_SolicitudesGuias_Activo")
+  VersionRegistro                                                                       Unsupported("timestamp")
+  RemitenteNombreCompleto                                                               String?                                 @db.NVarChar(200)
+  RemitenteCelular                                                                      String?                                 @db.NVarChar(30)
+  RemitenteCorreo                                                                       String?                                 @db.NVarChar(320)
+  RemitenteDireccion                                                                    String?                                 @db.NVarChar(500)
+  RequiereRecoleccion                                                                   Boolean?
+  PaqueteLargoCm                                                                        Decimal?                                @db.Decimal(10, 2)
+  PaqueteAnchoCm                                                                        Decimal?                                @db.Decimal(10, 2)
+  PaqueteAltoCm                                                                         Decimal?                                @db.Decimal(10, 2)
+  PaquetePesoKg                                                                         Decimal?                                @db.Decimal(10, 3)
+  DestinatarioNombreCompleto                                                            String?                                 @db.NVarChar(200)
+  DestinatarioCelular                                                                   String?                                 @db.NVarChar(30)
+  DestinatarioCorreo                                                                    String?                                 @db.NVarChar(320)
+  GASOAL_Cat_Carrier                                                                    GASOAL_Cat_Carrier                      @relation(fields: [IdCarrier], references: [Id], onUpdate: NoAction, map: "FK_GASOAL_SolicitudesGuias_Carrier")
+  GASOAL_Cat_Paqueterias                                                                GASOAL_Cat_Paqueterias                  @relation(fields: [IdPaqueteria], references: [IdPaqueteria], onUpdate: NoAction, map: "FK_GASOAL_SolicitudesGuias_Paqueteria")
+  GASOCO_Cat_Usuarios_GASOAL_SolicitudesGuias_IdUsuarioSolicitanteToGASOCO_Cat_Usuarios GASOCO_Cat_Usuarios                     @relation("GASOAL_SolicitudesGuias_IdUsuarioSolicitanteToGASOCO_Cat_Usuarios", fields: [IdUsuarioSolicitante], references: [IdUsuario], onUpdate: NoAction, map: "FK_GASOAL_SolicitudesGuias_Solicitante")
+  GASOCO_Cat_Usuarios_GASOAL_SolicitudesGuias_IdUsuarioCanceloToGASOCO_Cat_Usuarios     GASOCO_Cat_Usuarios?                    @relation("GASOAL_SolicitudesGuias_IdUsuarioCanceloToGASOCO_Cat_Usuarios", fields: [IdUsuarioCancelo], references: [IdUsuario], onDelete: NoAction, onUpdate: NoAction, map: "FK_GASOAL_SolicitudesGuias_UsuarioCancelo")
+  GASOCO_Cat_Usuarios_GASOAL_SolicitudesGuias_IdUsuarioAsignoGuiaToGASOCO_Cat_Usuarios  GASOCO_Cat_Usuarios?                    @relation("GASOAL_SolicitudesGuias_IdUsuarioAsignoGuiaToGASOCO_Cat_Usuarios", fields: [IdUsuarioAsignoGuia], references: [IdUsuario], onDelete: NoAction, onUpdate: NoAction, map: "FK_GASOAL_SolicitudesGuias_UsuarioGuia")
+  GASOAL_CatalogoAlmacenes                                                              GASOAL_CatalogoAlmacenes                @relation(fields: [IdXdock], references: [Id], onUpdate: NoAction, map: "FK_GASOAL_SolicitudesGuias_Xdock")
+  GASOAL_SolicitudesGuiasArchivos                                                       GASOAL_SolicitudesGuiasArchivos[]
+  GASOAL_SolicitudesGuiasDetalle                                                        GASOAL_SolicitudesGuiasDetalle[]
+  GASOAL_SolicitudesGuiasHistorial                                                      GASOAL_SolicitudesGuiasHistorial[]
+  GASOAL_SolicitudesGuiasNotificaciones                                                 GASOAL_SolicitudesGuiasNotificaciones[]
+
+  @@index([EstatusSolicitud, FechaHoraProgramada], map: "IX_GASOAL_SG_Estatus_Fecha")
+  @@index([EstatusSolicitudPago, FechaCreacion], map: "IX_GASOAL_SG_Pago")
+  @@index([IdUsuarioSolicitante, FechaCreacion], map: "IX_GASOAL_SG_Solicitante")
+  @@schema("dbo")
+}
+
+model GASOAL_SolicitudesGuiasArchivos {
+  IdArchivo               BigInt                  @id(map: "PK_GASOAL_SolicitudesGuiasArchivos") @default(autoincrement())
+  IdSolicitudGuia         Int
+  TipoArchivo             String                  @default("ARCHIVO_ENVIO", map: "DF_GASOAL_SGArchivos_Tipo") @db.VarChar(30)
+  NombreOriginal          String                  @db.NVarChar(260)
+  NombreAlmacenado        String                  @db.NVarChar(260)
+  RutaArchivo             String
+  MimeType                String?                 @db.VarChar(150)
+  Extension               String?                 @db.VarChar(20)
+  TamanioBytes            BigInt?
+  HashSha256              String?                 @db.Char(64)
+  IdUsuarioCarga          Int
+  FechaCarga              DateTime                @default(dbgenerated("sysdatetime()"), map: "DF_GASOAL_SGArchivos_FechaCarga")
+  Activo                  Boolean                 @default(true, map: "DF_GASOAL_SGArchivos_Activo")
+  GASOAL_SolicitudesGuias GASOAL_SolicitudesGuias @relation(fields: [IdSolicitudGuia], references: [IdSolicitudGuia], onUpdate: NoAction, map: "FK_GASOAL_SGArchivos_Solicitud")
+  GASOCO_Cat_Usuarios     GASOCO_Cat_Usuarios     @relation(fields: [IdUsuarioCarga], references: [IdUsuario], onUpdate: NoAction, map: "FK_GASOAL_SGArchivos_Usuario")
+
+  @@index([IdSolicitudGuia, Activo, FechaCarga], map: "IX_GASOAL_SGArchivos_Solicitud")
+  @@schema("dbo")
+}
+
+model GASOAL_SolicitudesGuiasDetalle {
+  IdDetalle                       Int                              @id(map: "PK_GASOAL_SolicitudesGuiasDetalle") @default(autoincrement())
+  IdSolicitudGuia                 Int
+  OrigenPieza                     String                           @db.VarChar(20)
+  IdItemEricsson                  Int?
+  Codigo                          String?                          @db.NVarChar(100)
+  SerialNumber                    String?                          @db.NVarChar(150)
+  Descripcion                     String                           @db.NVarChar(300)
+  Cantidad                        Int
+  CantidadDisponibleAlSolicitar   Int?
+  Bodega                          String?                          @db.NVarChar(100)
+  NombreSitio                     String?                          @db.NVarChar(200)
+  Region                          String?                          @db.NVarChar(100)
+  Proceso                         String?                          @db.NVarChar(100)
+  FechaCreacion                   DateTime                         @default(dbgenerated("sysdatetime()"), map: "DF_GASOAL_SGDetalle_FechaCreacion")
+  IdUsuarioCreacion               Int
+  Activo                          Boolean                          @default(true, map: "DF_GASOAL_SGDetalle_Activo")
+  GASOAL_InventarioEricsson_Items GASOAL_InventarioEricsson_Items? @relation(fields: [IdItemEricsson], references: [id_item], onDelete: NoAction, onUpdate: NoAction, map: "FK_GASOAL_SGDetalle_InventarioEricsson")
+  GASOAL_SolicitudesGuias         GASOAL_SolicitudesGuias          @relation(fields: [IdSolicitudGuia], references: [IdSolicitudGuia], onUpdate: NoAction, map: "FK_GASOAL_SGDetalle_Solicitud")
+  GASOCO_Cat_Usuarios             GASOCO_Cat_Usuarios              @relation(fields: [IdUsuarioCreacion], references: [IdUsuario], onUpdate: NoAction, map: "FK_GASOAL_SGDetalle_Usuario")
+
+  @@index([IdSolicitudGuia, Activo], map: "IX_GASOAL_SGDetalle_Solicitud")
+  @@schema("dbo")
+}
+
+model GASOAL_SolicitudesGuiasHistorial {
+  IdHistorial             BigInt                  @id(map: "PK_GASOAL_SolicitudesGuiasHistorial") @default(autoincrement())
+  IdSolicitudGuia         Int
+  Accion                  String                  @db.VarChar(50)
+  EstatusAnterior         String?                 @db.VarChar(30)
+  EstatusNuevo            String?                 @db.VarChar(30)
+  Descripcion             String?
+  DatosJson               String?                 @db.NVarChar(Max)
+  IdUsuarioAccion         Int?
+  IpOrigen                String?                 @db.VarChar(45)
+  UserAgent               String?                 @db.NVarChar(500)
+  FechaAccion             DateTime                @default(dbgenerated("sysdatetime()"), map: "DF_GASOAL_SGHistorial_FechaAccion")
+  GASOAL_SolicitudesGuias GASOAL_SolicitudesGuias @relation(fields: [IdSolicitudGuia], references: [IdSolicitudGuia], onUpdate: NoAction, map: "FK_GASOAL_SGHistorial_Solicitud")
+  GASOCO_Cat_Usuarios     GASOCO_Cat_Usuarios?    @relation(fields: [IdUsuarioAccion], references: [IdUsuario], onDelete: NoAction, onUpdate: NoAction, map: "FK_GASOAL_SGHistorial_Usuario")
+
+  @@index([IdSolicitudGuia, FechaAccion], map: "IX_GASOAL_SGHistorial_Solicitud")
+  @@schema("dbo")
+}
+
+model GASOAL_SolicitudesGuiasNotificaciones {
+  IdNotificacion          BigInt                  @id(map: "PK_GASOAL_SolicitudesGuiasNotificaciones") @default(autoincrement())
+  IdSolicitudGuia         Int
+  TipoNotificacion        String                  @db.VarChar(50)
+  Destinatario            String                  @db.NVarChar(320)
+  DestinatariosCopia      String?
+  Asunto                  String                  @db.NVarChar(300)
+  CuerpoHtml              String                  @db.NVarChar(Max)
+  Estatus                 String                  @default("PENDIENTE", map: "DF_GASOAL_SGNotificaciones_Estatus") @db.VarChar(20)
+  Intentos                Int                     @default(0, map: "DF_GASOAL_SGNotificaciones_Intentos")
+  UltimoError             String?                 @db.NVarChar(2000)
+  FechaDisponible         DateTime                @default(dbgenerated("sysdatetime()"), map: "DF_GASOAL_SGNotificaciones_FechaDisponible")
+  FechaUltimoIntento      DateTime?
+  FechaEnvio              DateTime?
+  FechaCreacion           DateTime                @default(dbgenerated("sysdatetime()"), map: "DF_GASOAL_SGNotificaciones_FechaCreacion")
+  GASOAL_SolicitudesGuias GASOAL_SolicitudesGuias @relation(fields: [IdSolicitudGuia], references: [IdSolicitudGuia], onUpdate: NoAction, map: "FK_GASOAL_SGNotificaciones_Solicitud")
+
+  @@index([Estatus, FechaDisponible, Intentos], map: "IX_GASOAL_SGNotificaciones_Pendientes")
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1172,30 +1852,108 @@ model GASOAL_Tipo_HW {
   tipo_hw String? @db.VarChar(50)
 
   @@ignore
+  @@schema("dbo")
+}
+
+model GASOAL_VinculosFolioValidacion {
+  Id                 Int       @id(map: "GASOAL_VFV_PK") @default(autoincrement())
+  TenantID           String    @db.UniqueIdentifier
+  MovimientoId       Int       @unique(map: "GASOAL_VFV_UX_Mov")
+  MovFolio           String    @db.VarChar(100)
+  Sitio              String    @db.VarChar(150)
+  FolioValidacion    String    @db.VarChar(150)
+  FechaRegistro      DateTime  @default(now(), map: "DF_VFV_FechaRegistro") @db.DateTime
+  FechaActualizacion DateTime? @db.DateTime
+  FolioEntrada       String?   @db.VarChar(150)
+  FolioSalida        String?   @db.VarChar(150)
+  Tenants            Tenants   @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "GASOAL_VFV_Tenant_FK")
+
+  @@index([TenantID, FolioValidacion], map: "IX_VFV_Tenant_FolioValidacion")
+  @@schema("dbo")
 }
 
 model GASOAL_VMAlmacenes {
-  Id                 Int                  @id(map: "GASOAL_VMAlmacenes_PK") @default(autoincrement())
-  Nombre             String               @unique(map: "GASOAL_VMAlmacenes_UNIQUE") @db.VarChar(150)
-  GASOAL_VMaterialES GASOAL_VMaterialES[]
+  Id          Int           @id(map: "GASOAL_VMAlmacenes_PK") @default(autoincrement())
+  Nombre      String        @db.VarChar(150)
+  TenantID    String?       @db.UniqueIdentifier
+  Activo      Boolean       @default(true, map: "DF_GASOAL_VMAlmacenes_Activo")
+  GASOAL_VMES GASOAL_VMES[]
+
+  @@unique([TenantID, Nombre], map: "GASOAL_VMAlmacenes_UQ")
+  @@schema("dbo")
+}
+
+model GASOAL_VMES {
+  Id                       Int                      @id(map: "GASOAL_VMES_PK") @default(autoincrement())
+  TenantID                 String                   @db.UniqueIdentifier
+  IdUsuario                Int
+  Folio                    String                   @db.VarChar(30)
+  IdProyecto               Int                      @db.SmallInt
+  IdTipoMaterial           Int                      @db.SmallInt
+  NombreSitio              String                   @db.VarChar(200)
+  IdSitio                  String                   @db.VarChar(100)
+  CuentaCliente            String                   @db.VarChar(100)
+  Fecha                    DateTime                 @db.DateTime
+  AspNombre                String                   @db.VarChar(100)
+  AspFirma                 String                   @db.VarChar(Max)
+  NombreContacto           String                   @db.VarChar(100)
+  IdCarrier                Int                      @db.SmallInt
+  OtroCarrier              String?                  @db.VarChar(150)
+  IdRegion                 Int                      @db.SmallInt
+  TotalPiezas              Int                      @default(0, map: "DF_VMES_TotalPiezas")
+  PlacasTransporte         String                   @db.VarChar(100)
+  MaterialEnTransporteFoto String                   @db.VarChar(100)
+  MaterialDescargadoFoto   String?                  @db.VarChar(100)
+  TransporteFoto           String                   @db.VarChar(100)
+  PlacasFoto               String                   @db.VarChar(100)
+  Notas                    String?                  @db.VarChar(350)
+  Qr                       String                   @db.VarChar(100)
+  FechaCaptura             DateTime                 @default(now(), map: "DF_VMES_FechaCaptura") @db.DateTime
+  Status                   Int                      @default(0, map: "DF_VMES_Status") @db.SmallInt
+  FechaEdicion             DateTime?                @db.DateTime
+  NumTarimas               Int                      @default(0, map: "DF_VMES_NumTarimas")
+  Tarimas                  String?                  @db.VarChar(Max)
+  Cancelada                Boolean                  @default(false, map: "DF_VMES_Cancelada")
+  IdAlmacenDestino         Int
+  MaterialDocumentos       String?                  @db.VarChar(Max)
+  IdUsuarioEditorWeb       Int?
+  ES                       Boolean                  @default(true, map: "DF_VMES_ES")
+  Cat_Carriers             Cat_Carriers             @relation(fields: [IdCarrier], references: [Id], onUpdate: NoAction, map: "GASOAL_VMES_Carrier_FK")
+  GASOAL_VMAlmacenes       GASOAL_VMAlmacenes       @relation(fields: [IdAlmacenDestino], references: [Id], onUpdate: NoAction, map: "GASOAL_VMES_GASOAL_VMAlmacenes_FK")
+  Cat_VMProyecto           Cat_VMProyecto           @relation(fields: [IdProyecto], references: [Id], onUpdate: NoAction, map: "GASOAL_VMES_Proyecto_FK")
+  Tenants                  Tenants                  @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "GASOAL_VMES_Tenant_FK")
+  Cat_VMTiposMaterial      Cat_VMTiposMaterial      @relation(fields: [IdTipoMaterial], references: [Id], onUpdate: NoAction, map: "GASOAL_VMES_TipoMaterial_FK")
+  GASOAL_VMPiezasEstadoF   GASOAL_VMPiezasEstadoF[]
+  GASOAL_VMPiezasMotivo    GASOAL_VMPiezasMotivo[]
+
+  @@unique([TenantID, Folio], map: "GASOAL_VMES_UQ_Folio")
+  @@index([TenantID, FechaCaptura(sort: Desc)], map: "IX_VMES_Tenant_FechaCaptura")
+  @@index([TenantID, IdUsuario], map: "IX_VMES_Tenant_Usuario")
+  @@schema("dbo")
 }
 
 model GASOAL_VMPiezasEstadoF {
-  Id            Int                @id(map: "GASOAL_VMEPiezasEstadoF_PK") @default(autoincrement())
+  Id            Int           @id(map: "GASOAL_VMPiezasEstadoF_PK") @default(autoincrement())
   IdVM          Int
-  Clave         String             @db.Char(1)
-  Piezas        String             @db.VarChar(300)
-  Cat_VMEFisico Cat_VMEFisico      @relation(fields: [Clave], references: [Clave], map: "GASOAL_VMEPiezasEstadoF_Cat_DevEntEFisico_FK")
-  GASOAL_VMES   GASOAL_VMaterialES @relation(fields: [IdVM], references: [Id], onDelete: Cascade, map: "GASOAL_VMPiezasEstadoF_GASOAL_VMES_FK")
+  Clave         String        @db.Char(1)
+  Piezas        String        @db.VarChar(300)
+  Cat_VMEFisico Cat_VMEFisico @relation(fields: [Clave], references: [Clave], map: "GASOAL_VMPiezasEstadoF_Cat_FK")
+  GASOAL_VMES   GASOAL_VMES   @relation(fields: [IdVM], references: [Id], onUpdate: NoAction, map: "GASOAL_VMPiezasEstadoF_VMES_FK")
+
+  @@index([IdVM], map: "IX_VMPE_IdVM")
+  @@schema("dbo")
 }
 
 model GASOAL_VMPiezasMotivo {
-  Id           Int                @id(map: "GASOAL_VMEPiezasMotivo_PK") @default(autoincrement())
+  Id           Int          @id(map: "GASOAL_VMPiezasMotivo_PK") @default(autoincrement())
   IdVM         Int
-  Clave        Int                @db.SmallInt
-  Piezas       String             @db.VarChar(300)
-  Cat_VMMotivo Cat_VMMotivo       @relation(fields: [Clave], references: [Id], onUpdate: NoAction, map: "GASOAL_VMEPiezasMotivo_Cat_DevEntMotivo_FK")
-  GASOAL_VMES  GASOAL_VMaterialES @relation(fields: [IdVM], references: [Id], onDelete: Cascade, map: "GASOAL_VMPiezasMotivo_GASOAL_VMES_FK")
+  Clave        Int          @db.SmallInt
+  Piezas       String       @db.VarChar(300)
+  Cat_VMMotivo Cat_VMMotivo @relation(fields: [Clave], references: [Id], onUpdate: NoAction, map: "GASOAL_VMPiezasMotivo_Cat_FK")
+  GASOAL_VMES  GASOAL_VMES  @relation(fields: [IdVM], references: [Id], onUpdate: NoAction, map: "GASOAL_VMPiezasMotivo_VMES_FK")
+
+  @@index([IdVM], map: "IX_VMPM_IdVM")
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1208,6 +1966,7 @@ model GASOAUTOS_Bitacora_Asignacion_Cambio_Auto {
   IdUsuarioRealiza Int?
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1248,6 +2007,7 @@ model GASOAUTOS_Cat_Autos {
   correo                   String?   @db.NVarChar(150)
 
   @@ignore
+  @@schema("dbo")
 }
 
 model GASOAUTOS_Cat_Autos_Files {
@@ -1255,6 +2015,8 @@ model GASOAUTOS_Cat_Autos_Files {
   PolizaSeguro       String? @db.VarChar(500)
   TarjetaCirculacion String? @db.VarChar(500)
   ResponsivaVehiculo String? @db.VarChar(500)
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1291,6 +2053,7 @@ model GASOAUTOS_Cat_Autos_PRUEBA {
   EstatusConductor          Int?
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1307,6 +2070,7 @@ model GASOAUTOS_Cat_Hallazgos {
   Estatus          Int      @default(0, map: "DF_GASOAUTOS_Cat_Hallazgos_Estatus")
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1323,6 +2087,7 @@ model GASOAUTOS_Cat_Usuarios {
   IsAdmin    Int?      @default(0, map: "DEFAULT_GASOAUTOS_Cat_Usuarios_IsAdmin")
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1335,6 +2100,7 @@ model GASOAUTOS_Json_Autos_Plantilla_Detalle {
   IdAuto         Int?
 
   @@ignore
+  @@schema("dbo")
 }
 
 model GASOAUTOS_Kmsemanal {
@@ -1347,6 +2113,8 @@ model GASOAUTOS_Kmsemanal {
   IdUsuario       Int?
   TarjetaFoto     String?   @db.VarChar(150)
   FechaCaptura    DateTime? @default(now(), map: "DF__GASOAUTOS__Fecha__388F4914") @db.DateTime
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1358,6 +2126,7 @@ model GASOAUTOS_Relacion_Usuario_Auto {
   estatus         Int?
 
   @@ignore
+  @@schema("dbo")
 }
 
 model GASOCO_Cat_Clientes {
@@ -1368,6 +2137,8 @@ model GASOCO_Cat_Clientes {
   ClienteDomicilio       String? @db.Text
   ClienteNumeroProveedor String? @db.NVarChar(20)
   ClienteContacto        String? @default("[{}]", map: "DEFAULT_GASOCO_Cat_Clientes_ClienteContacto") @db.Text
+
+  @@schema("dbo")
 }
 
 model GASOCO_Cat_ContactoEmer {
@@ -1376,6 +2147,8 @@ model GASOCO_Cat_ContactoEmer {
   IdParentesco       Int?
   TelefonoEmergencia String? @db.VarChar(500)
   IdUsuario          Int?
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1408,6 +2181,7 @@ model GASOCO_Cat_Contratistas {
   Estatus              String? @db.NVarChar(50)
 
   @@ignore
+  @@schema("dbo")
 }
 
 model GASOCO_Cat_Cotizaciones {
@@ -1431,6 +2205,8 @@ model GASOCO_Cat_Cotizaciones {
   CotizacionIdUsuarioResponsable Int?
   CotizacionTerminosCondiciones  String?   @default("{}", map: "DEFAULT_GASOCO_Cat_Cotizaciones_CotizacionTerminosCondiciones") @db.Text
   TenantID                       String    @default(dbgenerated("00000000-0000-0000-0000-000000000000"), map: "DF__GASOCO_Ca__Tenan__6621099A") @db.UniqueIdentifier
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1439,21 +2215,28 @@ model GASOCO_Cat_Estatus {
   nombreEstatus String? @db.VarChar(100)
 
   @@ignore
+  @@schema("dbo")
 }
 
 model GASOCO_Cat_Parentesco {
   IdParentesco     Int     @id(map: "PK__GASOCO_C__B8A279C272E0D633") @default(autoincrement())
   NombreParentesco String? @db.VarChar(250)
+
+  @@schema("dbo")
 }
 
 model GASOCO_Cat_Perfiles {
   Id          Int     @id(map: "PK_GASOCO_Cat_Perfiles") @default(autoincrement())
   Descripcion String? @db.NVarChar(50)
+
+  @@schema("dbo")
 }
 
 model GASOCO_Cat_Permisos {
   Id     Int     @id(map: "PK__GASOCO_C__3214EC07378E2F32") @default(autoincrement())
   Nombre String? @db.VarChar(200)
+
+  @@schema("dbo")
 }
 
 model GASOCO_Cat_Proyectos {
@@ -1509,6 +2292,8 @@ model GASOCO_Cat_Proyectos {
   totalfacturado               Decimal?  @db.Decimal(18, 2)
   foliofacturaPR               Int?
   TenantID                     String    @default(dbgenerated("00000000-0000-0000-0000-000000000000"), map: "DF__GASOCO_Ca__Tenan__652CE561") @db.UniqueIdentifier
+
+  @@schema("dbo")
 }
 
 model GASOCO_Cat_Roles {
@@ -1517,6 +2302,8 @@ model GASOCO_Cat_Roles {
   IdPuesto       Int?
   IdEstatus      Int?
   Descripcion    String? @db.VarChar(200)
+
+  @@schema("dbo")
 }
 
 model GASOCO_Cat_SolGastos {
@@ -1553,6 +2340,8 @@ model GASOCO_Cat_SolGastos {
   Archivo                      Bytes?
   NombreArchivo                String?   @db.NVarChar(255)
   TipoArchivo                  String?   @db.NVarChar(50)
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1561,6 +2350,7 @@ model GASOCO_Cat_Talleres {
   NombreTaller String @db.VarChar(100)
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1569,6 +2359,7 @@ model GASOCO_Cat_TipoSangre {
   Descripcion String? @db.NVarChar(50)
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1577,43 +2368,61 @@ model GASOCO_Cat_UnidadCot {
   NombreUnidadCot String? @db.VarChar(500)
 
   @@ignore
+  @@schema("dbo")
 }
 
 model GASOCO_Cat_Usuarios {
-  IdUsuario              Int       @id(map: "PK_GASOCO_Cat_Usuarios") @default(autoincrement())
-  Nombre                 String    @db.NVarChar(255)
-  NumCelular             BigInt?
-  Email                  String    @db.NVarChar(255)
-  Usuario                String    @db.NVarChar(125)
-  Password               String    @db.NVarChar(14)
-  FechaAlta              DateTime  @default(now(), map: "DF_GASOCO_Cat_Usuarios_FechaAlta")
-  IdPerfil               Int?
-  Estatus                String    @default("A", map: "DEFAULT_GASOCO_Cat_Usuarios_Estatus") @db.Char(1)
-  isAdmin                Int?      @default(0, map: "DF__GASOCO_Ca__isAdm__507BE13E")
-  IdArea                 Int?
-  IdSuperior             Int?
-  IdBaseCiudad           Int?
-  Sueldo                 Decimal?  @db.Decimal(10, 2)
-  ContactosPersonales    String?   @db.VarChar(1000)
-  TieneLecencia          Int?
-  FechaCaducidadLicencia DateTime? @db.DateTime
-  FechaDC3               DateTime? @db.DateTime
-  FechaNacimiento        DateTime? @db.DateTime
-  IdTipoSangre           Int?
-  IdRegion               Int?
-  IdDepartamento         Int?
-  IdPuesto               Int?
-  IdBaja                 Int?
-  CorreoPersonal         String?   @db.VarChar(255)
-  ContactoEmergencia     String?   @db.VarChar(200)
-  NumCelularSecundario   String?   @db.VarChar(200)
-  CURP                   String?   @db.VarChar(250)
-  RFC                    String?   @db.VarChar(250)
-  NSS                    String?   @db.VarChar(250)
-  idSexo                 Int?
-  TokenFirebase          String?   @db.VarChar(Max)
-  IdEmpresa              Int       @default(1, map: "DF__GASOCO_Ca__IdEmp__665613C4") @db.SmallInt
-  TenantID               String    @default(dbgenerated("00000000-0000-0000-0000-000000000000"), map: "DF__GASOCO_Ca__Tenan__60683044") @db.UniqueIdentifier
+  IdUsuario                                                                                 Int                                @id(map: "PK_GASOCO_Cat_Usuarios") @default(autoincrement())
+  Nombre                                                                                    String                             @db.NVarChar(255)
+  NumCelular                                                                                BigInt?
+  Email                                                                                     String                             @db.NVarChar(255)
+  Usuario                                                                                   String                             @db.NVarChar(125)
+  Password                                                                                  String?                            @db.NVarChar(Max)
+  FechaAlta                                                                                 DateTime                           @default(now(), map: "DF_GASOCO_Cat_Usuarios_FechaAlta")
+  IdPerfil                                                                                  Int?
+  Estatus                                                                                   String                             @default("A", map: "DEFAULT_GASOCO_Cat_Usuarios_Estatus") @db.Char(1)
+  isAdmin                                                                                   Int?                               @default(0, map: "DF__GASOCO_Ca__isAdm__507BE13E")
+  IdArea                                                                                    Int?
+  IdSuperior                                                                                Int?
+  IdBaseCiudad                                                                              Int?
+  Sueldo                                                                                    Decimal?                           @db.Decimal(10, 2)
+  ContactosPersonales                                                                       String?                            @db.VarChar(1000)
+  TieneLecencia                                                                             Int?
+  FechaCaducidadLicencia                                                                    DateTime?                          @db.DateTime
+  FechaDC3                                                                                  DateTime?                          @db.DateTime
+  FechaNacimiento                                                                           DateTime?                          @db.DateTime
+  IdTipoSangre                                                                              Int?
+  IdRegion                                                                                  Int?
+  IdDepartamento                                                                            Int?
+  IdPuesto                                                                                  Int?
+  IdBaja                                                                                    Int?
+  CorreoPersonal                                                                            String?                            @db.VarChar(255)
+  ContactoEmergencia                                                                        String?                            @db.VarChar(200)
+  NumCelularSecundario                                                                      String?                            @db.VarChar(200)
+  CURP                                                                                      String?                            @db.VarChar(250)
+  RFC                                                                                       String?                            @db.VarChar(250)
+  NSS                                                                                       String?                            @db.VarChar(250)
+  idSexo                                                                                    Int?
+  TokenFirebase                                                                             String?                            @db.VarChar(Max)
+  IdEmpresa                                                                                 Int                                @default(1, map: "DF__GASOCO_Ca__IdEmp__665613C4") @db.SmallInt
+  TenantID                                                                                  String                             @default(dbgenerated("00000000-0000-0000-0000-000000000000"), map: "DF__GASOCO_Ca__Tenan__60683044") @db.UniqueIdentifier
+  EmployeeID                                                                                Int
+  GASOAL_LM                                                                                 GASOAL_LM[]
+  GASOAL_SolicitudesGuias_GASOAL_SolicitudesGuias_IdUsuarioSolicitanteToGASOCO_Cat_Usuarios GASOAL_SolicitudesGuias[]          @relation("GASOAL_SolicitudesGuias_IdUsuarioSolicitanteToGASOCO_Cat_Usuarios")
+  GASOAL_SolicitudesGuias_GASOAL_SolicitudesGuias_IdUsuarioCanceloToGASOCO_Cat_Usuarios     GASOAL_SolicitudesGuias[]          @relation("GASOAL_SolicitudesGuias_IdUsuarioCanceloToGASOCO_Cat_Usuarios")
+  GASOAL_SolicitudesGuias_GASOAL_SolicitudesGuias_IdUsuarioAsignoGuiaToGASOCO_Cat_Usuarios  GASOAL_SolicitudesGuias[]          @relation("GASOAL_SolicitudesGuias_IdUsuarioAsignoGuiaToGASOCO_Cat_Usuarios")
+  GASOAL_SolicitudesGuiasArchivos                                                           GASOAL_SolicitudesGuiasArchivos[]
+  GASOAL_SolicitudesGuiasDetalle                                                            GASOAL_SolicitudesGuiasDetalle[]
+  GASOAL_SolicitudesGuiasHistorial                                                          GASOAL_SolicitudesGuiasHistorial[]
+  Employees                                                                                 Employees                          @relation(fields: [TenantID, EmployeeID], references: [TenantID, EmployeeID], onUpdate: NoAction, map: "FK_Usuarios_Employee")
+  UserViews                                                                                 UserViews[]
+  WMS_Warehouses_WMS_Warehouses_TenantID_CoordinatorUserIDToGASOCO_Cat_Usuarios             WMS_Warehouses[]                   @relation("WMS_Warehouses_TenantID_CoordinatorUserIDToGASOCO_Cat_Usuarios")
+  WMS_Warehouses_WMS_Warehouses_TenantID_ResponsibleUserIDToGASOCO_Cat_Usuarios             WMS_Warehouses[]                   @relation("WMS_Warehouses_TenantID_ResponsibleUserIDToGASOCO_Cat_Usuarios")
+
+  @@unique([TenantID, IdUsuario], map: "UX_GASOCO_Cat_Usuarios_Tenant_IdUsuario")
+  @@unique([TenantID, EmployeeID], map: "UX_Usuarios_Tenant_Employee")
+  @@unique([TenantID, Usuario], map: "UX_Usuarios_Tenant_Usuario")
+  @@schema("dbo")
 }
 
 model GASOCO_Cat_Usuarios_Files {
@@ -1634,6 +2443,8 @@ model GASOCO_Cat_Usuarios_Files {
   Otro                 String? @db.VarChar(200)
   AcuerdoConfidencial  String? @db.VarChar(500)
   TenantID             String  @default(dbgenerated("00000000-0000-0000-0000-000000000000"), map: "DF__GASOCO_Ca__Tenan__625078B6") @db.UniqueIdentifier
+
+  @@schema("dbo")
 }
 
 model GASOCO_CtlVeh_Historico {
@@ -1645,16 +2456,22 @@ model GASOCO_CtlVeh_Historico {
   Fecha         DateTime? @default(now(), map: "DF__GASOCO_Ct__Fecha__49B9D516") @db.SmallDateTime
   ValorAnterior String?   @db.NVarChar(Max)
   ValorNuevo    String?   @db.NVarChar(Max)
+
+  @@schema("dbo")
 }
 
 model GASOCO_RH_Area {
   IdArea     Int    @id(map: "PK__GASOCO_R__2FC141AADA953C1B") @default(autoincrement())
   NombreArea String @db.VarChar(255)
+
+  @@schema("dbo")
 }
 
 model GASOCO_RH_Departamento {
   IdDepartamento     Int    @id(map: "PK__GASOCO_R__787A433D5C49DE54") @default(autoincrement())
   NombreDepartamento String @db.VarChar(200)
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1663,6 +2480,7 @@ model GASOCO_RH_Puesto {
   NombrePuesto String @db.VarChar(255)
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1720,6 +2538,7 @@ model GASOGASTOVEH {
   TenantID              String    @default(dbgenerated("00000000-0000-0000-0000-000000000000"), map: "DF__GASOGASTO__Tenan__6809520C") @db.UniqueIdentifier
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1775,12 +2594,15 @@ model GASOGASTOVEH_Backup {
   Historico             String?   @db.VarChar(Max)
 
   @@ignore
+  @@schema("dbo")
 }
 
 model GASOGASTOVEH_Cat_Responsable {
   IdResposable     Int     @id(map: "GASOGASTOVEH_Cat_Responsable_PK") @default(autoincrement())
   NombreResposable String? @db.VarChar(500)
   IdUsuario        Int?
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1789,11 +2611,14 @@ model GASOGASTOVEH_Cat_Solicitud {
   NombreSolicitud String? @db.VarChar(500)
 
   @@ignore
+  @@schema("dbo")
 }
 
 model GASOGE_Cat_Status {
   IdEstatus     Int    @id(map: "PK__GASOGE_C__B32BA1C71D8C2F9D") @default(autoincrement())
   NombreEstatus String @db.VarChar(200)
+
+  @@schema("dbo")
 }
 
 model GASOGE_Gestion_Documentos {
@@ -1803,6 +2628,8 @@ model GASOGE_Gestion_Documentos {
   rutaEvidencia String?   @db.NVarChar(300)
   nombreArchivo String?   @db.NVarChar(150)
   fechaSubida   DateTime? @default(now(), map: "DF__GASOGE_Ge__fecha__78DED853") @db.DateTime
+
+  @@schema("dbo")
 }
 
 model GASOGE_Gestion_Proyectos {
@@ -1820,21 +2647,29 @@ model GASOGE_Gestion_Proyectos {
   IdCoordinador Int?
   Comentarios   String?   @db.VarChar(Max)
   IdEstatus     Int?
+
+  @@schema("dbo")
 }
 
 model GASOSOL_Aprobadores {
   IdAprobador     Int    @id(map: "PK__GASOSOL___0ADB88E3B4BFD2BC") @default(autoincrement())
   NombreAprobador String @db.VarChar(255)
+
+  @@schema("dbo")
 }
 
 model GASOSOL_BancoGastos {
   IdBanco     Int    @id(map: "PK__GASOCO_C__2D3F553E4FBB53F0") @default(autoincrement())
   NombreBanco String @db.VarChar(200)
+
+  @@schema("dbo")
 }
 
 model GASOSOL_DescripcionServGastos {
   IdDescripcionServ     Int    @id(map: "PK__GASOCO_C__BDF1A141732A4B1B") @default(autoincrement())
   NombreDescripcionServ String @db.VarChar(200)
+
+  @@schema("dbo")
 }
 
 model GASOSOL_SolGastos {
@@ -1874,16 +2709,22 @@ model GASOSOL_SolGastos {
   IdContratista         Int?
   MontoNoDeducible      Float?
   TenantID              String    @default(dbgenerated("00000000-0000-0000-0000-000000000000"), map: "DF__GASOSOL_S__Tenan__67152DD3") @db.UniqueIdentifier
+
+  @@schema("dbo")
 }
 
 model GASOSOL_TipoSolGastos {
   IdTipoSolicitud Int    @id(map: "PK__GASOCO_C__D42020776FB48DA8") @default(autoincrement())
   NombreSolicitud String @db.VarChar(200)
+
+  @@schema("dbo")
 }
 
 model GASOVac_CatTipoSol {
   IdTipo      Int     @id(map: "PK__GASOVac___9E3A29A5E8774272") @default(autoincrement())
   Descripcion String? @db.VarChar(500)
+
+  @@schema("dbo")
 }
 
 model GASOVac_Sol {
@@ -1898,6 +2739,8 @@ model GASOVac_Sol {
   IdTipo          Int
   Comentarios     String?  @db.VarChar(Max)
   IdAprobador     Int?
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1909,6 +2752,7 @@ model Log_Cancelaciones {
   FechaCancelacion  DateTime? @db.SmallDateTime
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1920,6 +2764,7 @@ model Log_Registro_WO_Plantilla {
   fechaHoraUltimoRegistro DateTime? @db.SmallDateTime
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1930,6 +2775,35 @@ model Log_WO {
   IdEstadoWO      Int
 
   @@ignore
+  @@schema("dbo")
+}
+
+model MfaChallenges {
+  ChallengeId String   @id(map: "PK_MfaChallenges") @db.NVarChar(100)
+  TenantId    String   @db.NVarChar(36)
+  TenantSlug  String   @db.NVarChar(255)
+  TenantName  String   @db.NVarChar(255)
+  Username    String   @db.NVarChar(50)
+  UserId      Int
+  Email       String?  @db.NVarChar(250)
+  Status      String   @default("PENDING", map: "DF__MfaChalle__Statu__2235F3A1") @db.NVarChar(20)
+  Attempts    Int      @default(0, map: "DF__MfaChalle__Attem__232A17DA")
+  MaxAttempts Int      @default(5, map: "DF__MfaChalle__MaxAt__241E3C13")
+  ExpiresAt   DateTime
+  CreatedAt   DateTime @default(dbgenerated("sysutcdatetime()"), map: "DF__MfaChalle__Creat__2512604C")
+
+  @@unique([UserId, TenantId], map: "IX_MfaChallenges_UserId")
+  @@index([ExpiresAt], map: "IX_MfaChallenges_ExpiresAt")
+  @@index([UserId, TenantId], map: "IX_MfaChallenges_UserId_TenantId")
+  @@schema("Security")
+}
+
+model MigrLegacyUserExtras {
+  IdUsuario  Int     @id(map: "PK_MigrLegacyUserExtras")
+  EmployeeID Int?
+  ExtrasJson String? @db.NVarChar(Max)
+
+  @@schema("dbo")
 }
 
 model Permisos_Paquetes {
@@ -1938,6 +2812,72 @@ model Permisos_Paquetes {
   IdModulo     Int?
   IdSec        String?       @db.NVarChar(10)
   Cat_Paquetes Cat_Paquetes? @relation(fields: [IdPaquete], references: [IdPaquete], onDelete: NoAction, onUpdate: NoAction, map: "FK_Cat_Paquetes_IdPaquete")
+
+  @@schema("dbo")
+}
+
+model PlanFeatures {
+  PlanFeatureId  Int             @id(map: "PK_Security_PlanFeatures") @default(autoincrement())
+  PlanId         Int
+  IdModulo       Int?
+  IdSubModulo    Int?
+  Cat_Modulos    Cat_Modulos?    @relation(fields: [IdModulo], references: [IdModulo], onDelete: NoAction, onUpdate: NoAction, map: "FK_PlanFeatures_Cat_Modulos")
+  Cat_SubModulos Cat_SubModulos? @relation(fields: [IdSubModulo], references: [IdSubModulo], onDelete: NoAction, onUpdate: NoAction, map: "FK_PlanFeatures_Cat_SubModulos")
+  Plans          Plans           @relation(fields: [PlanId], references: [PlanId], onDelete: Cascade, onUpdate: NoAction, map: "FK_PlanFeatures_Plans")
+
+  @@schema("Security")
+}
+
+model Plans {
+  PlanId              Int                   @id(map: "PK_Security_Plans") @default(autoincrement())
+  Name                String                @unique(map: "UQ_Security_Plans_Name") @db.NVarChar(50)
+  DisplayName         String                @db.NVarChar(100)
+  Description         String?               @db.NVarChar(500)
+  MonthlyPrice        Decimal               @db.Decimal(10, 2)
+  MaxUsers            Int?
+  MaxBranches         Int?
+  StorageMb           Int?
+  SupportLevel        String                @db.NVarChar(20)
+  HasAdvancedReports  Boolean               @default(false, map: "DF__Plans__HasAdvanc__6AB0B48D")
+  HasBranding         Boolean               @default(false, map: "DF__Plans__HasBrandi__6BA4D8C6")
+  IsActive            Boolean               @default(true, map: "DF__Plans__IsActive__6C98FCFF")
+  SortOrder           Int                   @default(0, map: "DF__Plans__SortOrder__6D8D2138")
+  CreatedAt           DateTime              @default(dbgenerated("sysutcdatetime()"), map: "DF__Plans__CreatedAt__6E814571")
+  UpdatedAt           DateTime              @default(dbgenerated("sysutcdatetime()"), map: "DF__Plans__UpdatedAt__6F7569AA")
+  PlanFeatures        PlanFeatures[]
+  TenantSubscriptions TenantSubscriptions[]
+
+  @@schema("Security")
+}
+
+model PlatformUsers {
+  UserID    Int       @id(map: "PK_PlatformUsers")
+  Role      String    @db.NVarChar(50)
+  CreatedAt DateTime? @default(dbgenerated("sysutcdatetime()"), map: "DF__PlatformU__Creat__1E6562BD")
+  CreatedBy Int?
+
+  @@schema("Security")
+}
+
+model Positions {
+  PositionID   Int          @default(autoincrement())
+  TenantID     String       @db.UniqueIdentifier
+  DepartmentID Int?
+  Name         String       @db.NVarChar(150)
+  Description  String?      @db.NVarChar(500)
+  IsActive     Boolean      @default(true, map: "DF_HC_Positions_IsActive")
+  CreatedAt    DateTime     @default(dbgenerated("sysutcdatetime()"), map: "DF_HC_Positions_CreatedAt")
+  UpdatedAt    DateTime     @default(dbgenerated("sysutcdatetime()"), map: "DF_HC_Positions_UpdatedAt")
+  CreatedBy    Int?
+  UpdatedBy    Int?
+  Employees    Employees[]
+  Departments  Departments? @relation(fields: [TenantID, DepartmentID], references: [TenantID, DepartmentID], onUpdate: NoAction, map: "FK_HC_Positions_Departments")
+  Tenants      Tenants      @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_HC_Positions_Tenants")
+
+  @@id([TenantID, PositionID], map: "PK_HC_Positions")
+  @@unique([TenantID, Name], map: "UX_HC_Positions_Tenant_Name")
+  @@index([TenantID, DepartmentID], map: "IX_HC_Positions_Tenant_Department")
+  @@schema("HumanCapital")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1947,6 +2887,7 @@ model Rel_Reg_Gerente {
   IdGerente       Int?
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1956,6 +2897,7 @@ model Rel_Sit_Usu {
   IdUsuario     Int
 
   @@ignore
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -1977,6 +2919,14 @@ model Respuestas_Tareas_WO {
   numeroTareas      Int?
 
   @@ignore
+  @@schema("dbo")
+}
+
+model Roles {
+  RoleID   Int    @id(map: "PK__Roles__8AFACE3A4CD35105") @default(autoincrement())
+  RoleName String @unique(map: "UQ__Roles__8A2B61600267EE63") @db.NVarChar(50)
+
+  @@schema("Security")
 }
 
 model sitios_Asignacion_Tarea_Segura {
@@ -2008,6 +2958,8 @@ model sitios_Asignacion_Tarea_Segura {
   posturasForzadas         String?   @db.VarChar(200)
   ordenLimpieza            String?   @db.VarChar(200)
   eppEspecifico            String?   @db.VarChar(200)
+
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -2022,6 +2974,7 @@ model Solicitudes_Acceso {
   Estatus         String?   @db.VarChar(2)
 
   @@ignore
+  @@schema("dbo")
 }
 
 model Solicitudes_Acceso_Detalle {
@@ -2038,6 +2991,8 @@ model Solicitudes_Acceso_Detalle {
   Equipo               String?   @db.VarChar(Max)
   CRQ                  String?   @db.VarChar(Max)
   ComentariosSolicitud String?   @db.VarChar(Max)
+
+  @@schema("dbo")
 }
 
 model sysdiagrams {
@@ -2048,6 +3003,7 @@ model sysdiagrams {
   definition   Bytes?
 
   @@unique([principal_id, name], map: "UK_principal_name")
+  @@schema("dbo")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -2058,6 +3014,94 @@ model Tareas_Usuarios_WO {
   Id_Usuario Int?
 
   @@ignore
+  @@schema("dbo")
+}
+
+model Tenants {
+  TenantID                       String                           @id(map: "PK__Tenants__2E9B4781173AE542") @default(dbgenerated("newid()"), map: "DF__Tenants__TenantI__54F67D98") @db.UniqueIdentifier
+  CompanyName                    String                           @db.NVarChar(150)
+  CreatedAt                      DateTime                         @default(dbgenerated("getutcdate()"), map: "DF__Tenants__Created__56DEC60A")
+  UpdatedAt                      DateTime                         @default(dbgenerated("getutcdate()"), map: "DF__Tenants__Updated__57D2EA43")
+  Dominio                        String                           @default("desconocido.com", map: "DF__Tenants__Dominio__69F19A7E") @db.VarChar(500)
+  Status                         String                           @default("ACTIVE", map: "DF__Tenants__Status__1A94D1D9") @db.NVarChar(20)
+  SubscriptionPlan               String?                          @db.NVarChar(100)
+  MaxUsers                       Int?
+  SuspendedAt                    DateTime?
+  SuspendedReason                String?                          @db.NVarChar(500)
+  SuspendedMessage               String?                          @db.NVarChar(500)
+  Region                         String?                          @db.NVarChar(50)
+  AssignableDepartments          AssignableDepartments[]
+  BillingRecords                 BillingRecords[]
+  Cat_LMXdocks                   Cat_LMXdocks[]
+  Cat_VMProyecto                 Cat_VMProyecto[]
+  Cat_VMTiposMaterial            Cat_VMTiposMaterial[]
+  Departments                    Departments[]
+  Employees                      Employees[]
+  GASOAL_LM                      GASOAL_LM[]
+  GASOAL_VinculosFolioValidacion GASOAL_VinculosFolioValidacion[]
+  GASOAL_VMES                    GASOAL_VMES[]
+  Positions                      Positions[]
+  TenantSettings                 TenantSettings?
+  TenantSubscriptions            TenantSubscriptions[]
+  TenantUsage                    TenantUsage[]
+  UserViews                      UserViews[]
+  VacationBalances               VacationBalances[]
+  VacationRequests               VacationRequests[]
+  WMS_Carriers                   WMS_Carriers[]
+  WMS_InventoryItemEvents        WMS_InventoryItemEvents[]
+  WMS_InventoryItems             WMS_InventoryItems[]
+  WMS_InventoryMovementItems     WMS_InventoryMovementItems[]
+  WMS_InventoryMovements         WMS_InventoryMovements[]
+  WMS_LoadUnits                  WMS_LoadUnits[]
+  WMS_LoadUnitTypes              WMS_LoadUnitTypes[]
+  WMS_MaterialTypes              WMS_MaterialTypes[]
+  WMS_NumberSequences            WMS_NumberSequences[]
+  WMS_Sites                      WMS_Sites[]
+  WMS_WarehouseAisles            WMS_WarehouseAisles[]
+  WMS_WarehouseBins              WMS_WarehouseBins[]
+  WMS_Warehouses                 WMS_Warehouses[]
+
+  @@schema("Security")
+}
+
+model TenantSettings {
+  TenantID     String   @id(map: "PK_TenantSettings") @db.UniqueIdentifier
+  BrandingJson String   @default("N'{\"displayName\":\"\",\"logoUrl\":null,\"primaryColor\":null}'", map: "DF_TenantSettings_BrandingJson") @db.NVarChar(Max)
+  LimitsJson   String   @default("N'{\"maxUsers\":null,\"maxStorageMb\":null,\"maxProjects\":null}'", map: "DF_TenantSettings_LimitsJson") @db.NVarChar(Max)
+  CreatedAt    DateTime @default(dbgenerated("sysutcdatetime()"), map: "DF_TenantSettings_CreatedAt")
+  UpdatedAt    DateTime @default(dbgenerated("sysutcdatetime()"), map: "DF_TenantSettings_UpdatedAt")
+  UpdatedBy    Int?
+  Tenants      Tenants  @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_TenantSettings_Tenants")
+
+  @@schema("Security")
+}
+
+model TenantSubscriptions {
+  SubscriptionId String           @id(map: "PK_Security_TenantSubscriptions") @default(dbgenerated("newid()"), map: "DF__TenantSub__Subsc__76226739") @db.UniqueIdentifier
+  TenantId       String           @db.UniqueIdentifier
+  PlanId         Int
+  Status         String           @default("TRIAL", map: "DF__TenantSub__Statu__77168B72") @db.NVarChar(20)
+  StartedAt      DateTime         @default(dbgenerated("sysutcdatetime()"), map: "DF__TenantSub__Start__780AAFAB")
+  ExpiresAt      DateTime?
+  AutoRenew      Boolean          @default(true, map: "DF__TenantSub__AutoR__78FED3E4")
+  CreatedAt      DateTime         @default(dbgenerated("sysutcdatetime()"), map: "DF__TenantSub__Creat__79F2F81D")
+  UpdatedAt      DateTime         @default(dbgenerated("sysutcdatetime()"), map: "DF__TenantSub__Updat__7AE71C56")
+  BillingRecords BillingRecords[]
+  Plans          Plans            @relation(fields: [PlanId], references: [PlanId], onUpdate: NoAction, map: "FK_TenantSubscriptions_Plans")
+  Tenants        Tenants          @relation(fields: [TenantId], references: [TenantID], onDelete: Cascade, onUpdate: NoAction, map: "FK_TenantSubscriptions_Tenants")
+
+  @@schema("Security")
+}
+
+model TenantUsage {
+  TenantId     String   @db.UniqueIdentifier
+  MetricKey    String   @db.NVarChar(50)
+  CurrentValue Int      @default(0, map: "DF__TenantUsa__Curre__009FF5AC")
+  UpdatedAt    DateTime @default(dbgenerated("sysutcdatetime()"), map: "DF__TenantUsa__Updat__019419E5")
+  Tenants      Tenants  @relation(fields: [TenantId], references: [TenantID], onDelete: Cascade, onUpdate: NoAction, map: "FK_TenantUsage_Tenants")
+
+  @@id([TenantId, MetricKey], map: "PK_Security_TenantUsage")
+  @@schema("Security")
 }
 
 model Tipo_Cuadrilla {
@@ -2065,6 +3109,62 @@ model Tipo_Cuadrilla {
   Descripcion     String?          @db.NVarChar(50)
   Status          Int?             @db.TinyInt
   Cat_Cuadrillas  Cat_Cuadrillas[]
+
+  @@schema("dbo")
+}
+
+model TransactionLog {
+  AuditID      BigInt        @id(map: "PK__Transact__A17F23B86DBA1C8E") @default(autoincrement())
+  TenantID     String        @db.UniqueIdentifier
+  TableName    String        @db.NVarChar(128)
+  Action       String        @db.NVarChar(10)
+  OldData      String?       @db.NVarChar(Max)
+  NewData      String?       @db.NVarChar(Max)
+  ChangedAt    DateTime      @default(dbgenerated("getutcdate()"), map: "DF__Transacti__Chang__5D8BC399")
+  AppUser      String        @default("original_login()", map: "DF__Transacti__AppUs__5E7FE7D2") @db.NVarChar(128)
+  UserID       Int?
+  IdOrigin     Int?
+  Cat_OriginTL Cat_OriginTL? @relation(fields: [IdOrigin], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "TransactionLog_Cat_OriginTL_FK")
+
+  @@index([TenantID], map: "Audit_TenantID")
+  @@schema("Audit")
+}
+
+model UserMfaFactors {
+  MfaFactorID     String    @id(map: "PK_UserMfaFactors") @default(dbgenerated("newid()"), map: "DF__UserMfaFa__MfaFa__709E980D") @db.UniqueIdentifier
+  TenantID        String    @db.UniqueIdentifier
+  IdUsuario       Int
+  FactorType      String    @db.NVarChar(20)
+  Provider        String?   @db.NVarChar(50)
+  SecretEncrypted String?   @db.NVarChar(Max)
+  PhoneMasked     String?   @db.NVarChar(50)
+  EmailMasked     String?   @db.NVarChar(255)
+  IsEnabled       Boolean   @default(false, map: "DF__UserMfaFa__IsEna__7192BC46")
+  IsVerified      Boolean   @default(false, map: "DF__UserMfaFa__IsVer__7286E07F")
+  CreatedAt       DateTime  @default(dbgenerated("sysutcdatetime()"), map: "DF__UserMfaFa__Creat__737B04B8")
+  VerifiedAt      DateTime?
+  UpdatedAt       DateTime?
+  LastUsedAt      DateTime?
+  DisabledAt      DateTime?
+  FailedAttempts  Int       @default(0, map: "DF__UserMfaFa__Faile__746F28F1")
+  LastFailedAt    DateTime?
+  CreatedBy       String?   @db.NVarChar(128)
+  UpdatedBy       String?   @db.NVarChar(128)
+
+  @@schema("Security")
+}
+
+model UserViews {
+  TenantID            String              @db.UniqueIdentifier
+  IdUsuario           Int
+  ViewCode            String              @db.VarChar(64)
+  PermMask            Int                 @db.TinyInt
+  Tenants             Tenants             @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_UserViews_Tenants")
+  GASOCO_Cat_Usuarios GASOCO_Cat_Usuarios @relation(fields: [IdUsuario], references: [IdUsuario], onUpdate: NoAction, map: "FK_UserViews_Usuario")
+  Views               Views               @relation(fields: [ViewCode], references: [ViewCode], onUpdate: NoAction, map: "FK_UserViews_Views")
+
+  @@id([TenantID, IdUsuario, ViewCode], map: "PK_Security_UserViews")
+  @@schema("Security")
 }
 
 model Usuarios_por_Perfil {
@@ -2078,214 +3178,485 @@ model Usuarios_por_Perfil {
   FechaUltMod   DateTime?
   Cat_Perfiles  Cat_Perfiles? @relation(fields: [IdPerfil], references: [IdPerfil], onDelete: NoAction, onUpdate: NoAction, map: "FK_Cat_Perfiles_IdPerfil")
   Cat_Usuarios  Cat_Usuarios? @relation(fields: [IdUsuario], references: [IdUsuario], onDelete: NoAction, onUpdate: NoAction, map: "FK_Cat_Usuarios_IdUsuario")
+
+  @@schema("dbo")
 }
 
-model Wo_Helix {
-  IdWo_Helix          Int       @id(map: "PK_Wo_Helix") @default(autoincrement())
-  Inc_Id              String    @db.NVarChar(50)
-  tas_id              String    @db.NVarChar(50)
-  timestampsiteaccess DateTime?
-  siteid              Int?
-  workflow_type       String?   @db.NVarChar(10)
-  region              Int?
-  severity            String?   @db.NVarChar(10)
-  faultfirstoccurtime DateTime?
-  title               String?   @db.NVarChar(500)
-  description         String?   @db.NVarChar(500)
-  service             String?   @db.NVarChar(50)
-  coordinate_nokia_   String?   @map("coordinate_nokia ") @db.NVarChar(50)
-  alarmid             Int?
-  alarmname           String?   @db.NVarChar(50)
-  site_priority       String?   @db.NVarChar(50)
-  service_impact_     String?   @map("service_impact ") @db.NVarChar(5)
-  Descripcion         String?   @db.VarChar(500)
-  site_name_          String?   @map("site_name ") @db.VarChar(500)
-  site_address_       String?   @map("site_address ") @db.VarChar(500)
+model VacationBalances {
+  BalanceID    Int       @default(autoincrement())
+  TenantID     String    @db.UniqueIdentifier
+  EmployeeID   Int
+  PeriodStart  DateTime  @db.Date
+  PeriodEnd    DateTime  @db.Date
+  AssignedDays Decimal   @default(0, map: "DF_HC_VacationBalances_AssignedDays") @db.Decimal(6, 2)
+  UsedDays     Decimal   @default(0, map: "DF_HC_VacationBalances_UsedDays") @db.Decimal(6, 2)
+  Notes        String?   @db.NVarChar(500)
+  IsActive     Boolean   @default(true, map: "DF_HC_VacationBalances_IsActive")
+  CreatedAt    DateTime  @default(dbgenerated("sysutcdatetime()"), map: "DF_HC_VacationBalances_CreatedAt")
+  UpdatedAt    DateTime  @default(dbgenerated("sysutcdatetime()"), map: "DF_HC_VacationBalances_UpdatedAt")
+  CreatedBy    Int?
+  UpdatedBy    Int?
+  Employees    Employees @relation(fields: [TenantID, EmployeeID], references: [TenantID, EmployeeID], onUpdate: NoAction, map: "FK_HC_VacationBalances_Employees")
+  Tenants      Tenants   @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_HC_VacationBalances_Tenants")
+
+  @@id([TenantID, BalanceID], map: "PK_HC_VacationBalances")
+  @@index([TenantID, EmployeeID, IsActive], map: "IX_HC_VacationBalances_Tenant_Employee_Active")
+  @@schema("HumanCapital")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-model WO_Helix_JsonDetalle {
-  Id          Int      @default(autoincrement())
-  Type        Boolean?
-  Uuid        Int?
-  IdPlantilla Int?
-  Json        String?  @default("{ \"type\": \"\", \"uuid\": \"\", \"e00\": { \"e01\": { \"datetime\": \"\", \"status\": \"\", \"photo\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"comment\": \"\" }, \"e02\": { \"datetime\": \"\", \"photo\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"eta\": \"\", \"comment\": \"\" }, \"e03\": { \"datetime\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"comment\": \"\"}, \"e04\": { \"datetime\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"photo\": \"\", \"comment\": \"\" }, \"e05\": { \"datetime\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"photo\": \"\", \"comment\": \"\" }, \"e06\": { \"datetime\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"photo\": \"\", \"comment\": \"\" }, \"e07\": { \"datetime\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"photo\": \"\", \"comment\": \"\" }, \"e08\": { \"datetime\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"photo\": \"\", \"comment\": \"\" }, \"e09\": { \"datetime\": \"\", \"location\": { \"lat\": \"\", \"lng\": \"\" }, \"photo\": \"\", \"comment\": \"\" } }, \"form\": { \"header\":{}, \"data\":[] } }", map: "DF_WO_Helix_JsonDetalle_Json") @db.VarChar(Max)
-  Estatus     Boolean?
+model VacationRequests {
+  VacationRequestID Int       @default(autoincrement())
+  TenantID          String    @db.UniqueIdentifier
+  EmployeeID        Int
+  StartDate         DateTime  @db.Date
+  EndDate           DateTime  @db.Date
+  RequestedDays     Decimal   @db.Decimal(6, 2)
+  Status            String    @default("pending", map: "DF_HC_VacationRequests_Status") @db.VarChar(20)
+  Reason            String?   @db.NVarChar(500)
+  ReviewComments    String?   @db.NVarChar(500)
+  ReviewedBy        Int?
+  ReviewedAt        DateTime?
+  CancelledBy       Int?
+  CancelledAt       DateTime?
+  CancelReason      String?   @db.NVarChar(500)
+  CreatedAt         DateTime  @default(dbgenerated("sysutcdatetime()"), map: "DF_HC_VacationRequests_CreatedAt")
+  UpdatedAt         DateTime  @default(dbgenerated("sysutcdatetime()"), map: "DF_HC_VacationRequests_UpdatedAt")
+  CreatedBy         Int?
+  UpdatedBy         Int?
+  Employees         Employees @relation(fields: [TenantID, EmployeeID], references: [TenantID, EmployeeID], onUpdate: NoAction, map: "FK_HC_VacationRequests_Employees")
+  Tenants           Tenants   @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_HC_VacationRequests_Tenants")
 
-  @@ignore
+  @@id([TenantID, VacationRequestID], map: "PK_HC_VacationRequests")
+  @@index([TenantID, EmployeeID, StartDate, EndDate], map: "IX_HC_VacationRequests_Tenant_Employee_Dates")
+  @@index([TenantID, EmployeeID, Status], map: "IX_HC_VacationRequests_Tenant_Employee_Status")
+  @@index([TenantID, Status, CreatedAt(sort: Desc)], map: "IX_HC_VacationRequests_Tenant_Status")
+  @@schema("HumanCapital")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-model WO_Helix_JsonDetalle_bak {
-  Id          Int      @default(autoincrement())
-  Type        Boolean?
-  Uuid        Int?
-  IdPlantilla Int?
-  Json        String?  @db.VarChar(Max)
-  Estatus     Boolean?
+model Views {
+  ViewCode   String      @id(map: "PK_Security_Views") @db.VarChar(64)
+  Label      String      @db.NVarChar(150)
+  MenuGroup  String?     @db.VarChar(20)
+  PublicMask Int?        @db.TinyInt
+  UserViews  UserViews[]
 
-  @@ignore
+  @@schema("Security")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-model Wo_Helix_Rem {
-  IdWo_HelixRem           Int       @default(autoincrement())
-  tas_id                  Int?
-  FechaDespacho           DateTime?
-  FechaLimiteConfirmacion DateTime?
-  IdPrioridad             Int?
-  Estatus                 Int?
-  ReporteAceptado         Boolean?
-  IdUsuario               Int?
-  LimiteConfirmacion      DateTime?
-  LimiteRestauracion      DateTime?
-  LimiteResolucion        DateTime?
-  TotalTareas             Int?
-  TareasFinalizadas       Int?
-  TareasxFinalizar        Int?
-  FechaAsignacion         DateTime?
-  IdCuadrilla             Int?
-  IdCriticidad            Int?
-  IdClasificacionWO       Int?
-  IdReg                   Int?
-  IdEstado                Int?
-  IdWo_Helix              Int?
-  IdTipoWO                Int?
-  Descripcion             String?   @db.VarChar(500)
-  IdWO                    Int?
-  IdUsuarioAprover        Int?
-  FechaAprover            DateTime?
-  IcoPlantilla            Int?
-  IcoTarea                Int?
-  IcoInfo                 Int?
-  IcoHistorial            Int?
-  IcoComentarios          Int?
-  IcoDescarga             Int?
-  IcoConfirmada           Int?
-  AsignacionHistorial     String?   @default("[]", map: "DF_Wo_Helix_Rem_AsignacionHistorial") @db.VarChar(Max)
+model WMS_Carriers {
+  CarrierID       String                   @id(map: "PK_WMS_Carriers") @default(dbgenerated("newsequentialid()"), map: "DF_WMS_Carriers_ID") @db.UniqueIdentifier
+  TenantID        String                   @db.UniqueIdentifier
+  Code            String                   @db.NVarChar(30)
+  Name            String                   @db.NVarChar(100)
+  IsActive        Boolean                  @default(true, map: "DF_WMS_Carriers_IsActive")
+  CreatedAt       DateTime                 @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_Carriers_CreatedAt")
+  CreatedByUserID Int?
+  UpdatedAt       DateTime                 @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_Carriers_UpdatedAt")
+  UpdatedByUserID Int?
+  RowVersion      Unsupported("timestamp")
+  Tenants         Tenants                  @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_WMS_Carriers_Tenants")
+  WMS_Sites       WMS_Sites[]
 
-  @@ignore
+  @@unique([TenantID, Code], map: "UQ_WMS_Carriers_Tenant_Code")
+  @@unique([TenantID, CarrierID], map: "UQ_WMS_Carriers_Tenant_ID")
+  @@index([TenantID, IsActive, Name], map: "IX_WMS_Carriers_Tenant_Active_Name")
+  @@schema("dbo")
 }
 
-model WorkOrders_Plantilla_Detalle {
-  ID          Int     @id(map: "PK_WorkOrder_Plantilla_Detalle") @default(autoincrement())
-  IdWO        Int?
-  IdPlantilla Int?
-  nombreCampo String? @db.VarChar(Max)
-  valorCampo  String? @db.VarChar(Max)
+model WMS_InventoryItemEvents {
+  EventID                                                                                                 String                  @id(map: "PK_WMS_InventoryItemEvents") @default(dbgenerated("newsequentialid()"), map: "DF_WMS_InventoryItemEvents_ID") @db.UniqueIdentifier
+  TenantID                                                                                                String                  @db.UniqueIdentifier
+  InventoryItemID                                                                                         String                  @db.UniqueIdentifier
+  MovementID                                                                                              String?                 @db.UniqueIdentifier
+  EventType                                                                                               String                  @db.NVarChar(60)
+  PreviousStatus                                                                                          String?                 @db.NVarChar(30)
+  NewStatus                                                                                               String?                 @db.NVarChar(30)
+  PreviousWarehouseID                                                                                     String?                 @db.UniqueIdentifier
+  PreviousBinID                                                                                           String?                 @db.UniqueIdentifier
+  NewWarehouseID                                                                                          String?                 @db.UniqueIdentifier
+  NewBinID                                                                                                String?                 @db.UniqueIdentifier
+  EventAt                                                                                                 DateTime
+  UserID                                                                                                  Int?
+  Reason                                                                                                  String?                 @db.NVarChar(500)
+  MetadataJson                                                                                            String?                 @db.NVarChar(Max)
+  CreatedAt                                                                                               DateTime                @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_InventoryItemEvents_CreatedAt")
+  WMS_InventoryItems                                                                                      WMS_InventoryItems      @relation(fields: [TenantID, InventoryItemID], references: [TenantID, InventoryItemID], onUpdate: NoAction, map: "FK_WMS_InventoryItemEvents_Item")
+  WMS_InventoryMovements                                                                                  WMS_InventoryMovements? @relation(fields: [TenantID, MovementID], references: [TenantID, MovementID], onUpdate: NoAction, map: "FK_WMS_InventoryItemEvents_Movement")
+  WMS_WarehouseBins_WMS_InventoryItemEvents_TenantID_NewWarehouseID_NewBinIDToWMS_WarehouseBins           WMS_WarehouseBins?      @relation("WMS_InventoryItemEvents_TenantID_NewWarehouseID_NewBinIDToWMS_WarehouseBins", fields: [TenantID, NewWarehouseID, NewBinID], references: [TenantID, WarehouseID, BinID], onUpdate: NoAction, map: "FK_WMS_InventoryItemEvents_NewBin")
+  WMS_Warehouses_WMS_InventoryItemEvents_TenantID_NewWarehouseIDToWMS_Warehouses                          WMS_Warehouses?         @relation("WMS_InventoryItemEvents_TenantID_NewWarehouseIDToWMS_Warehouses", fields: [TenantID, NewWarehouseID], references: [TenantID, WarehouseID], onUpdate: NoAction, map: "FK_WMS_InventoryItemEvents_NewWarehouse")
+  WMS_WarehouseBins_WMS_InventoryItemEvents_TenantID_PreviousWarehouseID_PreviousBinIDToWMS_WarehouseBins WMS_WarehouseBins?      @relation("WMS_InventoryItemEvents_TenantID_PreviousWarehouseID_PreviousBinIDToWMS_WarehouseBins", fields: [TenantID, PreviousWarehouseID, PreviousBinID], references: [TenantID, WarehouseID, BinID], onUpdate: NoAction, map: "FK_WMS_InventoryItemEvents_PreviousBin")
+  WMS_Warehouses_WMS_InventoryItemEvents_TenantID_PreviousWarehouseIDToWMS_Warehouses                     WMS_Warehouses?         @relation("WMS_InventoryItemEvents_TenantID_PreviousWarehouseIDToWMS_Warehouses", fields: [TenantID, PreviousWarehouseID], references: [TenantID, WarehouseID], onUpdate: NoAction, map: "FK_WMS_InventoryItemEvents_PreviousWarehouse")
+  Tenants                                                                                                 Tenants                 @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_WMS_InventoryItemEvents_Tenants")
+
+  @@unique([TenantID, EventID], map: "UQ_WMS_InventoryItemEvents_Tenant_ID")
+  @@index([TenantID, InventoryItemID, EventAt(sort: Desc)], map: "IX_WMS_InventoryItemEvents_Tenant_Item_Date")
+  @@schema("dbo")
 }
 
-model WorkOrders_Plantilla_Detalle_JSON {
-  ID          Int      @id(map: "PK_WorkOrders_Plantilla_Detalle_JSON") @default(autoincrement())
-  Uuid        Int?
-  IdPlantilla Int?
-  Json        String?  @db.VarChar(Max)
-  Estatus     Boolean? @default(false, map: "DEFAULT_WorkOrders_Plantilla_Detalle_JSON_EstatusSync")
+model WMS_InventoryItems {
+  InventoryItemID            String                       @id(map: "PK_WMS_InventoryItems") @default(dbgenerated("newsequentialid()"), map: "DF_WMS_InventoryItems_ID") @db.UniqueIdentifier
+  TenantID                   String                       @db.UniqueIdentifier
+  SiteID                     String                       @db.UniqueIdentifier
+  LoadUnitID                 String?                      @db.UniqueIdentifier
+  ItemFolio                  String                       @db.NVarChar(100)
+  MaterialTypeID             String                       @db.UniqueIdentifier
+  CurrentWarehouseID         String?                      @db.UniqueIdentifier
+  CurrentBinID               String?                      @db.UniqueIdentifier
+  EntryType                  String                       @default("N'ARRIBO'", map: "DF_WMS_InventoryItems_EntryType") @db.NVarChar(30)
+  CurrentStatus              String                       @default("N'ARRIBO'", map: "DF_WMS_InventoryItems_CurrentStatus") @db.NVarChar(30)
+  Quantity                   Decimal                      @default(1, map: "DF_WMS_InventoryItems_Quantity") @db.Decimal(18, 3)
+  UnitOfMeasure              String                       @default("N'PZA'", map: "DF_WMS_InventoryItems_UOM") @db.NVarChar(20)
+  SerialNumber               String?                      @db.NVarChar(200)
+  Classification             String?                      @db.NVarChar(150)
+  Project                    String?                      @db.NVarChar(150)
+  SubProject                 String?                      @db.NVarChar(150)
+  Technology                 String?                      @db.NVarChar(150)
+  Description                String?
+  SourceWarehouseFolio       String?                      @db.NVarChar(150)
+  ClientPdmFolio             String?                      @db.NVarChar(150)
+  RoutedClientFolio          String?                      @db.NVarChar(150)
+  EntryAt                    DateTime
+  LastExitAt                 DateTime?
+  Observations               String?
+  IsActive                   Boolean                      @default(true, map: "DF_WMS_InventoryItems_IsActive")
+  CreatedAt                  DateTime                     @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_InventoryItems_CreatedAt")
+  CreatedByUserID            Int?
+  UpdatedAt                  DateTime                     @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_InventoryItems_UpdatedAt")
+  UpdatedByUserID            Int?
+  RowVersion                 Unsupported("timestamp")
+  WMS_InventoryItemEvents    WMS_InventoryItemEvents[]
+  WMS_WarehouseBins          WMS_WarehouseBins?           @relation(fields: [TenantID, CurrentWarehouseID, CurrentBinID], references: [TenantID, WarehouseID, BinID], onUpdate: NoAction, map: "FK_WMS_InventoryItems_CurrentBin")
+  WMS_Warehouses             WMS_Warehouses?              @relation(fields: [TenantID, CurrentWarehouseID], references: [TenantID, WarehouseID], onUpdate: NoAction, map: "FK_WMS_InventoryItems_CurrentWarehouse")
+  WMS_LoadUnits              WMS_LoadUnits?               @relation(fields: [TenantID, LoadUnitID], references: [TenantID, LoadUnitID], onUpdate: NoAction, map: "FK_WMS_InventoryItems_LoadUnit")
+  WMS_MaterialTypes          WMS_MaterialTypes            @relation(fields: [TenantID, MaterialTypeID], references: [TenantID, MaterialTypeID], onUpdate: NoAction, map: "FK_WMS_InventoryItems_MaterialType")
+  WMS_Sites                  WMS_Sites                    @relation(fields: [TenantID, SiteID], references: [TenantID, SiteID], onUpdate: NoAction, map: "FK_WMS_InventoryItems_Site")
+  Tenants                    Tenants                      @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_WMS_InventoryItems_Tenants")
+  WMS_InventoryMovementItems WMS_InventoryMovementItems[]
 
-  @@index([IdPlantilla], map: "report_json")
+  @@unique([TenantID, ItemFolio], map: "UQ_WMS_InventoryItems_Tenant_Folio")
+  @@unique([TenantID, InventoryItemID], map: "UQ_WMS_InventoryItems_Tenant_ID")
+  @@index([TenantID, CurrentWarehouseID, CurrentBinID, CurrentStatus], map: "IX_WMS_InventoryItems_Tenant_Location_Status")
+  @@index([TenantID, SiteID, CurrentStatus], map: "IX_WMS_InventoryItems_Tenant_Site_Status")
+  @@schema("dbo")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-model WorkOrders_Tarea_Detalle_JSON {
-  Id          Int      @default(autoincrement())
-  IdWO        Int?
-  IdTarea     Int?
-  jsonDetalle String?  @db.VarChar(Max)
-  EstatusSync Boolean? @default(false, map: "DEFAULT_WorkOrders_Tarea_Detalle_JSON_EstatusSync")
+model WMS_InventoryMovementItems {
+  MovementItemID                                                                                             String                 @id(map: "PK_WMS_InventoryMovementItems") @default(dbgenerated("newsequentialid()"), map: "DF_WMS_InventoryMovementItems_ID") @db.UniqueIdentifier
+  TenantID                                                                                                   String                 @db.UniqueIdentifier
+  MovementID                                                                                                 String                 @db.UniqueIdentifier
+  InventoryItemID                                                                                            String                 @db.UniqueIdentifier
+  LoadUnitID                                                                                                 String?                @db.UniqueIdentifier
+  Quantity                                                                                                   Decimal                @default(1, map: "DF_WMS_InventoryMovementItems_Quantity") @db.Decimal(18, 3)
+  PreviousStatus                                                                                             String?                @db.NVarChar(30)
+  NewStatus                                                                                                  String                 @db.NVarChar(30)
+  PreviousWarehouseID                                                                                        String?                @db.UniqueIdentifier
+  PreviousBinID                                                                                              String?                @db.UniqueIdentifier
+  NewWarehouseID                                                                                             String?                @db.UniqueIdentifier
+  NewBinID                                                                                                   String?                @db.UniqueIdentifier
+  CreatedAt                                                                                                  DateTime               @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_InventoryMovementItems_CreatedAt")
+  PreviousSiteID                                                                                             String?                @db.UniqueIdentifier
+  NewSiteID                                                                                                  String?                @db.UniqueIdentifier
+  WMS_InventoryItems                                                                                         WMS_InventoryItems     @relation(fields: [TenantID, InventoryItemID], references: [TenantID, InventoryItemID], onUpdate: NoAction, map: "FK_WMS_InventoryMovementItems_Item")
+  WMS_LoadUnits                                                                                              WMS_LoadUnits?         @relation(fields: [TenantID, LoadUnitID], references: [TenantID, LoadUnitID], onUpdate: NoAction, map: "FK_WMS_InventoryMovementItems_LoadUnit")
+  WMS_InventoryMovements                                                                                     WMS_InventoryMovements @relation(fields: [TenantID, MovementID], references: [TenantID, MovementID], onUpdate: NoAction, map: "FK_WMS_InventoryMovementItems_Movement")
+  WMS_WarehouseBins_WMS_InventoryMovementItems_TenantID_NewWarehouseID_NewBinIDToWMS_WarehouseBins           WMS_WarehouseBins?     @relation("WMS_InventoryMovementItems_TenantID_NewWarehouseID_NewBinIDToWMS_WarehouseBins", fields: [TenantID, NewWarehouseID, NewBinID], references: [TenantID, WarehouseID, BinID], onUpdate: NoAction, map: "FK_WMS_InventoryMovementItems_NewBin")
+  WMS_Sites_WMS_InventoryMovementItems_TenantID_NewSiteIDToWMS_Sites                                         WMS_Sites?             @relation("WMS_InventoryMovementItems_TenantID_NewSiteIDToWMS_Sites", fields: [TenantID, NewSiteID], references: [TenantID, SiteID], onUpdate: NoAction, map: "FK_WMS_InventoryMovementItems_NewSite")
+  WMS_Warehouses_WMS_InventoryMovementItems_TenantID_NewWarehouseIDToWMS_Warehouses                          WMS_Warehouses?        @relation("WMS_InventoryMovementItems_TenantID_NewWarehouseIDToWMS_Warehouses", fields: [TenantID, NewWarehouseID], references: [TenantID, WarehouseID], onUpdate: NoAction, map: "FK_WMS_InventoryMovementItems_NewWarehouse")
+  WMS_WarehouseBins_WMS_InventoryMovementItems_TenantID_PreviousWarehouseID_PreviousBinIDToWMS_WarehouseBins WMS_WarehouseBins?     @relation("WMS_InventoryMovementItems_TenantID_PreviousWarehouseID_PreviousBinIDToWMS_WarehouseBins", fields: [TenantID, PreviousWarehouseID, PreviousBinID], references: [TenantID, WarehouseID, BinID], onUpdate: NoAction, map: "FK_WMS_InventoryMovementItems_PreviousBin")
+  WMS_Sites_WMS_InventoryMovementItems_TenantID_PreviousSiteIDToWMS_Sites                                    WMS_Sites?             @relation("WMS_InventoryMovementItems_TenantID_PreviousSiteIDToWMS_Sites", fields: [TenantID, PreviousSiteID], references: [TenantID, SiteID], onUpdate: NoAction, map: "FK_WMS_InventoryMovementItems_PreviousSite")
+  WMS_Warehouses_WMS_InventoryMovementItems_TenantID_PreviousWarehouseIDToWMS_Warehouses                     WMS_Warehouses?        @relation("WMS_InventoryMovementItems_TenantID_PreviousWarehouseIDToWMS_Warehouses", fields: [TenantID, PreviousWarehouseID], references: [TenantID, WarehouseID], onUpdate: NoAction, map: "FK_WMS_InventoryMovementItems_PreviousWarehouse")
+  Tenants                                                                                                    Tenants                @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_WMS_InventoryMovementItems_Tenants")
 
-  @@ignore
+  @@unique([TenantID, MovementID, InventoryItemID], map: "UQ_WMS_InventoryMovementItems_Movement_Item")
+  @@unique([TenantID, MovementItemID], map: "UQ_WMS_InventoryMovementItems_Tenant_ID")
+  @@index([TenantID, InventoryItemID, CreatedAt(sort: Desc)], map: "IX_WMS_InventoryMovementItems_Tenant_Item")
+  @@schema("dbo")
 }
 
-model WorkOrders_Tickets {
-  IdWO                    Int       @id(map: "PK__WorkOrde__B7707409AECD0ECF") @default(autoincrement())
-  Descripcion             String?   @db.NVarChar(150)
-  IdTipoWO                Int?      @db.TinyInt
-  FechaDespacho           DateTime?
-  FechaLimiteConfirmacion DateTime?
-  IdPrioridad             Int?
-  IdCriticidad            Int?
-  LimiteConfirmacion      DateTime?
-  LimiteRestauracion      DateTime?
-  LimiteResolucion        DateTime?
-  TotalTareas             Int?
-  TareasFinalizadas       Int?
-  TareasxFinalizar        Int?
-  Status                  Int?      @db.TinyInt
-  FechaAsignacion         DateTime?
-  IdCuadrilla             Int?
-  IdUsuario               Int?
-  IdReg                   Int?
-  IdEstado                Int?
-  Avance                  Int?
-  Alarma                  String?   @db.VarChar(100)
-  IcoTarea                Int?      @db.TinyInt
-  IcoInfo                 Int?      @db.TinyInt
-  IcoHistorial            Int?      @db.TinyInt
-  IcoComentarios          Int?      @db.TinyInt
-  IcoDescarga             Int?      @db.TinyInt
-  IcoConfirmada           Int?      @db.TinyInt
-  IdPlantilla             Int?
-  IdSubEstadoWO           Int?
-  IdClasificacionWO       Int?
-  IcoPlantilla            Int?      @db.TinyInt
-  IdSitio                 Int?
-  FechaCreacion           DateTime?
-  IdContenedor            Int?
-  fechaAceptanWO          DateTime?
-  ReporteAceptado         Boolean?
-  FechaFinalizado         DateTime?
-  IdUsuarioAprover        Int?
-  FechaAprover            DateTime?
-  KomodoFlag              Boolean?
+model WMS_InventoryMovements {
+  MovementID                                                                                                   String                       @id(map: "PK_WMS_InventoryMovements") @default(dbgenerated("newsequentialid()"), map: "DF_WMS_InventoryMovements_ID") @db.UniqueIdentifier
+  TenantID                                                                                                     String                       @db.UniqueIdentifier
+  Folio                                                                                                        String                       @db.NVarChar(100)
+  MovementType                                                                                                 String                       @db.NVarChar(40)
+  Status                                                                                                       String                       @default("N'BORRADOR'", map: "DF_WMS_InventoryMovements_Status") @db.NVarChar(20)
+  SiteID                                                                                                       String?                      @db.UniqueIdentifier
+  OriginWarehouseID                                                                                            String?                      @db.UniqueIdentifier
+  OriginBinID                                                                                                  String?                      @db.UniqueIdentifier
+  DestinationWarehouseID                                                                                       String?                      @db.UniqueIdentifier
+  DestinationBinID                                                                                             String?                      @db.UniqueIdentifier
+  OperationAt                                                                                                  DateTime
+  ConfirmedAt                                                                                                  DateTime?
+  ConfirmedByUserID                                                                                            Int?
+  CancelledAt                                                                                                  DateTime?
+  CancelledByUserID                                                                                            Int?
+  CancellationReason                                                                                           String?                      @db.NVarChar(500)
+  ExternalReference                                                                                            String?                      @db.NVarChar(150)
+  DestinationName                                                                                              String?                      @db.NVarChar(250)
+  AspName                                                                                                      String?                      @db.NVarChar(250)
+  OperatorName                                                                                                 String?                      @db.NVarChar(250)
+  VehiclePlates                                                                                                String?                      @db.NVarChar(100)
+  Observations                                                                                                 String?
+  CreatedAt                                                                                                    DateTime                     @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_InventoryMovements_CreatedAt")
+  CreatedByUserID                                                                                              Int?
+  UpdatedAt                                                                                                    DateTime                     @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_InventoryMovements_UpdatedAt")
+  UpdatedByUserID                                                                                              Int?
+  RowVersion                                                                                                   Unsupported("timestamp")
+  OriginSiteID                                                                                                 String?                      @db.UniqueIdentifier
+  DestinationSiteID                                                                                            String?                      @db.UniqueIdentifier
+  OriginSiteCodeSnapshot                                                                                       String?                      @db.NVarChar(100)
+  OriginSiteNameSnapshot                                                                                       String?                      @db.NVarChar(250)
+  DestinationSiteCodeSnapshot                                                                                  String?                      @db.NVarChar(100)
+  DestinationSiteNameSnapshot                                                                                  String?                      @db.NVarChar(250)
+  WMS_InventoryItemEvents                                                                                      WMS_InventoryItemEvents[]
+  WMS_InventoryMovementItems                                                                                   WMS_InventoryMovementItems[]
+  WMS_WarehouseBins_WMS_InventoryMovements_TenantID_DestinationWarehouseID_DestinationBinIDToWMS_WarehouseBins WMS_WarehouseBins?           @relation("WMS_InventoryMovements_TenantID_DestinationWarehouseID_DestinationBinIDToWMS_WarehouseBins", fields: [TenantID, DestinationWarehouseID, DestinationBinID], references: [TenantID, WarehouseID, BinID], onUpdate: NoAction, map: "FK_WMS_InventoryMovements_DestinationBin")
+  WMS_Sites_WMS_InventoryMovements_TenantID_DestinationSiteIDToWMS_Sites                                       WMS_Sites?                   @relation("WMS_InventoryMovements_TenantID_DestinationSiteIDToWMS_Sites", fields: [TenantID, DestinationSiteID], references: [TenantID, SiteID], onUpdate: NoAction, map: "FK_WMS_InventoryMovements_DestinationSite")
+  WMS_Warehouses_WMS_InventoryMovements_TenantID_DestinationWarehouseIDToWMS_Warehouses                        WMS_Warehouses?              @relation("WMS_InventoryMovements_TenantID_DestinationWarehouseIDToWMS_Warehouses", fields: [TenantID, DestinationWarehouseID], references: [TenantID, WarehouseID], onUpdate: NoAction, map: "FK_WMS_InventoryMovements_DestinationWarehouse")
+  WMS_WarehouseBins_WMS_InventoryMovements_TenantID_OriginWarehouseID_OriginBinIDToWMS_WarehouseBins           WMS_WarehouseBins?           @relation("WMS_InventoryMovements_TenantID_OriginWarehouseID_OriginBinIDToWMS_WarehouseBins", fields: [TenantID, OriginWarehouseID, OriginBinID], references: [TenantID, WarehouseID, BinID], onUpdate: NoAction, map: "FK_WMS_InventoryMovements_OriginBin")
+  WMS_Sites_WMS_InventoryMovements_TenantID_OriginSiteIDToWMS_Sites                                            WMS_Sites?                   @relation("WMS_InventoryMovements_TenantID_OriginSiteIDToWMS_Sites", fields: [TenantID, OriginSiteID], references: [TenantID, SiteID], onUpdate: NoAction, map: "FK_WMS_InventoryMovements_OriginSite")
+  WMS_Warehouses_WMS_InventoryMovements_TenantID_OriginWarehouseIDToWMS_Warehouses                             WMS_Warehouses?              @relation("WMS_InventoryMovements_TenantID_OriginWarehouseIDToWMS_Warehouses", fields: [TenantID, OriginWarehouseID], references: [TenantID, WarehouseID], onUpdate: NoAction, map: "FK_WMS_InventoryMovements_OriginWarehouse")
+  WMS_Sites_WMS_InventoryMovements_TenantID_SiteIDToWMS_Sites                                                  WMS_Sites?                   @relation("WMS_InventoryMovements_TenantID_SiteIDToWMS_Sites", fields: [TenantID, SiteID], references: [TenantID, SiteID], onUpdate: NoAction, map: "FK_WMS_InventoryMovements_Site")
+  Tenants                                                                                                      Tenants                      @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_WMS_InventoryMovements_Tenants")
+
+  @@unique([TenantID, Folio], map: "UQ_WMS_InventoryMovements_Tenant_Folio")
+  @@unique([TenantID, MovementID], map: "UQ_WMS_InventoryMovements_Tenant_ID")
+  @@index([TenantID, OperationAt(sort: Desc), MovementID], map: "IX_WMS_InventoryMovements_Tenant_Date")
+  @@index([TenantID, SiteID, OperationAt(sort: Desc)], map: "IX_WMS_InventoryMovements_Tenant_Site_Date")
+  @@schema("dbo")
 }
 
-model Cat_VMCondicion {
-  Id                 Int                  @id(map: "Cat_CondicionDevEnt_PK") @default(autoincrement()) @db.SmallInt
-  Condicion          String               @unique(map: "Cat_CondicionDevEnt_UNIQUE") @db.VarChar(50)
-  GASOAL_VMaterialES GASOAL_VMaterialES[]
+model WMS_LoadUnits {
+  LoadUnitID                 String                       @id(map: "PK_WMS_LoadUnits") @default(dbgenerated("newsequentialid()"), map: "DF_WMS_LoadUnits_ID") @db.UniqueIdentifier
+  TenantID                   String                       @db.UniqueIdentifier
+  SiteID                     String                       @db.UniqueIdentifier
+  Folio                      String                       @db.NVarChar(100)
+  LoadUnitTypeID             String?                      @db.UniqueIdentifier
+  ParentLoadUnitID           String?                      @db.UniqueIdentifier
+  CurrentWarehouseID         String?                      @db.UniqueIdentifier
+  CurrentBinID               String?                      @db.UniqueIdentifier
+  EntryType                  String                       @default("N'ARRIBO'", map: "DF_WMS_LoadUnits_EntryType") @db.NVarChar(30)
+  CurrentStatus              String                       @default("N'ARRIBO'", map: "DF_WMS_LoadUnits_CurrentStatus") @db.NVarChar(30)
+  ExternalCode               String?                      @db.NVarChar(100)
+  SequenceNumber             Int?
+  EntryAt                    DateTime
+  LastExitAt                 DateTime?
+  Observations               String?
+  IsActive                   Boolean                      @default(true, map: "DF_WMS_LoadUnits_IsActive")
+  CreatedAt                  DateTime                     @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_LoadUnits_CreatedAt")
+  CreatedByUserID            Int?
+  UpdatedAt                  DateTime                     @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_LoadUnits_UpdatedAt")
+  UpdatedByUserID            Int?
+  RowVersion                 Unsupported("timestamp")
+  WMS_InventoryItems         WMS_InventoryItems[]
+  WMS_InventoryMovementItems WMS_InventoryMovementItems[]
+  WMS_WarehouseBins          WMS_WarehouseBins?           @relation(fields: [TenantID, CurrentWarehouseID, CurrentBinID], references: [TenantID, WarehouseID, BinID], onUpdate: NoAction, map: "FK_WMS_LoadUnits_CurrentBin")
+  WMS_Warehouses             WMS_Warehouses?              @relation(fields: [TenantID, CurrentWarehouseID], references: [TenantID, WarehouseID], onUpdate: NoAction, map: "FK_WMS_LoadUnits_CurrentWarehouse")
+  WMS_LoadUnits              WMS_LoadUnits?               @relation("WMS_LoadUnitsToWMS_LoadUnits", fields: [TenantID, ParentLoadUnitID], references: [TenantID, LoadUnitID], onUpdate: NoAction, map: "FK_WMS_LoadUnits_Parent")
+  other_WMS_LoadUnits        WMS_LoadUnits[]              @relation("WMS_LoadUnitsToWMS_LoadUnits")
+  WMS_Sites                  WMS_Sites                    @relation(fields: [TenantID, SiteID], references: [TenantID, SiteID], onUpdate: NoAction, map: "FK_WMS_LoadUnits_Site")
+  Tenants                    Tenants                      @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_WMS_LoadUnits_Tenants")
+  WMS_LoadUnitTypes          WMS_LoadUnitTypes?           @relation(fields: [TenantID, LoadUnitTypeID], references: [TenantID, LoadUnitTypeID], onUpdate: NoAction, map: "FK_WMS_LoadUnits_Type")
+
+  @@unique([TenantID, Folio], map: "UQ_WMS_LoadUnits_Tenant_Folio")
+  @@unique([TenantID, LoadUnitID], map: "UQ_WMS_LoadUnits_Tenant_ID")
+  @@index([TenantID, CurrentWarehouseID, CurrentBinID, CurrentStatus], map: "IX_WMS_LoadUnits_Tenant_Location_Status")
+  @@index([TenantID, SiteID, CurrentStatus], map: "IX_WMS_LoadUnits_Tenant_Site_Status")
+  @@schema("dbo")
 }
 
-model Cat_VMTipo {
-  Id                 Int                  @id(map: "Cat_TipoDevEnt_PK") @default(autoincrement()) @db.SmallInt
-  Tipo               String               @unique(map: "Cat_TipoDevEnt_UNIQUE") @db.VarChar(30)
-  GASOAL_VMaterialES GASOAL_VMaterialES[]
+model WMS_LoadUnitTypes {
+  LoadUnitTypeID  String                   @id(map: "PK_WMS_LoadUnitTypes") @default(dbgenerated("newsequentialid()"), map: "DF_WMS_LoadUnitTypes_ID") @db.UniqueIdentifier
+  TenantID        String                   @db.UniqueIdentifier
+  Code            String                   @db.NVarChar(50)
+  Name            String                   @db.NVarChar(150)
+  LengthM         Decimal?                 @db.Decimal(10, 3)
+  WidthM          Decimal?                 @db.Decimal(10, 3)
+  HeightM         Decimal?                 @db.Decimal(10, 3)
+  AreaM2          Decimal?                 @db.Decimal(12, 4)
+  IsActive        Boolean                  @default(true, map: "DF_WMS_LoadUnitTypes_IsActive")
+  CreatedAt       DateTime                 @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_LoadUnitTypes_CreatedAt")
+  CreatedByUserID Int?
+  UpdatedAt       DateTime                 @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_LoadUnitTypes_UpdatedAt")
+  UpdatedByUserID Int?
+  RowVersion      Unsupported("timestamp")
+  WMS_LoadUnits   WMS_LoadUnits[]
+  Tenants         Tenants                  @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_WMS_LoadUnitTypes_Tenants")
+
+  @@unique([TenantID, Code], map: "UQ_WMS_LoadUnitTypes_Tenant_Code")
+  @@unique([TenantID, LoadUnitTypeID], map: "UQ_WMS_LoadUnitTypes_Tenant_ID")
+  @@schema("dbo")
 }
 
-model GASOAL_VMaterialES {
-  Id                       Int                      @id(map: "GASOAL_VMaterialEntrada_PK") @default(autoincrement())
-  IdUsuario                Int
-  Folio                    String                   @unique(map: "GASOAL_VMaterialEntrada_UNIQUE") @db.VarChar(30)
-  Responsable              String                   @db.VarChar(150)
-  IdTipo                   Int                      @db.SmallInt
-  IdCondicion              Int                      @db.SmallInt
-  NombrePS                 String?                  @db.VarChar(150)
-  IdProyecto               String?                  @db.VarChar(100)
-  CuentaCliente            String?                  @db.VarChar(100)
-  Fecha                    DateTime                 @db.DateTime
-  AspNombre                String?                  @db.VarChar(100)
-  AspFirma                 String?                  @db.VarChar(Max)
-  NombreContacto           String?                  @db.VarChar(100)
-  Tecnologia               String?                  @db.VarChar(100)
-  IdRegion                 Int                      @db.SmallInt
-  TotalPiezas              Int                      @default(0, map: "DF__GASOAL_VM__Total__15460CD7")
-  PlacasTransporte         String                   @db.VarChar(100)
-  MaterialEnTransporteFoto String                   @db.VarChar(100)
-  MaterialDescargadoFoto   String?                  @db.VarChar(100)
-  TransporteFoto           String                   @db.VarChar(100)
-  PlacasFoto               String                   @db.VarChar(100)
-  Notas                    String?                  @db.VarChar(350)
-  Qr                       String?                  @db.VarChar(100)
-  FechaCaptura             DateTime                 @default(now(), map: "DefaultFechaCaptura_GASOAL_VMaterialEntrada") @db.DateTime
-  Status                   Int                      @default(0, map: "DF__GASOAL_VM__Statu__39836D4D") @db.SmallInt
-  FechaEdicion             DateTime?                @db.DateTime
-  ES                       Boolean                  @default(true, map: "DF__GASOAL_VMate__ES__46DD686B")
-  NumTarimas               Int                      @default(0, map: "DF__GASOAL_VM__NumTa__54376389")
-  Tarimas                  String?                  @db.VarChar(Max)
-  Cancelada                Boolean                  @default(false, map: "DF__GASOAL_VM__Cance__5807F46D")
-  IdAlmacenDestino         Int                      @default(1, map: "DF__GASOAL_VM__IdAlm__5DC0CDC3")
-  Cat_VMCondicion          Cat_VMCondicion          @relation(fields: [IdCondicion], references: [Id], onUpdate: NoAction, map: "GASOAL_VMaterialEntrada_Cat_DevEntCondicion_FK")
-  Cat_VMTipo               Cat_VMTipo               @relation(fields: [IdTipo], references: [Id], onUpdate: NoAction, map: "GASOAL_VMaterialEntrada_Cat_DevEntTipo_FK")
-  GASOAL_VMAlmacenes       GASOAL_VMAlmacenes       @relation(fields: [IdAlmacenDestino], references: [Id], onUpdate: NoAction, map: "GASOAL_VMaterialES_GASOAL_VMAlmacenes_FK")
-  GASOAL_VMPiezasEstadoF   GASOAL_VMPiezasEstadoF[]
-  GASOAL_VMPiezasMotivo    GASOAL_VMPiezasMotivo[]
+model WMS_MaterialTypes {
+  MaterialTypeID     String                   @id(map: "PK_WMS_MaterialTypes") @default(dbgenerated("newsequentialid()"), map: "DF_WMS_MaterialTypes_ID") @db.UniqueIdentifier
+  TenantID           String                   @db.UniqueIdentifier
+  Code               String                   @db.NVarChar(50)
+  Name               String                   @db.NVarChar(150)
+  Description        String?                  @db.NVarChar(500)
+  IsActive           Boolean                  @default(true, map: "DF_WMS_MaterialTypes_IsActive")
+  CreatedAt          DateTime                 @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_MaterialTypes_CreatedAt")
+  CreatedByUserID    Int?
+  UpdatedAt          DateTime                 @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_MaterialTypes_UpdatedAt")
+  UpdatedByUserID    Int?
+  RowVersion         Unsupported("timestamp")
+  WMS_InventoryItems WMS_InventoryItems[]
+  Tenants            Tenants                  @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_WMS_MaterialTypes_Tenants")
+
+  @@unique([TenantID, Code], map: "UQ_WMS_MaterialTypes_Tenant_Code")
+  @@unique([TenantID, MaterialTypeID], map: "UQ_WMS_MaterialTypes_Tenant_ID")
+  @@index([TenantID, IsActive, Name], map: "IX_WMS_MaterialTypes_Tenant_Active_Name")
+  @@schema("dbo")
+}
+
+model WMS_NumberSequences {
+  SequenceID      String                   @id(map: "PK_WMS_NumberSequences") @default(dbgenerated("newsequentialid()"), map: "DF_WMS_NumberSequences_ID") @db.UniqueIdentifier
+  TenantID        String                   @db.UniqueIdentifier
+  SequenceType    String                   @db.NVarChar(50)
+  Prefix          String?                  @db.NVarChar(30)
+  CurrentValue    BigInt                   @default(0, map: "DF_WMS_NumberSequences_CurrentValue")
+  Padding         Int                      @default(6, map: "DF_WMS_NumberSequences_Padding") @db.TinyInt
+  IsActive        Boolean                  @default(true, map: "DF_WMS_NumberSequences_IsActive")
+  CreatedAt       DateTime                 @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_NumberSequences_CreatedAt")
+  CreatedByUserID Int?
+  UpdatedAt       DateTime                 @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_NumberSequences_UpdatedAt")
+  UpdatedByUserID Int?
+  RowVersion      Unsupported("timestamp")
+  Tenants         Tenants                  @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_WMS_NumberSequences_Tenants")
+
+  @@unique([TenantID, SequenceID], map: "UQ_WMS_NumberSequences_Tenant_ID")
+  @@unique([TenantID, SequenceType], map: "UQ_WMS_NumberSequences_Tenant_Type")
+  @@schema("dbo")
+}
+
+model WMS_Sites {
+  SiteID                                                                                   String                       @id(map: "PK_WMS_Sites") @default(dbgenerated("newsequentialid()"), map: "DF_WMS_Sites_ID") @db.UniqueIdentifier
+  TenantID                                                                                 String                       @db.UniqueIdentifier
+  Code                                                                                     String                       @db.NVarChar(100)
+  Name                                                                                     String?                      @db.NVarChar(250)
+  CarrierID                                                                                String?                      @db.UniqueIdentifier
+  CurrentWarehouseID                                                                       String?                      @db.UniqueIdentifier
+  CurrentStatus                                                                            String                       @default("N'ARRIBO'", map: "DF_WMS_Sites_CurrentStatus") @db.NVarChar(30)
+  ArrivalAt                                                                                DateTime?
+  IsActive                                                                                 Boolean                      @default(true, map: "DF_WMS_Sites_IsActive")
+  CreatedAt                                                                                DateTime                     @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_Sites_CreatedAt")
+  CreatedByUserID                                                                          Int?
+  UpdatedAt                                                                                DateTime                     @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_Sites_UpdatedAt")
+  UpdatedByUserID                                                                          Int?
+  RowVersion                                                                               Unsupported("timestamp")
+  WMS_InventoryItems                                                                       WMS_InventoryItems[]
+  WMS_InventoryMovementItems_WMS_InventoryMovementItems_TenantID_NewSiteIDToWMS_Sites      WMS_InventoryMovementItems[] @relation("WMS_InventoryMovementItems_TenantID_NewSiteIDToWMS_Sites")
+  WMS_InventoryMovementItems_WMS_InventoryMovementItems_TenantID_PreviousSiteIDToWMS_Sites WMS_InventoryMovementItems[] @relation("WMS_InventoryMovementItems_TenantID_PreviousSiteIDToWMS_Sites")
+  WMS_InventoryMovements_WMS_InventoryMovements_TenantID_DestinationSiteIDToWMS_Sites      WMS_InventoryMovements[]     @relation("WMS_InventoryMovements_TenantID_DestinationSiteIDToWMS_Sites")
+  WMS_InventoryMovements_WMS_InventoryMovements_TenantID_OriginSiteIDToWMS_Sites           WMS_InventoryMovements[]     @relation("WMS_InventoryMovements_TenantID_OriginSiteIDToWMS_Sites")
+  WMS_InventoryMovements_WMS_InventoryMovements_TenantID_SiteIDToWMS_Sites                 WMS_InventoryMovements[]     @relation("WMS_InventoryMovements_TenantID_SiteIDToWMS_Sites")
+  WMS_LoadUnits                                                                            WMS_LoadUnits[]
+  WMS_Carriers                                                                             WMS_Carriers?                @relation(fields: [TenantID, CarrierID], references: [TenantID, CarrierID], onUpdate: NoAction, map: "FK_WMS_Sites_Carrier")
+  WMS_Warehouses                                                                           WMS_Warehouses?              @relation(fields: [TenantID, CurrentWarehouseID], references: [TenantID, WarehouseID], onUpdate: NoAction, map: "FK_WMS_Sites_CurrentWarehouse")
+  Tenants                                                                                  Tenants                      @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_WMS_Sites_Tenants")
+
+  @@unique([TenantID, SiteID], map: "UQ_WMS_Sites_Tenant_ID")
+  @@index([TenantID, CurrentStatus, CurrentWarehouseID], map: "IX_WMS_Sites_Tenant_Status_Warehouse")
+  @@index([TenantID, CurrentWarehouseID, Code, Name, IsActive], map: "IX_WMS_Sites_Tenant_Warehouse_Code_Name")
+  @@schema("dbo")
+}
+
+model WMS_WarehouseAisles {
+  AisleID           String                   @id(map: "PK_WMS_WarehouseAisles") @default(dbgenerated("newsequentialid()"), map: "DF_WMS_WarehouseAisles_ID") @db.UniqueIdentifier
+  TenantID          String                   @db.UniqueIdentifier
+  WarehouseID       String                   @db.UniqueIdentifier
+  Code              String                   @db.NVarChar(50)
+  Name              String?                  @db.NVarChar(150)
+  SortOrder         Int                      @default(0, map: "DF_WMS_WarehouseAisles_SortOrder")
+  IsActive          Boolean                  @default(true, map: "DF_WMS_WarehouseAisles_IsActive")
+  CreatedAt         DateTime                 @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_WarehouseAisles_CreatedAt")
+  CreatedByUserID   Int?
+  UpdatedAt         DateTime                 @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_WarehouseAisles_UpdatedAt")
+  UpdatedByUserID   Int?
+  RowVersion        Unsupported("timestamp")
+  Tenants           Tenants                  @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_WMS_WarehouseAisles_Tenants")
+  WMS_Warehouses    WMS_Warehouses           @relation(fields: [TenantID, WarehouseID], references: [TenantID, WarehouseID], onUpdate: NoAction, map: "FK_WMS_WarehouseAisles_Warehouse")
+  WMS_WarehouseBins WMS_WarehouseBins[]
+
+  @@unique([TenantID, AisleID], map: "UQ_WMS_WarehouseAisles_Tenant_ID")
+  @@unique([TenantID, WarehouseID, AisleID], map: "UQ_WMS_WarehouseAisles_Tenant_Warehouse_Aisle")
+  @@unique([TenantID, WarehouseID, Code], map: "UQ_WMS_WarehouseAisles_Tenant_Warehouse_Code")
+  @@index([TenantID, WarehouseID, IsActive, SortOrder], map: "IX_WMS_WarehouseAisles_Tenant_Warehouse_Active")
+  @@schema("dbo")
+}
+
+model WMS_WarehouseBins {
+  BinID                                                                                                               String                       @id(map: "PK_WMS_WarehouseBins") @default(dbgenerated("newsequentialid()"), map: "DF_WMS_WarehouseBins_ID") @db.UniqueIdentifier
+  TenantID                                                                                                            String                       @db.UniqueIdentifier
+  WarehouseID                                                                                                         String                       @db.UniqueIdentifier
+  AisleID                                                                                                             String                       @db.UniqueIdentifier
+  Code                                                                                                                String                       @db.NVarChar(50)
+  Name                                                                                                                String?                      @db.NVarChar(150)
+  CapacityM2                                                                                                          Decimal?                     @db.Decimal(12, 2)
+  SortOrder                                                                                                           Int                          @default(0, map: "DF_WMS_WarehouseBins_SortOrder")
+  IsActive                                                                                                            Boolean                      @default(true, map: "DF_WMS_WarehouseBins_IsActive")
+  CreatedAt                                                                                                           DateTime                     @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_WarehouseBins_CreatedAt")
+  CreatedByUserID                                                                                                     Int?
+  UpdatedAt                                                                                                           DateTime                     @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_WarehouseBins_UpdatedAt")
+  UpdatedByUserID                                                                                                     Int?
+  RowVersion                                                                                                          Unsupported("timestamp")
+  WMS_InventoryItemEvents_WMS_InventoryItemEvents_TenantID_NewWarehouseID_NewBinIDToWMS_WarehouseBins                 WMS_InventoryItemEvents[]    @relation("WMS_InventoryItemEvents_TenantID_NewWarehouseID_NewBinIDToWMS_WarehouseBins")
+  WMS_InventoryItemEvents_WMS_InventoryItemEvents_TenantID_PreviousWarehouseID_PreviousBinIDToWMS_WarehouseBins       WMS_InventoryItemEvents[]    @relation("WMS_InventoryItemEvents_TenantID_PreviousWarehouseID_PreviousBinIDToWMS_WarehouseBins")
+  WMS_InventoryItems                                                                                                  WMS_InventoryItems[]
+  WMS_InventoryMovementItems_WMS_InventoryMovementItems_TenantID_NewWarehouseID_NewBinIDToWMS_WarehouseBins           WMS_InventoryMovementItems[] @relation("WMS_InventoryMovementItems_TenantID_NewWarehouseID_NewBinIDToWMS_WarehouseBins")
+  WMS_InventoryMovementItems_WMS_InventoryMovementItems_TenantID_PreviousWarehouseID_PreviousBinIDToWMS_WarehouseBins WMS_InventoryMovementItems[] @relation("WMS_InventoryMovementItems_TenantID_PreviousWarehouseID_PreviousBinIDToWMS_WarehouseBins")
+  WMS_InventoryMovements_WMS_InventoryMovements_TenantID_DestinationWarehouseID_DestinationBinIDToWMS_WarehouseBins   WMS_InventoryMovements[]     @relation("WMS_InventoryMovements_TenantID_DestinationWarehouseID_DestinationBinIDToWMS_WarehouseBins")
+  WMS_InventoryMovements_WMS_InventoryMovements_TenantID_OriginWarehouseID_OriginBinIDToWMS_WarehouseBins             WMS_InventoryMovements[]     @relation("WMS_InventoryMovements_TenantID_OriginWarehouseID_OriginBinIDToWMS_WarehouseBins")
+  WMS_LoadUnits                                                                                                       WMS_LoadUnits[]
+  WMS_WarehouseAisles                                                                                                 WMS_WarehouseAisles          @relation(fields: [TenantID, WarehouseID, AisleID], references: [TenantID, WarehouseID, AisleID], onUpdate: NoAction, map: "FK_WMS_WarehouseBins_Aisle")
+  Tenants                                                                                                             Tenants                      @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_WMS_WarehouseBins_Tenants")
+
+  @@unique([TenantID, AisleID, Code], map: "UQ_WMS_WarehouseBins_Tenant_Aisle_Code")
+  @@unique([TenantID, BinID], map: "UQ_WMS_WarehouseBins_Tenant_ID")
+  @@unique([TenantID, WarehouseID, BinID], map: "UQ_WMS_WarehouseBins_Tenant_Warehouse_Bin")
+  @@index([TenantID, WarehouseID, AisleID, IsActive, SortOrder], map: "IX_WMS_WarehouseBins_Tenant_Warehouse_Aisle_Active")
+  @@schema("dbo")
+}
+
+model WMS_Warehouses {
+  WarehouseID                                                                                        String                       @id(map: "PK_WMS_Warehouses") @default(dbgenerated("newsequentialid()"), map: "DF_WMS_Warehouses_ID") @db.UniqueIdentifier
+  TenantID                                                                                           String                       @db.UniqueIdentifier
+  Code                                                                                               String                       @db.NVarChar(50)
+  Name                                                                                               String                       @db.NVarChar(200)
+  Description                                                                                        String?                      @db.NVarChar(500)
+  AddressLine                                                                                        String?                      @db.NVarChar(300)
+  City                                                                                               String?                      @db.NVarChar(100)
+  State                                                                                              String?                      @db.NVarChar(100)
+  PostalCode                                                                                         String?                      @db.NVarChar(20)
+  Latitude                                                                                           Decimal?                     @db.Decimal(9, 6)
+  Longitude                                                                                          Decimal?                     @db.Decimal(9, 6)
+  CapacityM2                                                                                         Decimal?                     @db.Decimal(14, 2)
+  IsActive                                                                                           Boolean                      @default(true, map: "DF_WMS_Warehouses_IsActive")
+  CreatedAt                                                                                          DateTime                     @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_Warehouses_CreatedAt")
+  CreatedByUserID                                                                                    Int?
+  UpdatedAt                                                                                          DateTime                     @default(dbgenerated("sysutcdatetime()"), map: "DF_WMS_Warehouses_UpdatedAt")
+  UpdatedByUserID                                                                                    Int?
+  RowVersion                                                                                         Unsupported("timestamp")
+  Phone                                                                                              String?                      @db.NVarChar(30)
+  Region                                                                                             String?                      @db.NVarChar(100)
+  ResponsibleUserID                                                                                  Int?
+  CoordinatorUserID                                                                                  Int?
+  WMS_InventoryItemEvents_WMS_InventoryItemEvents_TenantID_NewWarehouseIDToWMS_Warehouses            WMS_InventoryItemEvents[]    @relation("WMS_InventoryItemEvents_TenantID_NewWarehouseIDToWMS_Warehouses")
+  WMS_InventoryItemEvents_WMS_InventoryItemEvents_TenantID_PreviousWarehouseIDToWMS_Warehouses       WMS_InventoryItemEvents[]    @relation("WMS_InventoryItemEvents_TenantID_PreviousWarehouseIDToWMS_Warehouses")
+  WMS_InventoryItems                                                                                 WMS_InventoryItems[]
+  WMS_InventoryMovementItems_WMS_InventoryMovementItems_TenantID_NewWarehouseIDToWMS_Warehouses      WMS_InventoryMovementItems[] @relation("WMS_InventoryMovementItems_TenantID_NewWarehouseIDToWMS_Warehouses")
+  WMS_InventoryMovementItems_WMS_InventoryMovementItems_TenantID_PreviousWarehouseIDToWMS_Warehouses WMS_InventoryMovementItems[] @relation("WMS_InventoryMovementItems_TenantID_PreviousWarehouseIDToWMS_Warehouses")
+  WMS_InventoryMovements_WMS_InventoryMovements_TenantID_DestinationWarehouseIDToWMS_Warehouses      WMS_InventoryMovements[]     @relation("WMS_InventoryMovements_TenantID_DestinationWarehouseIDToWMS_Warehouses")
+  WMS_InventoryMovements_WMS_InventoryMovements_TenantID_OriginWarehouseIDToWMS_Warehouses           WMS_InventoryMovements[]     @relation("WMS_InventoryMovements_TenantID_OriginWarehouseIDToWMS_Warehouses")
+  WMS_LoadUnits                                                                                      WMS_LoadUnits[]
+  WMS_Sites                                                                                          WMS_Sites[]
+  WMS_WarehouseAisles                                                                                WMS_WarehouseAisles[]
+  GASOCO_Cat_Usuarios_WMS_Warehouses_TenantID_CoordinatorUserIDToGASOCO_Cat_Usuarios                 GASOCO_Cat_Usuarios?         @relation("WMS_Warehouses_TenantID_CoordinatorUserIDToGASOCO_Cat_Usuarios", fields: [TenantID, CoordinatorUserID], references: [TenantID, IdUsuario], onUpdate: NoAction, map: "FK_WMS_Warehouses_CoordinatorUser")
+  GASOCO_Cat_Usuarios_WMS_Warehouses_TenantID_ResponsibleUserIDToGASOCO_Cat_Usuarios                 GASOCO_Cat_Usuarios?         @relation("WMS_Warehouses_TenantID_ResponsibleUserIDToGASOCO_Cat_Usuarios", fields: [TenantID, ResponsibleUserID], references: [TenantID, IdUsuario], onUpdate: NoAction, map: "FK_WMS_Warehouses_ResponsibleUser")
+  Tenants                                                                                            Tenants                      @relation(fields: [TenantID], references: [TenantID], onUpdate: NoAction, map: "FK_WMS_Warehouses_Tenants")
+
+  @@unique([TenantID, Code], map: "UQ_WMS_Warehouses_Tenant_Code")
+  @@unique([TenantID, WarehouseID], map: "UQ_WMS_Warehouses_Tenant_ID")
+  @@index([TenantID, IsActive, Name], map: "IX_WMS_Warehouses_Tenant_Active_Name")
+  @@index([TenantID, Region, City], map: "IX_WMS_Warehouses_Tenant_Region_City")
+  @@schema("dbo")
 }

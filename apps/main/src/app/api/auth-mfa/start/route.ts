@@ -9,8 +9,7 @@ import {
   ID_ORIGIN_WEB,
   getUserTotpSecret,
   createMfaChallenge,
-  writeAuthAudit,
-  withTenantContext
+  writeAuthAudit
 } from '@gaso/shared'
 
 export async function POST(req: Request) {
@@ -75,19 +74,14 @@ export async function POST(req: Request) {
       )
     }
 
-    const emp = await withTenantContext(tenantId, async (tx) => {
-      const rows = await tx.$queryRaw<Array<{
-        Nombre: string | null; Email: string | null
-        IdDepartamento: number | null; IdPuesto: number | null
-        IdArea: number | null; IdRegion: number | null; IsActive: boolean
-      }>>`
-        SELECT e.Email, e.IsActive
-        FROM HumanCapital.Employees e
-        WHERE e.TenantID = CAST(${tenantId} AS uniqueidentifier) AND e.EmployeeID = ${user.EmployeeID}
-      `
+    // emp sobre el MISMO pool con contexto ya fijado por setTenantContext (no abrir otra tx)
+    const empRows = await prisma.$queryRaw<Array<{ Email: string | null; IsActive: boolean }>>`
+      SELECT e.Email, e.IsActive
+      FROM HumanCapital.Employees e
+      WHERE e.TenantID = CAST(${tenantId} AS uniqueidentifier) AND e.EmployeeID = ${user.EmployeeID}
+    `
 
-      return rows[0] ?? null
-    })
+    const emp = empRows[0] ?? null
 
     if (!emp || !emp.IsActive) {
       await writeAuthAudit({ eventType: 'LOGIN_FAILED', eventStatus: 'FAILED', tenantId, username, userId: user.IdUsuario, reason: 'EMPLOYEE_INACTIVE' })
@@ -163,10 +157,9 @@ export async function POST(req: Request) {
       expiresAt,
       factorType: 'TOTP'
     })
-  } catch {
-    return NextResponse.json(
-      { ok: false, message: ['Server error'] },
-      { status: 500 }
-    )
+  } catch (error) {
+    console.error('[AUTH_MFA_START_ERROR]', error instanceof Error ? { message: error.message, stack: error.stack } : error)
+
+    return NextResponse.json({ ok: false, message: ['Server error'] }, { status: 500 })
   }
 }
