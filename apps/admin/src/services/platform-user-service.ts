@@ -1,25 +1,16 @@
 import { revalidateTag } from 'next/cache'
-import { prisma, writeTransactionLog, setTenantContext } from '@gaso/shared'
-import type { PlatformRole } from '@gaso/shared'
-import type { PlatformUserRow, PlatformUserListResult, CreateUserInput } from '@/types/apps/platformUserTypes'
+import { prisma, writeTransactionLog, setTenantContext, withTenantContext } from '@gaso/shared'
+import type {
+  PlatformUserRow, AddPlatformRoleOptions, PlatformUserListResult,
+  CreateUserInput, UpdatePlatformUserOptions, ListPlatformUsersOptions
+} from '@/types/apps/platformUserTypes'
 import { getAdminTenantId } from './admin-tenant'
-
-interface ListPlatformUsersOptions {
-  page: number
-  pageSize: number
-  role?: PlatformRole | null
-  search?: string | null
-}
+import { Prisma } from '@prisma/client'
 
 export async function listPlatformUsers({
-  page = 1,
-  pageSize = 20,
-  role,
-  search
+  page = 1, pageSize = 20, role, search
 }: ListPlatformUsersOptions): Promise<PlatformUserListResult> {
   const tenantId = await getAdminTenantId()
-  await setTenantContext(tenantId)
-
   const offset = (page - 1) * pageSize
 
   let whereClause = ''
@@ -32,131 +23,110 @@ export async function listPlatformUsers({
 
   if (search) {
     params.push(`%${search}%`)
-    whereClause += ` AND (u.Usuario LIKE @p${params.length} OR u.Nombre LIKE @p${params.length})`
+    // nombre ahora desde Employee:
+    whereClause += ` AND (u.Usuario LIKE @p${params.length} OR (e.FirstName + ' ' + e.LastName) LIKE @p${params.length})`
   }
 
-  const countParams = [...params]
-  const dataParams = [...params, offset, pageSize]
+  const baseFrom = `
+    FROM Security.PlatformUsers pu
+    INNER JOIN dbo.GASOCO_Cat_Usuarios u ON u.IdUsuario = pu.UserID
+    INNER JOIN HumanCapital.Employees e ON e.TenantID = u.TenantID AND e.EmployeeID = u.EmployeeID
+    WHERE 1=1 ${whereClause}`
 
-  const [users, totalResult] = await Promise.all([
-    prisma.$queryRawUnsafe<PlatformUserRow[]>(`
+  return withTenantContext(tenantId, async (tx) => {
+    // SECUENCIAL (no Promise.all sobre tx)
+    const users = await tx.$queryRawUnsafe<PlatformUserRow[]>(`
+      SELECT pu.UserID, u.Usuario,
+             LTRIM(RTRIM(e.FirstName + ' ' + e.LastName)) AS Nombre,
+             e.Email, pu.Role, pu.CreatedAt, pu.CreatedBy, u.Estatus
+      ${baseFrom}
+      ORDER BY pu.CreatedAt DESC
+      OFFSET @p${params.length + 1} ROWS FETCH NEXT @p${params.length + 2} ROWS ONLY
+    `, ...params, offset, pageSize)
+
+    const totalResult = await tx.$queryRawUnsafe<Array<{ total: number }>>(`
+      SELECT COUNT(*) AS total ${baseFrom}
+    `, ...params)
+
+    return { users, total: Number(totalResult[0]?.total) || 0 }
+  })
+}
+
+export async function getPlatformUserById(userId: number): Promise<PlatformUserRow | null> {
+  const tenantId = await getAdminTenantId()
+
+  return withTenantContext(tenantId, async (tx) => {
+    const [user] = await tx.$queryRawUnsafe<PlatformUserRow[]>(`
       SELECT
         pu.UserID,
         u.Usuario,
-        u.Nombre,
-        u.Email,
+        LTRIM(RTRIM(e.FirstName + ' ' + e.LastName)) AS Nombre,
+        e.Email,
         pu.Role,
         pu.CreatedAt,
         pu.CreatedBy,
         u.Estatus
       FROM Security.PlatformUsers pu
       INNER JOIN dbo.GASOCO_Cat_Usuarios u ON u.IdUsuario = pu.UserID
-      WHERE 1=1 ${whereClause}
-      ORDER BY pu.CreatedAt DESC
-      OFFSET @p${dataParams.length - 1} ROWS FETCH NEXT @p${dataParams.length} ROWS ONLY
-    `, ...dataParams),
-    prisma.$queryRawUnsafe<Array<{ total: number }>>(`
-      SELECT COUNT(*) as total
-      FROM Security.PlatformUsers pu
-      INNER JOIN dbo.GASOCO_Cat_Usuarios u ON u.IdUsuario = pu.UserID
-      WHERE 1=1 ${whereClause}
-    `, ...countParams)
-  ])
+      INNER JOIN HumanCapital.Employees e ON e.TenantID = u.TenantID AND e.EmployeeID = u.EmployeeID
+      WHERE pu.UserID = @p1
+    `, userId)
 
-  return {
-    users,
-    total: Number(totalResult[0]?.total) || 0
-  }
+    return user ?? null
+  })
+
 }
 
-export async function getPlatformUserById(userId: number): Promise<PlatformUserRow | null> {
+export async function createPlatformUser(input: CreateUserInput, adminUserId: number, adminEmail: string): Promise<PlatformUserRow> {
   const tenantId = await getAdminTenantId()
-  await setTenantContext(tenantId)
 
-  const [user] = await prisma.$queryRawUnsafe<PlatformUserRow[]>(`
-    SELECT
-      pu.UserID,
-      u.Usuario,
-      u.Nombre,
-      u.Email,
-      pu.Role,
-      pu.CreatedAt,
-      pu.CreatedBy,
-      u.Estatus
-    FROM Security.PlatformUsers pu
-    INNER JOIN dbo.GASOCO_Cat_Usuarios u ON u.IdUsuario = pu.UserID
-    WHERE pu.UserID = @p1
-  `, userId)
+  const userId = await withTenantContext(tenantId, async (tx) => {
+    // ── Paso 1: Employee (patrón calcado de RH) ──
+    const empRows = await tx.$queryRaw<Array<{ EmployeeID: number }>>(Prisma.sql`
+      INSERT INTO HumanCapital.Employees
+        (TenantID, FirstName, LastName, Email, EmploymentStatus, IsActive, CreatedBy)
+      OUTPUT inserted.EmployeeID
+      VALUES (
+        CAST(${tenantId} AS uniqueidentifier),
+        ${input.nombre}, ${input.apellidos}, ${input.email ?? null},
+        'active', 1, ${adminUserId}
+      )
+    `)
+    const employeeId = empRows[0]?.EmployeeID
+    if (!employeeId) throw new Error('EMPLOYEE_INSERT_FAILED')
 
-  return user ?? null
-}
+    // ── Paso 2: cáscara Cat_Usuarios (Nombre/Email ya nullables → no se duplican) ──
+    const userRows = await tx.$queryRaw<Array<{ IdUsuario: number }>>(Prisma.sql`
+      INSERT INTO dbo.GASOCO_Cat_Usuarios
+        (Usuario, Password, Estatus, TenantID, EmployeeID)
+      OUTPUT inserted.IdUsuario
+      VALUES (
+        ${input.usuario}, ${input.password}, 'A',
+        CAST(${tenantId} AS uniqueidentifier), ${employeeId}
+      )
+    `)
+    const newUserId = userRows[0]?.IdUsuario
+    if (!newUserId) throw new Error('USER_INSERT_FAILED')
 
-export async function createPlatformUser(
-  input: CreateUserInput,
-  adminUserId: number,
-  adminEmail: string
-): Promise<{ ok: boolean; userId?: number; error?: string }> {
-  try {
-    const tenantId = await getAdminTenantId()
-    await setTenantContext(tenantId)
+    // ── Paso 3: rol de plataforma ──
+    await tx.$executeRaw(Prisma.sql`
+      INSERT INTO Security.PlatformUsers (UserID, Role, CreatedBy)
+      VALUES (${newUserId}, ${input.role}, ${adminUserId})
+    `)
 
-    const existingUser = await prisma.$queryRawUnsafe<Array<{ IdUsuario: number }>>(
-      'SELECT IdUsuario FROM dbo.GASOCO_Cat_Usuarios WHERE Usuario = @p1',
-      input.usuario
-    )
+    return newUserId
+  })
 
-    if (existingUser.length > 0) {
-      return { ok: false, error: 'USERNAME_ALREADY_EXISTS' }
-    }
+  // Fuera de la tx: re-leer el registro compuesto (mismo patrón que RH re-lee el employee)
+  const created = await getPlatformUserById(userId)
+  if (!created) throw new Error('PLATFORM_USER_CREATE_READBACK_FAILED')
 
-    await prisma.$executeRawUnsafe(
-      `INSERT INTO dbo.GASOCO_Cat_Usuarios (Nombre, Usuario, Password, Email, Estatus, TenantID, FechaAlta)
-       VALUES (@p1, @p2, @p3, @p4, 'A', CAST(@p5 AS uniqueidentifier), SYSUTCDATETIME())`,
-      input.nombre,
-      input.usuario,
-      input.password,
-      input.email,
-      tenantId
-    )
+  writeTransactionLog({
+    tenantId, tableName: 'Security.PlatformUsers', action: 'CREATE',
+    userId: adminUserId, appUser: adminEmail, oldData: null, newData: created
+  }).catch(() => { })
 
-    const [newUserResult] = await prisma.$queryRawUnsafe<Array<{ IdUsuario: number }>>(
-      'SELECT IdUsuario FROM dbo.GASOCO_Cat_Usuarios WHERE Usuario = @p1',
-      input.usuario
-    )
-
-    const newUserId = newUserResult?.IdUsuario
-    if (!newUserId) {
-      return { ok: false, error: 'FAILED_TO_CREATE_USER' }
-    }
-
-    await prisma.$executeRawUnsafe(`
-      INSERT INTO Security.PlatformUsers (UserID, Role, CreatedAt, CreatedBy)
-      VALUES (@p1, @p2, SYSUTCDATETIME(), @p3)
-    `, newUserId, input.role, adminUserId)
-
-    await writeTransactionLog({
-      tenantId,
-      tableName: 'Security.PlatformUsers',
-      action: 'PLT_CR',
-      userId: adminUserId,
-      newData: { userId: newUserId, role: input.role, nombre: input.nombre, usuario: input.usuario },
-      appUser: adminEmail,
-    })
-
-    revalidateTag('platform-user')
-
-    return { ok: true, userId: newUserId }
-  } catch (error) {
-    console.error('[CREATE_PLATFORM_USER_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
-  }
-}
-
-interface AddPlatformRoleOptions {
-  userId: number
-  role: PlatformRole
-  adminUserId: number
-  adminEmail: string
+  return created
 }
 
 export async function addPlatformRole(options: AddPlatformRoleOptions): Promise<{ ok: boolean; error?: string }> {
@@ -252,18 +222,11 @@ export async function getOldestPlatformUserId(): Promise<number | null> {
   return result?.UserID ?? null
 }
 
-interface UpdatePlatformUserOptions {
-  userId: number
-  nombre?: string
-  email?: string
-  adminUserId: number
-  adminEmail: string
-}
-
 export async function updatePlatformUser(options: UpdatePlatformUserOptions): Promise<{ ok: boolean; error?: string }> {
-  const { userId, nombre, email, adminUserId, adminEmail } = options
+  const { userId, nombre, apellidos, email, adminUserId, adminEmail } = options
 
   try {
+    const tenantId = await getAdminTenantId()
     const existing = await getPlatformUserById(userId)
     if (!existing) {
       return { ok: false, error: 'USER_NOT_FOUND' }
@@ -280,7 +243,11 @@ export async function updatePlatformUser(options: UpdatePlatformUserOptions): Pr
 
     if (nombre !== undefined) {
       params.push(nombre)
-      updates.push(`Nombre = @p${paramIndex++}`)
+      updates.push(`FirstName = @p${paramIndex++}`)
+    }
+    if (apellidos !== undefined) {
+      params.push(apellidos)
+      updates.push(`LastName = @p${paramIndex++}`)
     }
     if (email !== undefined) {
       params.push(email)
@@ -291,29 +258,34 @@ export async function updatePlatformUser(options: UpdatePlatformUserOptions): Pr
       return { ok: true }
     }
 
-    params.push(userId)
+    params.push(tenantId)   // @p{paramIndex}
+    params.push(userId)     // @p{paramIndex+1}
 
-    const tenantId = await getAdminTenantId()
-    await setTenantContext(tenantId)
+    return withTenantContext(tenantId, async (tx) => {
+      await tx.$executeRawUnsafe(
+        `UPDATE HumanCapital.Employees
+         SET ${updates.join(', ')}
+         WHERE TenantID = CAST(@p${paramIndex} AS uniqueidentifier)
+           AND EmployeeID = (
+             SELECT EmployeeID FROM dbo.GASOCO_Cat_Usuarios
+             WHERE IdUsuario = @p${paramIndex + 1}
+           )`,
+        ...params
+      )
 
-    await prisma.$executeRawUnsafe(
-      `UPDATE dbo.GASOCO_Cat_Usuarios SET ${updates.join(', ')} WHERE IdUsuario = @p${paramIndex}`,
-      ...params
-    )
+      await writeTransactionLog({
+        tenantId,
+        tableName: 'HumanCapital.Employees',
+        action: 'UPDATE',
+        userId: adminUserId,
+        oldData: { nombre: existing.Nombre, email: existing.Email },
+        newData: { nombre, apellidos, email },
+        appUser: adminEmail,
+      })
+      revalidateTag('platform-user')
 
-    await writeTransactionLog({
-      tenantId,
-      tableName: 'GASOCO_Cat_Usuarios',
-      action: 'UPDATE',
-      userId: adminUserId,
-      oldData: { nombre: existing.Nombre, email: existing.Email },
-      newData: { nombre, email },
-      appUser: adminEmail,
+      return { ok: true }
     })
-
-    revalidateTag('platform-user')
-
-    return { ok: true }
   } catch (error) {
     console.error('[UPDATE_PLATFORM_USER_ERROR]', error)
     return { ok: false, error: 'INTERNAL_ERROR' }
@@ -337,26 +309,26 @@ export async function deactivatePlatformUser(
     }
 
     const tenantId = await getAdminTenantId()
-    await setTenantContext(tenantId)
 
-    await prisma.$executeRawUnsafe(
-      `UPDATE dbo.GASOCO_Cat_Usuarios SET Estatus = 'I' WHERE IdUsuario = @p1`,
-      userId
-    )
+    return withTenantContext(tenantId, async (tx) => {
+      await tx.$executeRawUnsafe(
+        `UPDATE dbo.GASOCO_Cat_Usuarios SET Estatus = 'I' WHERE IdUsuario = @p1`,
+        userId
+      )
 
-    await writeTransactionLog({
-      tenantId,
-      tableName: 'GASOCO_Cat_Usuarios',
-      action: 'UPDATE',
-      userId: adminUserId,
-      oldData: { userId, estatus: existing.Estatus },
-      newData: { userId, estatus: 'I' },
-      appUser: adminEmail,
+      await writeTransactionLog({
+        tenantId,
+        tableName: 'GASOCO_Cat_Usuarios',
+        action: 'UPDATE',
+        userId: adminUserId,
+        oldData: { userId, estatus: existing.Estatus },
+        newData: { userId, estatus: 'I' },
+        appUser: adminEmail,
+      })
+      revalidateTag('platform-user')
+
+      return { ok: true }
     })
-
-    revalidateTag('platform-user')
-
-    return { ok: true }
   } catch (error) {
     console.error('[DEACTIVATE_PLATFORM_USER_ERROR]', error)
     return { ok: false, error: 'INTERNAL_ERROR' }
@@ -375,26 +347,26 @@ export async function activatePlatformUser(
     }
 
     const tenantId = await getAdminTenantId()
-    await setTenantContext(tenantId)
 
-    await prisma.$executeRawUnsafe(
-      `UPDATE dbo.GASOCO_Cat_Usuarios SET Estatus = 'A' WHERE IdUsuario = @p1`,
-      userId
-    )
+    return withTenantContext(tenantId, async (tx) => {
+      await tx.$executeRawUnsafe(
+        `UPDATE dbo.GASOCO_Cat_Usuarios SET Estatus = 'A' WHERE IdUsuario = @p1`,
+        userId
+      )
 
-    await writeTransactionLog({
-      tenantId,
-      tableName: 'GASOCO_Cat_Usuarios',
-      action: 'UPDATE',
-      userId: adminUserId,
-      oldData: { userId, estatus: existing.Estatus },
-      newData: { userId, estatus: 'A' },
-      appUser: adminEmail,
+      await writeTransactionLog({
+        tenantId,
+        tableName: 'GASOCO_Cat_Usuarios',
+        action: 'UPDATE',
+        userId: adminUserId,
+        oldData: { userId, estatus: existing.Estatus },
+        newData: { userId, estatus: 'A' },
+        appUser: adminEmail,
+      })
+      revalidateTag('platform-user')
+
+      return { ok: true }
     })
-
-    revalidateTag('platform-user')
-
-    return { ok: true }
   } catch (error) {
     console.error('[ACTIVATE_PLATFORM_USER_ERROR]', error)
     return { ok: false, error: 'INTERNAL_ERROR' }
@@ -404,8 +376,11 @@ export async function activatePlatformUser(
 export async function deletePlatformUser(
   userId: number,
   adminUserId: number,
-  adminEmail: string
+  adminEmail: string,
+  mode: 'account' | 'full' = 'account'   // 'account' = solo cuenta | 'full' = cuenta + empleado
 ): Promise<{ ok: boolean; error?: string }> {
+  const tenantId = await getAdminTenantId()
+
   try {
     const existing = await getPlatformUserById(userId)
     if (!existing) {
@@ -417,20 +392,38 @@ export async function deletePlatformUser(
       return { ok: false, error: 'CANNOT_DELETE_OLDEST_USER' }
     }
 
-    const tenantId = await getAdminTenantId()
-    await setTenantContext(tenantId)
+    await withTenantContext(tenantId, async (tx) => {
+      // 1. Rol de plataforma
+      await tx.$executeRawUnsafe(
+        `DELETE FROM Security.PlatformUsers WHERE UserID = @p1`,
+        userId
+      )
 
-    await prisma.$executeRawUnsafe(
-      `DELETE FROM dbo.GASOCO_Cat_Usuarios WHERE IdUsuario = @p1`,
-      userId
-    )
+      // 2. Cáscara de usuario — capturar el EmployeeID ANTES de borrarla (lo necesita el paso 3)
+      const empRows = await tx.$queryRawUnsafe<Array<{ EmployeeID: number }>>(
+        `DELETE FROM dbo.GASOCO_Cat_Usuarios
+         OUTPUT deleted.EmployeeID
+         WHERE IdUsuario = @p1`,
+        userId
+      )
+      const employeeId = empRows[0]?.EmployeeID
+
+      // 3. Empleado — solo en modo 'full'
+      if (mode === 'full' && employeeId) {
+        await tx.$executeRawUnsafe(
+          `DELETE FROM HumanCapital.Employees
+           WHERE TenantID = CAST(@p1 AS uniqueidentifier) AND EmployeeID = @p2`,
+          tenantId, employeeId
+        )
+      }
+    })
 
     await writeTransactionLog({
       tenantId,
-      tableName: 'GASOCO_Cat_Usuarios',
+      tableName: mode === 'full' ? 'HumanCapital.Employees' : 'GASOCO_Cat_Usuarios',
       action: 'DELETE',
       userId: adminUserId,
-      oldData: { userId, nombre: existing.Nombre, usuario: existing.Usuario },
+      oldData: { userId, nombre: existing.Nombre, usuario: existing.Usuario, mode },
       appUser: adminEmail,
     })
 
@@ -438,6 +431,13 @@ export async function deletePlatformUser(
 
     return { ok: true }
   } catch (error) {
+    const message = error instanceof Error ? error.message : ''
+
+    // La FK habla: si el Employee tiene historial, el paso 3 truena → toda la tx hace rollback
+    if (message.includes('REFERENCE constraint') || message.includes('conflicted with the REFERENCE')) {
+      return { ok: false, error: 'EMPLOYEE_HAS_DEPENDENCIES' }
+    }
+
     console.error('[DELETE_PLATFORM_USER_ERROR]', error)
     return { ok: false, error: 'INTERNAL_ERROR' }
   }

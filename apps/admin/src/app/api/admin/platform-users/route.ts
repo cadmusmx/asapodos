@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { nombre, usuario, email, password, role, userId } = body
+    const { nombre, apellidos, usuario, email, password, role, userId } = body
 
     if (userId !== undefined) {
       if (!role) {
@@ -65,9 +65,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true }, { status: 201 })
     }
 
-    if (!nombre || !usuario || !email || !password || !role) {
+    if (!nombre || !apellidos || !usuario || !email || !password || !role) {
       return NextResponse.json(
-        { message: ['nombre, usuario, email, password, and role are required'] },
+        { message: ['nombre, apellidos, usuario, email, password, and role are required'] },
         { status: 400 }
       )
     }
@@ -87,19 +87,17 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await createPlatformUser(
-      { nombre, usuario, email, password, role },
+      { nombre, apellidos, usuario, email, password, role },
       guard.userId,
       String(guard.platformRole)
-    )
+    );
 
-    if (!result.ok) {
-      if (result.error === 'USERNAME_ALREADY_EXISTS') {
-        return NextResponse.json({ message: ['El nombre de usuario ya existe'] }, { status: 409 })
-      }
-      return NextResponse.json({ message: ['Failed to create user'] }, { status: 500 })
-    }
+    /* TODO
+    if (message.includes('UX_Usuarios_Tenant_Usuario')) return 409 'El usuario ya existe.'
+    if (message.includes('UX_HC_Employees_Tenant_Email')) return 409 'El correo ya existe.'
+    */
 
-    return NextResponse.json({ ok: true, userId: result.userId }, { status: 201 })
+    return NextResponse.json({ ok: true, userId: result.UserID }, { status: 201 })
   } catch (error) {
     console.error('[ADMIN_PLATFORM_USER_ERROR]', error)
     return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })

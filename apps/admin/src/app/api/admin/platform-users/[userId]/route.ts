@@ -27,15 +27,16 @@ export async function PUT(
     }
 
     const body = await req.json()
-    const { nombre, email } = body
+    const { nombre, apellidos, email } = body
 
-    if (!nombre && !email) {
-      return NextResponse.json({ message: ['nombre or email is required'] }, { status: 400 })
+    if (!nombre && !apellidos && !email) {
+      return NextResponse.json({ message: ['nombre, apellidos or email is required'] }, { status: 400 })
     }
 
     const result = await updatePlatformUser({
       userId: Number(userId),
       nombre,
+      apellidos,
       email,
       adminUserId: guard.userId,
       adminEmail: String(guard.platformRole)
@@ -72,6 +73,7 @@ export async function DELETE(
     const { userId } = await params
     const { searchParams } = new URL(req.url)
     const action = searchParams.get('action')
+    const mode = searchParams.get('mode') === 'full' ? 'full' : 'account'   // default seguro
 
     if (!userId) {
       return NextResponse.json({ message: ['userId is required'] }, { status: 400 })
@@ -100,7 +102,8 @@ export async function DELETE(
     const result = await deletePlatformUser(
       Number(userId),
       guard.userId,
-      String(guard.platformRole)
+      String(guard.platformRole),
+      mode
     )
 
     if (!result.ok) {
@@ -109,6 +112,12 @@ export async function DELETE(
       }
       if (result.error === 'CANNOT_DELETE_OLDEST_USER') {
         return NextResponse.json({ message: ['No se puede eliminar al usuario más antiguo'] }, { status: 403 })
+      }
+      if (result.error === 'EMPLOYEE_HAS_DEPENDENCIES') {
+        return NextResponse.json(
+          { message: ['El empleado tiene registros asociados. Elimina solo la cuenta o reasigna su historial.'] },
+          { status: 409 }
+        )
       }
       return NextResponse.json({ message: ['Failed to delete user'] }, { status: 500 })
     }

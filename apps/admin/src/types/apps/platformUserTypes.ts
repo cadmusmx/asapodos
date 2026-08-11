@@ -2,6 +2,13 @@ import type { PlatformRole } from '@gaso/shared'
 
 export type { PlatformRole }
 
+export interface ListPlatformUsersOptions {
+  page: number
+  pageSize: number
+  role?: PlatformRole | null
+  search?: string | null
+}
+
 export interface PlatformUserRow {
   UserID: number
   Usuario: string
@@ -20,6 +27,7 @@ export interface PlatformUserListResult {
 
 export interface CreateUserInput {
   nombre: string
+  apellidos: string
   usuario: string
   email: string
   password: string
@@ -33,4 +41,20 @@ export interface SearchUserRow {
   Email: string | null
   Estatus: string
   hasRole: number
+}
+
+export interface UpdatePlatformUserOptions {
+  userId: number
+  nombre?: string      // → FirstName
+  apellidos?: string   // → LastName
+  email?: string
+  adminUserId: number
+  adminEmail: string
+}
+
+export interface AddPlatformRoleOptions {
+  userId: number
+  role: PlatformRole
+  adminUserId: number
+  adminEmail: string
 }
