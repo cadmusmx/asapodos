@@ -38,6 +38,7 @@ const roleOptions: { value: PlatformRole; label: string; description: string }[]
 
 interface CreateFormState {
   nombre: string
+  apellidos: string
   usuario: string
   email: string
   password: string
@@ -47,6 +48,7 @@ interface CreateFormState {
 
 const initialCreateForm: CreateFormState = {
   nombre: '',
+  apellidos: '',
   usuario: '',
   email: '',
   password: '',
@@ -81,6 +83,10 @@ export default function UserCreateModal({ open, onClose, onSuccess }: UserCreate
 
     if (!createForm.nombre.trim()) {
       errors.nombre = 'El nombre es requerido'
+    }
+
+    if (!createForm.apellidos.trim()) {
+      errors.nombre = 'Los apellidos son requeridos'
     }
 
     if (!createForm.usuario.trim()) {
@@ -120,6 +126,7 @@ export default function UserCreateModal({ open, onClose, onSuccess }: UserCreate
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nombre: createForm.nombre.trim(),
+          apellidos: createForm.apellidos.trim(),
           usuario: createForm.usuario.trim(),
           email: createForm.email.trim(),
           password: createForm.password,
@@ -247,16 +254,27 @@ export default function UserCreateModal({ open, onClose, onSuccess }: UserCreate
         {tab === 0 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             <TextField
-              label='Nombre Completo'
-              placeholder='Juan Pérez García'
+              label='Nombre(s)'
+              placeholder='Juan'
               value={createForm.nombre}
               onChange={handleCreateChange('nombre')}
-              required
-              fullWidth
+              required fullWidth
               error={Boolean(fieldErrors.nombre)}
               helperText={fieldErrors.nombre}
               disabled={loading}
-              inputProps={{ maxLength: 255 }}
+              slotProps={{ htmlInput: { maxLength: 100 } }}
+            />
+
+            <TextField
+              label='Apellidos'
+              placeholder='Pérez García'
+              value={createForm.apellidos}
+              onChange={handleCreateChange('apellidos')}
+              required fullWidth
+              error={Boolean(fieldErrors.apellidos)}
+              helperText={fieldErrors.apellidos}
+              disabled={loading}
+              slotProps={{ htmlInput: { maxLength: 100 } }}
             />
 
             <TextField
@@ -269,7 +287,7 @@ export default function UserCreateModal({ open, onClose, onSuccess }: UserCreate
               error={Boolean(fieldErrors.usuario)}
               helperText={fieldErrors.usuario || 'Mínimo 3 caracteres'}
               disabled={loading}
-              inputProps={{ maxLength: 125 }}
+              slotProps={{ htmlInput: { maxLength: 125 } }}
             />
 
             <TextField
@@ -283,7 +301,7 @@ export default function UserCreateModal({ open, onClose, onSuccess }: UserCreate
               error={Boolean(fieldErrors.email)}
               helperText={fieldErrors.email}
               disabled={loading}
-              inputProps={{ maxLength: 255 }}
+              slotProps={{ htmlInput: { maxLength: 255 } }}
             />
 
             <TextField
