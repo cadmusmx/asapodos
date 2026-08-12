@@ -9,6 +9,7 @@ import type { PlatformUserRow, PlatformRole } from '@/types/apps/platformUserTyp
 import UsersTable from '@/components/users/UsersTable'
 import UsersFilters from '@/components/users/UsersFilters'
 import UserCreateModal from '@/components/users/UserCreateModal'
+import PromoteUserModal from '@/components/users/PromoteUserModal'
 import UserRemoveModal from '@/components/users/UserRemoveModal'
 import EditUserModal from '@/components/users/EditUserModal'
 import DeactivateUserModal from '@/components/users/DeactivateUserModal'
@@ -35,6 +36,7 @@ export default function UsersPageClient({
   oldestUserId
 }: UsersPageClientProps) {
   const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [promoteModalOpen, setPromoteModalOpen] = useState(false)
   const [removeModalOpen, setRemoveModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [deactivateModalOpen, setDeactivateModalOpen] = useState(false)
@@ -71,12 +73,17 @@ export default function UsersPageClient({
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant='h4' fontWeight='bold'>
-          Gestión de Usuarios
-        </Typography>
-        <Button variant='contained' onClick={() => setCreateModalOpen(true)}>
-          + Crear Usuario
-        </Button>
+        <Typography variant='h4' fontWeight='bold'>Gestión de Usuarios</Typography>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button variant='outlined' startIcon={<i className='ri-user-star-line' />}
+            onClick={() => setPromoteModalOpen(true)}>
+            Promover Usuario
+          </Button>
+          <Button variant='contained' startIcon={<i className='ri-user-add-line' />}
+            onClick={() => setCreateModalOpen(true)}>
+            Crear Usuario
+          </Button>
+        </Box>
       </Box>
 
       <UsersFilters />
@@ -99,6 +106,11 @@ export default function UsersPageClient({
       <UserCreateModal
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
+      />
+
+      <PromoteUserModal
+        open={promoteModalOpen}
+        onClose={() => setPromoteModalOpen(false)}
       />
 
       <UserRemoveModal

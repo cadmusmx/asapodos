@@ -6,7 +6,8 @@ import {
   updatePlatformUser,
   deactivatePlatformUser,
   activatePlatformUser,
-  removePlatformRole
+  removePlatformRole,
+  getPlatformUserById
 } from '@/services/platform-user-service'
 
 export async function PUT(
@@ -189,6 +190,31 @@ export async function POST(
     return NextResponse.json({ message: ['Invalid action'] }, { status: 400 })
   } catch (error) {
     console.error('[ADMIN_PLATFORM_USER_ACTION_ERROR]', error)
+    return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
+  }
+}
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ userId: string }> }
+) {
+  const guard = await requirePlatformRole('super_admin')
+
+  if (!guard.ok) {
+    return NextResponse.json({ message: guard.message }, { status: guard.status })
+  }
+
+  try {
+    const { userId } = await params
+    const user = await getPlatformUserById(Number(userId))
+
+    if (!user) {
+      return NextResponse.json({ message: ['User not found'] }, { status: 404 })
+    }
+
+    return NextResponse.json({ user })
+  } catch (error) {
+    console.error('[ADMIN_GET_PLATFORM_USER_ERROR]', error)
     return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
   }
 }

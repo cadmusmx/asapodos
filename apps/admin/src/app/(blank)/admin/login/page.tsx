@@ -130,6 +130,9 @@ const AdminLoginForm = () => {
 
         const setupVerifyResult = await setupVerifyRes.json()
 
+        console.log('setupVerifyResult', setupVerifyResult);
+
+
         if (!setupVerifyRes.ok) {
           setErrorState(setupVerifyResult)
 
@@ -207,6 +210,16 @@ const AdminLoginForm = () => {
         return
       }
 
+      console.log({
+        user: data.user,
+        password: data.password,
+        challengeId,
+        mfaCode: data.mfaCode,
+        loginType: 'admin',
+        redirect: false
+      });
+
+
       const res = await signIn('credentials', {
         user: data.user,
         password: data.password,
@@ -215,6 +228,9 @@ const AdminLoginForm = () => {
         loginType: 'admin',
         redirect: false
       })
+
+      console.log(JSON.stringify(res));
+
 
       if (res && res.ok && res.error === null) {
         const session = await getSession()
@@ -236,7 +252,10 @@ const AdminLoginForm = () => {
         setMfaStep(false)
         setChallengeId(null)
       }
-    } finally {
+    } catch (e) {
+      console.log('ERROR AdminLoginForm.onSubmit', e);
+    }
+    finally {
       setIsSubmitting(false)
     }
   }

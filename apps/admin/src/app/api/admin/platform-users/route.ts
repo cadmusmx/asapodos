@@ -92,11 +92,6 @@ export async function POST(req: NextRequest) {
       String(guard.platformRole)
     );
 
-    /* TODO
-    if (message.includes('UX_Usuarios_Tenant_Usuario')) return 409 'El usuario ya existe.'
-    if (message.includes('UX_HC_Employees_Tenant_Email')) return 409 'El correo ya existe.'
-    */
-
     return NextResponse.json({ ok: true, userId: result.UserID }, { status: 201 })
   } catch (error) {
     console.error('[ADMIN_PLATFORM_USER_ERROR]', error)

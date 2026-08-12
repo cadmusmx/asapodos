@@ -2,7 +2,8 @@ import { revalidateTag } from 'next/cache'
 import { prisma, writeTransactionLog, setTenantContext, withTenantContext } from '@gaso/shared'
 import type {
   PlatformUserRow, AddPlatformRoleOptions, PlatformUserListResult,
-  CreateUserInput, UpdatePlatformUserOptions, ListPlatformUsersOptions
+  CreateUserInput, UpdatePlatformUserOptions, ListPlatformUsersOptions,
+  PlatformUserEditRow
 } from '@/types/apps/platformUserTypes'
 import { getAdminTenantId } from './admin-tenant'
 import { Prisma } from '@prisma/client'
@@ -52,15 +53,17 @@ export async function listPlatformUsers({
   })
 }
 
-export async function getPlatformUserById(userId: number): Promise<PlatformUserRow | null> {
+export async function getPlatformUserById(userId: number): Promise<PlatformUserEditRow | null> {
   const tenantId = await getAdminTenantId()
 
   return withTenantContext(tenantId, async (tx) => {
-    const [user] = await tx.$queryRawUnsafe<PlatformUserRow[]>(`
+    const [user] = await tx.$queryRawUnsafe<PlatformUserEditRow[]>(`
       SELECT
         pu.UserID,
         u.Usuario,
         LTRIM(RTRIM(e.FirstName + ' ' + e.LastName)) AS Nombre,
+        e.FirstName AS FirstName,      -- ← nuevo
+        e.LastName  AS LastName,       -- ← nuevo
         e.Email,
         pu.Role,
         pu.CreatedAt,
@@ -74,7 +77,6 @@ export async function getPlatformUserById(userId: number): Promise<PlatformUserR
 
     return user ?? null
   })
-
 }
 
 export async function createPlatformUser(input: CreateUserInput, adminUserId: number, adminEmail: string): Promise<PlatformUserRow> {
@@ -95,15 +97,17 @@ export async function createPlatformUser(input: CreateUserInput, adminUserId: nu
     const employeeId = empRows[0]?.EmployeeID
     if (!employeeId) throw new Error('EMPLOYEE_INSERT_FAILED')
 
-    // ── Paso 2: cáscara Cat_Usuarios (Nombre/Email ya nullables → no se duplican) ──
+    // ── Paso 2: cáscara Cat_Usuarios (con OUTPUT INTO por el trigger) ──
     const userRows = await tx.$queryRaw<Array<{ IdUsuario: number }>>(Prisma.sql`
+      DECLARE @NewUser TABLE (IdUsuario int);
       INSERT INTO dbo.GASOCO_Cat_Usuarios
         (Usuario, Password, Estatus, TenantID, EmployeeID)
-      OUTPUT inserted.IdUsuario
+      OUTPUT inserted.IdUsuario INTO @NewUser
       VALUES (
         ${input.usuario}, ${input.password}, 'A',
         CAST(${tenantId} AS uniqueidentifier), ${employeeId}
-      )
+      );
+      SELECT IdUsuario FROM @NewUser;
     `)
     const newUserId = userRows[0]?.IdUsuario
     if (!newUserId) throw new Error('USER_INSERT_FAILED')
@@ -401,9 +405,11 @@ export async function deletePlatformUser(
 
       // 2. Cáscara de usuario — capturar el EmployeeID ANTES de borrarla (lo necesita el paso 3)
       const empRows = await tx.$queryRawUnsafe<Array<{ EmployeeID: number }>>(
-        `DELETE FROM dbo.GASOCO_Cat_Usuarios
-         OUTPUT deleted.EmployeeID
-         WHERE IdUsuario = @p1`,
+        `DECLARE @DeletedUser TABLE (EmployeeID int);
+          DELETE FROM dbo.GASOCO_Cat_Usuarios
+          OUTPUT deleted.EmployeeID INTO @DeletedUser
+          WHERE IdUsuario = @p1;
+          SELECT EmployeeID FROM @DeletedUser;`,
         userId
       )
       const employeeId = empRows[0]?.EmployeeID

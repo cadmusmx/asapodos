@@ -16,6 +16,7 @@ import IconButton from '@mui/material/IconButton'
 import Alert from '@mui/material/Alert'
 import type { PlatformUserRow } from '@/types/apps/platformUserTypes'
 import { toast } from 'react-toastify'
+import { FormControlLabel, Radio, RadioGroup } from '@mui/material'
 
 interface DeleteUserModalProps {
   open: boolean
@@ -27,23 +28,31 @@ interface DeleteUserModalProps {
 export default function DeleteUserModal({ open, onClose, user, onSuccess }: DeleteUserModalProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [mode, setMode] = useState<'account' | 'full'>('account')
+  const [depError, setDepError] = useState(false)
 
   const handleSubmit = async () => {
     if (!user) return
 
     setLoading(true)
+    setDepError(false)
 
     try {
-      const res = await fetch(`/api/admin/platform-users/${user.UserID}`, {
+      const res = await fetch(`/api/admin/platform-users/${user.UserID}?mode=${mode}`, {
         method: 'DELETE'
       })
 
       if (!res.ok) {
         const result = await res.json()
+        // 409 = el empleado tiene historial → sugerir modo 'account'
+        if (res.status === 409) {
+          setDepError(true)
+          throw new Error(result.message?.[0] || 'El empleado tiene registros asociados.')
+        }
         throw new Error(result.message?.[0] || 'Failed to delete user')
       }
 
-      toast.success('Usuario eliminado permanentemente')
+      toast.success(mode === 'full' ? 'Usuario y empleado eliminados' : 'Cuenta eliminada')
       handleClose()
       onSuccess?.()
       router.refresh()
@@ -82,26 +91,32 @@ export default function DeleteUserModal({ open, onClose, user, onSuccess }: Dele
         </Box>
       </DialogTitle>
 
-        <Divider sx={{ mb: 3 }} />
+      <Divider sx={{ mb: 3 }} />
 
-        <DialogContent sx={{ p: 1 }}>
-        <Box sx={{ mb: 2 }}>
-          <Typography variant='body2' color='text.secondary' gutterBottom>
-            Se eliminará permanentemente al siguiente usuario:
-          </Typography>
-          <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
-            <Typography fontWeight='bold'>{user.Nombre}</Typography>
-            <Typography variant='body2' color='text.secondary'>
-              @{user.Usuario} · {user.Email || 'sin email'}
-            </Typography>
-          </Box>
-        </Box>
+      <DialogContent sx={{ p: 1 }}>
+        <RadioGroup value={mode} onChange={(e) => setMode(e.target.value as 'account' | 'full')} sx={{ mb: 2 }}>
+          <FormControlLabel value='account' control={<Radio />}
+            label='Solo la cuenta — el empleado se conserva en RH, pierde el acceso' />
+          <FormControlLabel value='full' control={<Radio />}
+            label='Cuenta y empleado — elimina la persona del sistema por completo' />
+        </RadioGroup>
 
-        <Alert severity='error'>
+        <Alert severity={mode === 'full' ? 'error' : 'warning'}>
           <Typography variant='body2'>
-            Esta acción es irreversible. El usuario y todos sus datos serán eliminados permanentemente.
+            {mode === 'full'
+              ? 'Se eliminarán la cuenta y el registro de empleado. Irreversible.'
+              : 'Se eliminará la cuenta de acceso. El empleado permanece en RH.'}
           </Typography>
         </Alert>
+
+        {depError && (
+          <Alert severity='info' sx={{ mt: 2 }}>
+            <Typography variant='body2'>
+              Este empleado tiene registros asociados y no puede eliminarse por completo.
+              Usa <strong>Solo la cuenta</strong>, o reasigna su historial primero.
+            </Typography>
+          </Alert>
+        )}
       </DialogContent>
 
       <DialogActions sx={{ mt: 4, p: 0 }}>

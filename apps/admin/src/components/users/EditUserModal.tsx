@@ -14,32 +14,46 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
-import type { PlatformUserRow } from '@/types/apps/platformUserTypes'
+import type { PlatformUserEditRow } from '@/types/apps/platformUserTypes'
 import { toast } from 'react-toastify'
 
 interface EditUserModalProps {
   open: boolean
   onClose: () => void
-  user: PlatformUserRow | null
+  user: PlatformUserEditRow | null
   onSuccess?: () => void
 }
 
 export default function EditUserModal({ open, onClose, user, onSuccess }: EditUserModalProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [form, setForm] = useState({
-    nombre: '',
-    email: ''
-  })
-  const [fieldErrors, setFieldErrors] = useState<{ nombre?: string; email?: string }>({})
+  const [form, setForm] = useState({ nombre: '', apellidos: '', email: '' })
+  const [fieldErrors, setFieldErrors] = useState<{ nombre?: string; apellidos?: string; email?: string }>({})
+  const [fetching, setFetching] = useState(false)
 
+  // Fetch del detalle al abrir (opción A: dato fresco, First/Last separados)
   useEffect(() => {
-    if (user) {
-      setForm({ nombre: user.Nombre || '', email: user.Email || '' })
+    if (open && user) {
+      setFetching(true)
+      fetch(`/api/admin/platform-users/${user.UserID}`)
+        .then(res => res.ok ? res.json() : Promise.reject())
+        .then(data => {
+          setForm({
+            nombre: data.user.FirstName || '',
+            apellidos: data.user.LastName || '',
+            email: data.user.Email || ''
+          })
+        })
+        .catch(() => {
+          // Fallback: si el GET falla, parte el Nombre concatenado del prop
+          const parts = (user.Nombre || '').trim().split(/\s+/)
+          setForm({ nombre: parts[0] || '', apellidos: parts.slice(1).join(' '), email: user.Email || '' })
+        })
+        .finally(() => setFetching(false))
     }
-  }, [user])
+  }, [open, user])
 
-  const handleChange = (field: 'nombre' | 'email') => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (field: 'nombre' | 'apellidos' | 'email') => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [field]: e.target.value }))
     if (fieldErrors[field]) {
       setFieldErrors(prev => ({ ...prev, [field]: undefined }))
@@ -47,18 +61,11 @@ export default function EditUserModal({ open, onClose, user, onSuccess }: EditUs
   }
 
   const validate = (): boolean => {
-    const errors: { nombre?: string; email?: string } = {}
-
-    if (!form.nombre.trim()) {
-      errors.nombre = 'El nombre es requerido'
-    }
-
-    if (!form.email.trim()) {
-      errors.email = 'El email es requerido'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      errors.email = 'Email inválido'
-    }
-
+    const errors: { nombre?: string; apellidos?: string; email?: string } = {}
+    if (!form.nombre.trim()) errors.nombre = 'El nombre es requerido'
+    if (!form.apellidos.trim()) errors.apellidos = 'Los apellidos son requeridos'
+    if (!form.email.trim()) errors.email = 'El email es requerido'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.email = 'Email inválido'
     setFieldErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -74,6 +81,7 @@ export default function EditUserModal({ open, onClose, user, onSuccess }: EditUs
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nombre: form.nombre.trim(),
+          apellidos: form.apellidos.trim(),
           email: form.email.trim()
         })
       })
@@ -96,7 +104,7 @@ export default function EditUserModal({ open, onClose, user, onSuccess }: EditUs
 
   const handleClose = () => {
     if (!loading) {
-      setForm({ nombre: '', email: '' })
+      setForm({ nombre: '', apellidos: '', email: '' })
       setFieldErrors({})
       onClose()
     }
@@ -138,32 +146,35 @@ export default function EditUserModal({ open, onClose, user, onSuccess }: EditUs
               </Typography>
             </Box>
 
-            <TextField
-              label='Nombre Completo'
-              placeholder='Juan Pérez García'
-              value={form.nombre}
-              onChange={handleChange('nombre')}
-              required
-              fullWidth
-              error={Boolean(fieldErrors.nombre)}
-              helperText={fieldErrors.nombre}
-              disabled={loading}
-              inputProps={{ maxLength: 255 }}
-            />
-
-            <TextField
-              label='Email'
-              type='email'
-              placeholder='jperez@empresa.com'
-              value={form.email}
-              onChange={handleChange('email')}
-              required
-              fullWidth
-              error={Boolean(fieldErrors.email)}
-              helperText={fieldErrors.email}
-              disabled={loading}
-              inputProps={{ maxLength: 255 }}
-            />
+            {fetching ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress size={24} />
+              </Box>
+            ) : (
+              <>
+                <TextField
+                  label='Nombre(s)' placeholder='Juan'
+                  value={form.nombre} onChange={handleChange('nombre')}
+                  required fullWidth disabled={loading}
+                  error={Boolean(fieldErrors.nombre)} helperText={fieldErrors.nombre}
+                  slotProps={{ htmlInput: { maxLength: 100 } }}
+                />
+                <TextField
+                  label='Apellidos' placeholder='Pérez García'
+                  value={form.apellidos} onChange={handleChange('apellidos')}
+                  required fullWidth disabled={loading}
+                  error={Boolean(fieldErrors.apellidos)} helperText={fieldErrors.apellidos}
+                  slotProps={{ htmlInput: { maxLength: 100 } }}
+                />
+                <TextField
+                  label='Email' type='email' placeholder='jperez@empresa.com'
+                  value={form.email} onChange={handleChange('email')}
+                  required fullWidth disabled={loading}
+                  error={Boolean(fieldErrors.email)} helperText={fieldErrors.email}
+                  slotProps={{ htmlInput: { maxLength: 255 } }}
+                />
+              </>
+            )}
           </Box>
         </DialogContent>
 

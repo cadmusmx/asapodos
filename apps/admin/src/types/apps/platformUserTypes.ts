@@ -58,3 +58,8 @@ export interface AddPlatformRoleOptions {
   adminUserId: number
   adminEmail: string
 }
+
+export interface PlatformUserEditRow extends PlatformUserRow {
+  FirstName: string
+  LastName: string
+}
