@@ -241,7 +241,8 @@
       "main": "Administration",
       "requests": "Requests",
       "audit": "Audit",
-      "permissions": "Permission Access"
+      "permissions": "Permission Access",
+      "users": "Users Management"
     },
     "workTools": "Work Tools",
     "ehs": {

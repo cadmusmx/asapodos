@@ -113,9 +113,10 @@ export const erpNavigationModules: ErpNavigationModule[] = [
     labelKey: 'administration.main',
     icon: 'ri-government-line',
     items: [
+      { key: 'adm-users', labelKey: 'administration.users', href: '/administration/users', icon: 'ri-group-3-line', viewCode: 'users' },
+      { key: 'adm-permissions', labelKey: 'administration.permissions', href: '/administration/permissions', icon: 'ri-lock-unlock-line', viewCode: 'permissions_access' },
       { key: 'adm-requests', labelKey: 'administration.requests', href: '/administration/requests', icon: 'ri-file-list-line', viewCode: 'requests' },
       { key: 'adm-audit', labelKey: 'administration.audit', href: '/administration/audit', icon: 'ri-file-history-line', viewCode: 'audit' },
-      { key: 'adm-permissions', labelKey: 'administration.permissions', href: '/administration/permissions', icon: 'ri-lock-unlock-line', viewCode: 'permissions_access' }
     ]
   }
 ]
