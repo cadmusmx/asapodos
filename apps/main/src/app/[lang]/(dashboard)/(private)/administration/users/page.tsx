@@ -21,11 +21,15 @@ const UsersPage = async (props: { params: Promise<{ lang: Locale }> }) => {
     redirect(getLocalizedUrl(getTargetByReason(access.reason), lang));
   }
 
-  // NO es la autoridad (el servidor revalida en cada POST), es solo para pintar la UI correcta.
   const canCreate = (access.mask & PERM.W) === PERM.W;
   const canEdit = (access.mask & PERM.U) === PERM.U;
 
-  return <UsersManager canCreate={canCreate} canEdit={canEdit} />;
+  return (
+    <UsersManager
+      canCreate={canCreate}
+      canEdit={canEdit}
+    />
+  );
 };
 
 export default UsersPage;

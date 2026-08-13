@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import type { MouseEvent } from 'react';
+
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -16,6 +18,10 @@ import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
 import Grid from '@mui/material/Grid2';
 import IconButton from '@mui/material/IconButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
@@ -40,11 +46,15 @@ type StatusAction = 'suspend' | 'reactivate';
 
 type UsersManagerProps = {
 
-  // "Asignar usuario" es un alta → bit W.
+  // "Asignar usuario" → bit W.
   canCreate?: boolean;
 
-  // Suspender/reactivar cuenta → bit U.
+  // Suspender/reactivar y restablecer MFA → bit U.
   canEdit?: boolean;
+
+  // Enlace "Gestionar permisos" → gateado por el viewCode permissions_access.
+  canManagePermissions?: boolean;
+  permissionsHref?: string;
 };
 
 // Empleo (dominio RH) — solo lectura aquí.
@@ -96,8 +106,6 @@ const suggestUsername = (fullName: string): string => {
 
 const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps) => {
   const [rows, setRows] = useState<UserAccountListItem[]>([]);
-
-  // Lo que ve el input (inmediato) vs. lo que dispara la búsqueda (con debounce).
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
@@ -120,6 +128,17 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
   const [statusAction, setStatusAction] = useState<StatusAction | null>(null);
   const [statusSaving, setStatusSaving] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
+
+  // Menú kebab de acciones de cuenta
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [menuRow, setMenuRow] = useState<UserAccountListItem | null>(null);
+
+  // Diálogo restablecer MFA
+  const [mfaOpen, setMfaOpen] = useState(false);
+  const [mfaTarget, setMfaTarget] = useState<UserAccountListItem | null>(null);
+  const [mfaReason, setMfaReason] = useState('');
+  const [mfaSaving, setMfaSaving] = useState(false);
+  const [mfaError, setMfaError] = useState<string | null>(null);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -154,10 +173,6 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
   }, [page, pageSize, search]);
 
   useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
-
-  useEffect(() => {
     const handle = setTimeout(() => {
       setSearch(searchInput.trim());
       setPage(0);
@@ -165,6 +180,21 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
 
     return () => clearTimeout(handle);
   }, [searchInput]);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
+
+  // Menú kebab
+  const openMenu = (event: MouseEvent<HTMLElement>, row: UserAccountListItem) => {
+    setMenuAnchor(event.currentTarget);
+    setMenuRow(row);
+  };
+
+  const closeMenu = () => {
+    setMenuAnchor(null);
+    setMenuRow(null);
+  };
 
   // Asignar usuario
   const openAssign = (row: UserAccountListItem) => {
@@ -284,6 +314,65 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
     }
   };
 
+  // Restablecer MFA (endpoint de dominio Security, reusado)
+  const openMfa = (row: UserAccountListItem) => {
+    setMfaTarget(row);
+    setMfaReason('Usuario perdió acceso a Google Authenticator');
+    setMfaError(null);
+    setMfaOpen(true);
+  };
+
+  const closeMfa = () => {
+    if (mfaSaving) return;
+
+    setMfaOpen(false);
+    setMfaTarget(null);
+    setMfaReason('');
+    setMfaError(null);
+  };
+
+  const submitMfa = async () => {
+    if (!mfaTarget || mfaTarget.userId === null) return;
+
+    const target = mfaTarget;
+
+    setMfaSaving(true);
+    setMfaError(null);
+
+    try {
+      const response = await fetch(`/api/users/${target.userId}/mfa/reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: mfaReason.trim() || 'Admin MFA reset' })
+      });
+
+      const data = (await response.json().catch(() => null)) as {
+        ok?: boolean;
+        message?: string[];
+        updatedRows?: number;
+      } | null;
+
+      if (!response.ok || !data?.ok) {
+        throw new Error(data?.message?.[0] ?? 'No se pudo restablecer el MFA.');
+      }
+
+      setMfaOpen(false);
+      setMfaTarget(null);
+      setMfaReason('');
+      setFeedback({
+        type: 'success',
+        message:
+          (data.updatedRows ?? 0) > 0
+            ? `MFA de ${target.fullName} restablecido. Deberá enrolar Google Authenticator de nuevo.`
+            : `${target.fullName} no tenía un factor MFA activo.`
+      });
+    } catch (error) {
+      setMfaError(error instanceof Error ? error.message : 'Error al restablecer MFA.');
+    } finally {
+      setMfaSaving(false);
+    }
+  };
+
   return (
     <Box>
       <Card>
@@ -345,6 +434,7 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
                   ) : (
                     rows.map(row => {
                       const account = accountChip(row.accountStatus);
+                      const hasRowMenu = row.hasAccount && canEdit;
 
                       return (
                         <TableRow key={row.employeeId} hover>
@@ -409,20 +499,12 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
                                   </span>
                                 </Tooltip>
                               ) : null
-                            ) : canEdit ? (
-                              row.accountStatus === 'A' ? (
-                                <Tooltip title='Suspender cuenta'>
-                                  <IconButton color='warning' onClick={() => openStatus(row)}>
-                                    <i className='ri-pause-circle-line' />
-                                  </IconButton>
-                                </Tooltip>
-                              ) : (
-                                <Tooltip title='Reactivar cuenta'>
-                                  <IconButton color='success' onClick={() => openStatus(row)}>
-                                    <i className='ri-play-circle-line' />
-                                  </IconButton>
-                                </Tooltip>
-                              )
+                            ) : hasRowMenu ? (
+                              <Tooltip title='Acciones'>
+                                <IconButton onClick={event => openMenu(event, row)}>
+                                  <i className='ri-more-2-line' />
+                                </IconButton>
+                              </Tooltip>
                             ) : null}
                           </TableCell>
                         </TableRow>
@@ -448,6 +530,48 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
           </Stack>
         </CardContent>
       </Card>
+
+      {/* Menú de acciones de cuenta (filas con usuario) */}
+      <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={closeMenu}>
+        {menuRow && canEdit ? (
+          <MenuItem
+            onClick={() => {
+              const row = menuRow;
+
+              closeMenu();
+              if (row) openStatus(row);
+            }}
+          >
+            <ListItemIcon>
+              <i className={menuRow.accountStatus === 'A' ? 'ri-pause-circle-line' : 'ri-play-circle-line'} />
+            </ListItemIcon>
+            <ListItemText> {menuRow.accountStatus === 'A' ? 'Suspender cuenta' : 'Reactivar cuenta'}</ListItemText>
+          </MenuItem>
+        ) : null}
+
+        {menuRow && canEdit && menuRow.accountStatus === 'A' ? (
+          <MenuItem
+            onClick={() => {
+              const row = menuRow;
+
+              closeMenu();
+              if (row) openMfa(row);
+            }}
+          >
+            <ListItemIcon>
+              <i className='ri-shield-keyhole-line' />
+            </ListItemIcon>
+            <ListItemText> Restablecer MFA</ListItemText>
+          </MenuItem>
+        ) : null}
+
+        <MenuItem disabled onClick={() => { }}>
+          <ListItemIcon>
+            <i className="ri-key-2-line"></i>
+          </ListItemIcon>
+          <ListItemText> Restablecer contraseña</ListItemText>
+        </MenuItem>
+      </Menu>
 
       {/* Asignar usuario */}
       <Dialog open={assignOpen} onClose={closeAssign} maxWidth='xs' fullWidth>
@@ -536,6 +660,54 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
             startIcon={statusSaving ? <CircularProgress size={18} color='inherit' /> : null}
           >
             {statusSaving ? 'Guardando...' : statusAction === 'suspend' ? 'Suspender' : 'Reactivar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Restablecer MFA */}
+      <Dialog open={mfaOpen} onClose={closeMfa} maxWidth='xs' fullWidth>
+        <DialogTitle>Restablecer MFA</DialogTitle>
+
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            {mfaError ? <Alert severity='error'>{mfaError.length > 5 ? mfaError : 'Ocurrio un error, intente de nuevo mas tarde'}</Alert> : null}
+
+            {mfaTarget ? (
+              <Typography variant='body2'>
+                Cuenta de <strong>{mfaTarget.fullName}</strong>
+                {mfaTarget.username ? ` (usuario ${mfaTarget.username})` : ''}.
+              </Typography>
+            ) : null}
+
+            <Typography variant='body2' color='text.secondary'>
+              Se desactivará su MFA actual; el usuario deberá enrolar Google Authenticator de nuevo en su próximo inicio de
+              sesión.
+            </Typography>
+
+            <TextField
+              label='Motivo'
+              value={mfaReason}
+              onChange={event => setMfaReason(event.target.value)}
+              fullWidth
+              multiline
+              minRows={2}
+              disabled={mfaSaving}
+            />
+          </Stack>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={closeMfa} disabled={mfaSaving}>
+            Cancelar
+          </Button>
+          <Button
+            variant='contained'
+            color='warning'
+            onClick={submitMfa}
+            disabled={mfaSaving}
+            startIcon={mfaSaving ? <CircularProgress size={18} color='inherit' /> : null}
+          >
+            {mfaSaving ? 'Restableciendo...' : 'Restablecer MFA'}
           </Button>
         </DialogActions>
       </Dialog>
