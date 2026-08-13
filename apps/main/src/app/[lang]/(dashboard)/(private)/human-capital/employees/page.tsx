@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
 
+import { PERM } from '@gaso/shared'
+
 import type { Locale } from '@configs/i18n'
 
 import { getTargetByReason, requireViewAccess } from '@/lib/auth/require-view-access'
@@ -16,7 +18,12 @@ const Page = async (props: { params: Promise<{ lang: Locale }> }) => {
     redirect(getLocalizedUrl(getTargetByReason(access.reason), lang));
   }
 
-  return <HumanCapitalView />
+  // Launcher a Gestión de Usuarios: gateado por su viewCode, sin redirigir esta página.
+  const usersAccess = await requireViewAccess('users', PERM.R)
+  const canManageUsers = usersAccess.ok
+  const usersHref = getLocalizedUrl('/administration/users', lang)
+
+  return <HumanCapitalView canManageUsers={canManageUsers} usersHref={usersHref} />
 }
 
 export default Page

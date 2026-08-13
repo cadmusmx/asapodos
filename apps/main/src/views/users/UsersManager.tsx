@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { MouseEvent } from 'react';
 
+import { useSearchParams } from 'next/navigation';
+
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -105,14 +107,16 @@ const suggestUsername = (fullName: string): string => {
 };
 
 const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps) => {
+  const searchParams = useSearchParams();
+
   const [rows, setRows] = useState<UserAccountListItem[]>([]);
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
+  const [searchInput, setSearchInput] = useState(() => searchParams.get('search') ?? '');
+  const [search, setSearch] = useState(() => (searchParams.get('search') ?? '').trim());
 
   // Modal "Asignar usuario"
   const [assignOpen, setAssignOpen] = useState(false);

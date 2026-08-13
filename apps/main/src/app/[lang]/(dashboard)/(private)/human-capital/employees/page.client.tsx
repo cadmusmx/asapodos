@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { useRouter } from 'next/navigation'
+
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -33,7 +35,6 @@ import TextField from '@mui/material/TextField'
 import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 
-import EmployeeMfaResetCard from './EmployeeMfaResetCard'
 
 import type {
   EmploymentStatus,
@@ -114,7 +115,13 @@ const employeeToForm = (employee: HumanCapitalEmployee): EmployeeFormState => ({
   terminationDate: employee.terminationDate ?? ''
 })
 
-const HumanCapitalEmployeesView = () => {
+type HumanCapitalEmployeesViewProps = {
+  canManageUsers?: boolean
+  usersHref?: string
+}
+
+const HumanCapitalEmployeesView = ({ canManageUsers = false, usersHref = '' }: HumanCapitalEmployeesViewProps) => {
+  const router = useRouter()
   const [employees, setEmployees] = useState<HumanCapitalEmployee[]>([])
 
   const [catalogs, setCatalogs] = useState<HumanCapitalCatalogsResponse>({
@@ -473,6 +480,18 @@ const HumanCapitalEmployeesView = () => {
                                 </IconButton>
                               </span>
                             </Tooltip>
+
+                            {canManageUsers ? (
+                              <Tooltip title='Gestionar usuario'>
+                                <IconButton
+                                  onClick={() =>
+                                    router.push(`${usersHref}?search=${encodeURIComponent(employee.employeeNumber ?? employee.fullName)}`)
+                                  }
+                                >
+                                  <i className='ri-shield-user-line' />
+                                </IconButton>
+                              </Tooltip>
+                            ) : null}
                           </TableCell>
                         </TableRow>
                       ))
@@ -496,7 +515,6 @@ const HumanCapitalEmployeesView = () => {
             </Stack>
           </CardContent>
         </Card>
-        <EmployeeMfaResetCard />
       </Stack>
 
       <Dialog open={dialogOpen} onClose={closeDialog} maxWidth='md' fullWidth>
