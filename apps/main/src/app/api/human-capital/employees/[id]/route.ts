@@ -12,23 +12,23 @@ import type { HumanCapitalEmployeeRow } from '@/types/human-capital'
 export const runtime = 'nodejs'
 
 const getEmployeeIdFromRequest = (req: Request): number | null => {
-    const pathname = new URL(req.url).pathname
-    const idRaw = pathname.split('/').filter(Boolean).pop()
-    const id = Number(idRaw)
+  const pathname = new URL(req.url).pathname
+  const idRaw = pathname.split('/').filter(Boolean).pop()
+  const id = Number(idRaw)
 
-    return Number.isInteger(id) && id > 0 ? id : null
+  return Number.isInteger(id) && id > 0 ? id : null
 }
 
 const toSqlDate = (value: string | null | undefined): Prisma.Sql =>
-    value ? Prisma.sql`CAST(${value} AS date)` : Prisma.sql`CAST(NULL AS date)`
+  value ? Prisma.sql`CAST(${value} AS date)` : Prisma.sql`CAST(NULL AS date)`
 
 const getEmployeeById = async (
-    tx: Parameters<Parameters<typeof withTenantContext>[1]>[0],
-    tenantId: string,
-    employeeId: number
+  tx: Parameters<Parameters<typeof withTenantContext>[1]>[0],
+  tenantId: string,
+  employeeId: number
 ) => {
-    const rows = await tx.$queryRaw<HumanCapitalEmployeeRow[]>(
-        Prisma.sql`
+  const rows = await tx.$queryRaw<HumanCapitalEmployeeRow[]>(
+    Prisma.sql`
       SELECT
         e.EmployeeID,
         e.TenantID,
@@ -59,43 +59,43 @@ const getEmployeeById = async (
       WHERE e.TenantID = CAST(${tenantId} AS uniqueidentifier)
         AND e.EmployeeID = ${employeeId}
     `
-    )
+  )
 
-    return rows[0] ? normalizeEmployeeFromRow(rows[0]) : null
+  return rows[0] ? normalizeEmployeeFromRow(rows[0]) : null
 }
 
 export const PUT = withPermission(
-    'employees',
-    async (req, { auth, tenantId }) => {
-        const employeeId = getEmployeeIdFromRequest(req)
+  'employees',
+  async (req, { auth, tenantId }) => {
+    const employeeId = getEmployeeIdFromRequest(req)
 
-        if (!employeeId) {
-            return NextResponse.json({ message: 'Empleado inválido.' }, { status: 400 })
+    if (!employeeId) {
+      return NextResponse.json({ message: 'Empleado inválido.' }, { status: 400 })
+    }
+
+    let payload
+
+    try {
+      const body = await req.json()
+
+      payload = parseEmployeePayload(body)
+    } catch (error) {
+      return NextResponse.json(
+        { message: error instanceof Error ? error.message : 'Body inválido' },
+        { status: 400 }
+      )
+    }
+
+    try {
+      const result = await withTenantContext(tenantId, async tx => {
+        const oldEmployee = await getEmployeeById(tx, tenantId, employeeId)
+
+        if (!oldEmployee) {
+          return null
         }
 
-        let payload
-
-        try {
-            const body = await req.json()
-
-            payload = parseEmployeePayload(body)
-        } catch (error) {
-            return NextResponse.json(
-                { message: error instanceof Error ? error.message : 'Body inválido' },
-                { status: 400 }
-            )
-        }
-
-        try {
-            const result = await withTenantContext(tenantId, async tx => {
-                const oldEmployee = await getEmployeeById(tx, tenantId, employeeId)
-
-                if (!oldEmployee) {
-                    return null
-                }
-
-                await tx.$executeRaw(
-                    Prisma.sql`
+        await tx.$executeRaw(
+          Prisma.sql`
             UPDATE HumanCapital.Employees
             SET
                 EmployeeNumber = ${payload.employeeNumber},
@@ -114,69 +114,69 @@ export const PUT = withPermission(
             WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
               AND EmployeeID = ${employeeId}
           `
-                )
+        )
 
-                const newEmployee = await getEmployeeById(tx, tenantId, employeeId)
+        const newEmployee = await getEmployeeById(tx, tenantId, employeeId)
 
-                return {
-                    oldEmployee,
-                    newEmployee
-                }
-            })
-
-            if (!result?.newEmployee) {
-                return NextResponse.json({ message: 'Empleado no encontrado.' }, { status: 404 })
-            }
-
-            writeTransactionLog({
-                tenantId,
-                tableName: 'HumanCapital.Employees',
-                action: 'UPDATE',
-                userId: auth.userId,
-                appUser: auth.email ?? null,
-                oldData: result.oldEmployee,
-                newData: result.newEmployee
-            }).catch(() => { })
-
-            return NextResponse.json({ data: result.newEmployee })
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR'
-
-            if (message.includes('UX_HC_Employees_Tenant_EmployeeNumber')) {
-                return NextResponse.json({ message: 'El número de empleado ya existe.' }, { status: 409 })
-            }
-
-            if (message.includes('UX_HC_Employees_Tenant_Email')) {
-                return NextResponse.json({ message: 'El correo del empleado ya existe.' }, { status: 409 })
-            }
-
-            console.error('[HUMAN_CAPITAL_EMPLOYEE_UPDATE_ERROR]', { message })
-
-            return NextResponse.json({ message: 'Error al actualizar empleado.' }, { status: 500 })
+        return {
+          oldEmployee,
+          newEmployee
         }
-    },
-    { bit: PERM.U }
+      })
+
+      if (!result?.newEmployee) {
+        return NextResponse.json({ message: 'Empleado no encontrado.' }, { status: 404 })
+      }
+
+      writeTransactionLog({
+        tenantId,
+        tableName: 'HumanCapital.Employees',
+        action: 'UPDATE',
+        userId: auth.userId,
+        appUser: auth.email ?? null,
+        oldData: result.oldEmployee,
+        newData: result.newEmployee
+      }).catch(() => { })
+
+      return NextResponse.json({ data: result.newEmployee })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR'
+
+      if (message.includes('UX_HC_Employees_Tenant_EmployeeNumber')) {
+        return NextResponse.json({ message: 'El número de empleado ya existe.' }, { status: 409 })
+      }
+
+      if (message.includes('UX_HC_Employees_Tenant_Email')) {
+        return NextResponse.json({ message: 'El correo del empleado ya existe.' }, { status: 409 })
+      }
+
+      console.error('[HUMAN_CAPITAL_EMPLOYEE_UPDATE_ERROR]', { message })
+
+      return NextResponse.json({ message: 'Error al actualizar empleado.' }, { status: 500 })
+    }
+  },
+  { bit: PERM.U }
 )
 
 export const DELETE = withPermission(
-    'employees',
-    async (req, { auth, tenantId }) => {
-        const employeeId = getEmployeeIdFromRequest(req)
+  'employees',
+  async (req, { auth, tenantId }) => {
+    const employeeId = getEmployeeIdFromRequest(req)
 
-        if (!employeeId) {
-            return NextResponse.json({ message: 'Empleado inválido.' }, { status: 400 })
+    if (!employeeId) {
+      return NextResponse.json({ message: 'Empleado inválido.' }, { status: 400 })
+    }
+
+    try {
+      const result = await withTenantContext(tenantId, async tx => {
+        const oldEmployee = await getEmployeeById(tx, tenantId, employeeId)
+
+        if (!oldEmployee) {
+          return null
         }
 
-        try {
-            const result = await withTenantContext(tenantId, async tx => {
-                const oldEmployee = await getEmployeeById(tx, tenantId, employeeId)
-
-                if (!oldEmployee) {
-                    return null
-                }
-
-                await tx.$executeRaw(
-                    Prisma.sql`
+        await tx.$executeRaw(
+          Prisma.sql`
             UPDATE HumanCapital.Employees
             SET
               IsActive = 0,
@@ -186,38 +186,85 @@ export const DELETE = withPermission(
             WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
               AND EmployeeID = ${employeeId}
           `
-                )
+        )
 
-                const newEmployee = await getEmployeeById(tx, tenantId, employeeId)
+        const newEmployee = await getEmployeeById(tx, tenantId, employeeId)
 
-                return {
-                    oldEmployee,
-                    newEmployee
-                }
-            })
-
-            if (!result?.newEmployee) {
-                return NextResponse.json({ message: 'Empleado no encontrado.' }, { status: 404 })
-            }
-
-            writeTransactionLog({
-                tenantId,
-                tableName: 'HumanCapital.Employees',
-                action: 'DEACTIVATE',
-                userId: auth.userId,
-                appUser: auth.email ?? null,
-                oldData: result.oldEmployee,
-                newData: result.newEmployee
-            }).catch(() => { })
-
-            return NextResponse.json({ data: result.newEmployee })
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR'
-
-            console.error('[HUMAN_CAPITAL_EMPLOYEE_DEACTIVATE_ERROR]', { message })
-
-            return NextResponse.json({ message: 'Error al desactivar empleado.' }, { status: 500 })
+        return {
+          oldEmployee,
+          newEmployee
         }
-    },
-    { bit: PERM.D }
+      })
+
+      if (!result?.newEmployee) {
+        return NextResponse.json({ message: 'Empleado no encontrado.' }, { status: 404 })
+      }
+
+      writeTransactionLog({
+        tenantId,
+        tableName: 'HumanCapital.Employees',
+        action: 'DEACTIVATE',
+        userId: auth.userId,
+        appUser: auth.email ?? null,
+        oldData: result.oldEmployee,
+        newData: result.newEmployee
+      }).catch(() => { })
+
+      return NextResponse.json({ data: result.newEmployee })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR'
+
+      console.error('[HUMAN_CAPITAL_EMPLOYEE_DEACTIVATE_ERROR]', { message })
+
+      return NextResponse.json({ message: 'Error al desactivar empleado.' }, { status: 500 })
+    }
+  },
+  { bit: PERM.D }
+)
+
+export const GET = withPermission(
+  'employees',
+  async (req, { tenantId }) => {
+    const idRaw = new URL(req.url).pathname.split('/').filter(Boolean).pop()
+    const employeeId = Number(idRaw)
+
+    if (!Number.isInteger(employeeId) || employeeId <= 0) {
+      return NextResponse.json({ message: 'Empleado inválido.' }, { status: 400 })
+    }
+
+    return withTenantContext(tenantId, async tx => {
+      const rows = await tx.$queryRaw<Array<{
+        EmployeeID: number
+        EmployeeNumber: string | null
+        FirstName: string
+        LastName: string
+        Email: string | null
+        EmploymentStatus: string | null
+        IsActive: boolean | number
+      }>>(
+        Prisma.sql`
+          SELECT e.EmployeeID, e.EmployeeNumber, e.FirstName, e.LastName, e.Email, e.EmploymentStatus, e.IsActive
+          FROM HumanCapital.Employees e
+          WHERE e.TenantID = CAST(${tenantId} AS uniqueidentifier)
+            AND e.EmployeeID = ${employeeId}
+        `
+      )
+
+      const row = rows[0]
+
+      if (!row) return NextResponse.json({ message: 'Empleado no encontrado.' }, { status: 404 })
+
+      return NextResponse.json({
+        data: {
+          employeeId: row.EmployeeID,
+          employeeNumber: row.EmployeeNumber ?? null,
+          fullName: `${row.FirstName ?? ''} ${row.LastName ?? ''}`.trim(),
+          email: row.Email ?? null,
+          employmentStatus: row.EmploymentStatus ?? null,
+          isActive: Boolean(row.IsActive)
+        }
+      })
+    })
+  },
+  { bit: PERM.R }
 )

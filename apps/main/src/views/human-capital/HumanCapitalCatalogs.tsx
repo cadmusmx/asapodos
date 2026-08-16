@@ -34,7 +34,6 @@ const CATALOG_TABS = [
   { key: 'departamentos', label: 'Departamentos', singular: 'departamento' },
   { key: 'puestos', label: 'Puestos', singular: 'puesto' },
   { key: 'areas', label: 'Areas', singular: 'area' },
-  { key: 'documentos', label: 'Documentos', singular: 'documento' },
 ] as const;
 
 type CatalogKey = (typeof CATALOG_TABS)[number]['key'];
@@ -204,7 +203,7 @@ const HumanCapitalCatalogs = ({ canCreate, canEdit, canDelete }: Props) => {
       />
       <CardContent>
         <Tabs value={tab} onChange={(_, v) => setTab(v as CatalogKey)} className='mbe-4'>
-          {CATALOG_TABS.map(t => <Tab key={t.key} value={t.key} label={t.label} disabled={t.key == 'documentos'} />)}
+          {CATALOG_TABS.map(t => <Tab key={t.key} value={t.key} label={t.label} />)}
         </Tabs>
 
         {error && <Alert severity='error' className='mbe-4'>{error}</Alert>}

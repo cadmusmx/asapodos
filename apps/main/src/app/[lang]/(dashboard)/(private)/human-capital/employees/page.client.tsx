@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { useRouter } from 'next/navigation'
+import { useParams, usePathname, useRouter } from 'next/navigation'
 
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
+import CardHeader from '@mui/material/CardHeader'
 import Chip from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
 import Dialog from '@mui/material/Dialog'
@@ -34,8 +35,6 @@ import TableRow from '@mui/material/TableRow'
 import TextField from '@mui/material/TextField'
 import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
-
-import EmployeeMfaResetCard from './EmployeeMfaResetCard'
 
 import type {
   EmploymentStatus,
@@ -123,12 +122,17 @@ type HumanCapitalEmployeesViewProps = {
 
 const HumanCapitalEmployeesView = ({ canManageUsers = false, usersHref = '' }: HumanCapitalEmployeesViewProps) => {
   const router = useRouter()
+  const { lang } = useParams();
+  const pathname = usePathname();
+
   const [employees, setEmployees] = useState<HumanCapitalEmployee[]>([])
 
   const [catalogs, setCatalogs] = useState<HumanCapitalCatalogsResponse>({
     departments: [],
     positions: []
   })
+
+  const goCatalogs = () => router.push(`/${lang}/human-capital/catalogs`);
 
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<EmploymentStatus | 'all'>('all')
@@ -320,24 +324,20 @@ const HumanCapitalEmployeesView = ({ canManageUsers = false, usersHref = '' }: H
   return (
     <Box sx={{ p: 5 }}>
       <Stack spacing={4}>
-        <Stack direction={{ xs: 'column', md: 'row' }} justifyContent='space-between' spacing={3}>
-          <Box>
-            <Typography variant='h4'>Empleados</Typography>
-            <Typography variant='body2' color='text.secondary'>
-              Expediente básico de empleados por tenant con departamento, puesto y estado.
-            </Typography>
-          </Box>
-
-          <Box>
-            <Button variant='contained' startIcon={<i className='ri-user-add-line' />} onClick={openCreateDialog}>
-              Nuevo empleado
-            </Button>
-          </Box>
-        </Stack>
-
         {feedback && <Alert severity={feedback.type}>{feedback.message}</Alert>}
-
         <Card>
+          <CardHeader
+            title='Empleados'
+            subheader='Expediente básico de empleados por tenant con departamento, puesto y estado.'
+            action={
+              <div className='flex gap-4'>
+                <Button fullWidth size='small' variant='contained' startIcon={<i className='ri-user-add-line' />} onClick={openCreateDialog}>
+                  Nuevo
+                </Button>
+                <Button fullWidth size='small' variant='outlined' color='secondary' onClick={goCatalogs}>Catálogos</Button>
+              </div>
+            }
+          />
           <CardContent>
             <Stack spacing={4}>
               <Grid container spacing={3}>
@@ -464,6 +464,12 @@ const HumanCapitalEmployeesView = ({ canManageUsers = false, usersHref = '' }: H
                           </TableCell>
 
                           <TableCell align='right'>
+                            <Tooltip title='Expediente'>
+                              <IconButton onClick={() => router.push(`${pathname}/${employee.id}`)}>
+                                <i className='ri-folder-user-line' />
+                              </IconButton>
+                            </Tooltip>
+
                             <Tooltip title='Editar'>
                               <IconButton onClick={() => openEditDialog(employee)}>
                                 <i className='ri-pencil-line' />
@@ -516,7 +522,6 @@ const HumanCapitalEmployeesView = ({ canManageUsers = false, usersHref = '' }: H
             </Stack>
           </CardContent>
         </Card>
-        <EmployeeMfaResetCard />
       </Stack>
 
       <Dialog open={dialogOpen} onClose={closeDialog} maxWidth='md' fullWidth>

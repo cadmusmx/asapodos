@@ -6,7 +6,6 @@ export const CATALOG_REGISTRY = {
   'departamentos': { namePk: 'DepartmentID', table: 'Departments', nameCol: 'Name', label: 'Departamento' },
   'puestos': { namePk: 'PositionID', table: 'Positions', nameCol: 'Name', label: 'Puesto' },
   'areas': { namePk: 'AreaID', table: 'Areas', nameCol: 'Name', label: 'Area' },
-  'documentos': { namePk: 'DocumentID', table: 'Documents', nameCol: 'Name', label: 'Documento' },
 } as const;
 
 export type CatalogKey = keyof typeof CATALOG_REGISTRY;
