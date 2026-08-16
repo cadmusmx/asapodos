@@ -80,8 +80,8 @@ const defaultSuggestions: DefaultSuggestionsType[] = [
         icon: 'ri-user-3-line'
       },
       {
-        label: 'Account Settings',
-        href: '/pages/account-settings',
+        label: 'Settings',
+        href: '/settings',
         icon: 'ri-settings-4-line'
       },
       {

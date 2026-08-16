@@ -7,41 +7,55 @@
 
 import { useEffect, useState } from 'react'
 import Grid from '@mui/material/Grid2'
-import Card from '@mui/material/Card'
-import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
-import CircularProgress from '@mui/material/CircularProgress'
 import IconButton from '@mui/material/IconButton'
 
 import FleetCounterCards from '@views/dashboards/fleets/FleetCounterCards'
 import FleetFilters from '@views/dashboards/fleets/FleetFilters'
+import MonthlyExpenseChart from '@views/dashboards/fleets/MonthlyExpenseChart'
+import FleetStatusPieChart from '@views/dashboards/fleets/FleetStatusPieChart'
+import FleetBarChart from '@views/dashboards/fleets/FleetBarChart'
+import FleetInsightsPanel from '@views/dashboards/fleets/FleetInsightsPanel'
+import FleetTable from '@views/dashboards/fleets/FleetTable'
 import KpiCard from '@views/dashboards/components/KpiCard'
 import ChartModal from '@views/dashboards/components/ChartModal'
-import RequestsByMonthChart from '@views/dashboards/fleets/RequestsByMonthChart'
-import ByVehicleChart from '@views/dashboards/fleets/ByVehicleChart'
-import ByRegionChart from '@views/dashboards/fleets/ByRegionChart'
-import MileageChart from '@views/dashboards/fleets/MileageChart'
-import FuelConsumptionChart from '@views/dashboards/fleets/FuelConsumptionChart'
+import DashboardLoading from '@views/dashboards/components/DashboardLoading'
+import DashboardError from '@views/dashboards/components/DashboardError'
+import { getCurrentYearRange } from '@/utils/date-range'
 
 type MonthlyData = { month: string; year: string; count: number; monto: number }
+type StatusData = { key: string; count: number }
+type FleetTableData = { key: string; count: number; monto: number }
 
 type DashboardData = {
   counters: {
-    total: number
-    active: number
-    inactive: number
-    totalKms: number
-    totalFuel: number
+    gastoTotal: number
+    solicitado: number
+    unidades: number
+    promedio: number
+    solicitudes: number
+    diferencia: number
   }
   monthlyKm: MonthlyData[]
-  fuelData: MonthlyData[]
-  porVehiculo: Array<{ key: string; count: number; km: number }>
-  porRegion: Array<{ key: string; count: number; monto: number }>
+  statusData: StatusData[]
+  porUnidad: FleetTableData[]
+  porTipo: FleetTableData[]
+  porResponsable: FleetTableData[]
+  porTaller: FleetTableData[]
+  unitsTable: FleetTableData[]
+  facturadoPagado: FleetTableData[]
+  insights: {
+    topUnit: { label: string; value: number } | null
+    topType: { label: string; value: number } | null
+    topResponsible: { label: string; value: number } | null
+    pending: number
+  }
 }
 
 type CatalogData = {
-  regions: Array<{ id: number; nombre: string }>
-  vehicleTypes: Array<{ id: number; nombre: string }>
+  vehicleNoEconomico: Array<{ id: number; nombre: string }>
+  vehicleExpenseTypes: Array<{ id: number; nombre: string }>
+  vehicleResponsibles: Array<{ id: number; nombre: string }>
 }
 
 type Props = {
@@ -51,26 +65,42 @@ type Props = {
 const FleetsDashboard = ({ dictionary }: Props) => {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchKey, setSearchKey] = useState(0)
-  const [modalRequestsOpen, setModalRequestsOpen] = useState(false)
+  const [modalMonthlyOpen, setModalMonthlyOpen] = useState(false)
+  const defaultDates = getCurrentYearRange()
   const [filters, setFilters] = useState({
-    fechaInicio: '',
-    fechaFin: '',
-    estatus: '',
-    region: '',
-    vehicleType: ''
+    fechaInicio: defaultDates.fechaInicio,
+    fechaFin: defaultDates.fechaFin,
+    noEconomico: [] as string[],
+    tipoGasto: [] as string[],
+    responsable: [] as string[],
+    estatus: [] as string[]
   })
-  const [catalogs, setCatalogs] = useState<CatalogData>({ regions: [], vehicleTypes: [] })
+  const [catalogs, setCatalogs] = useState<CatalogData>({ vehicleNoEconomico: [], vehicleExpenseTypes: [], vehicleResponsibles: [] })
 
   const t = (key: string) => {
     return key.split('.').reduce((obj, k) => obj?.[k], dictionary) as unknown as string ?? key
   }
 
-  const fetchData = async (filterParams?: string, signal?: AbortSignal) => {
+  const buildParams = () => {
+    const params = new URLSearchParams()
+    if (filters.fechaInicio) params.append('fechaInicio', filters.fechaInicio)
+    if (filters.fechaFin) params.append('fechaFin', filters.fechaFin)
+    filters.noEconomico.forEach(v => { if (v) params.append('noEconomico', v) })
+    filters.tipoGasto.forEach(v => { if (v) params.append('tipoGasto', v) })
+    filters.responsable.forEach(v => { if (v) params.append('responsable', v) })
+    filters.estatus.forEach(v => { if (v) params.append('estatus', v) })
+    return params
+  }
+
+  const fetchData = async (signal?: AbortSignal) => {
     try {
+      if (data !== null) setRefreshing(true)
       setLoading(true)
-      const url = filterParams ? `/api/fleets/dashboard${filterParams}` : '/api/fleets/dashboard'
+      const params = buildParams()
+      const url = params.toString() ? `/api/fleets/dashboard?${params.toString()}` : '/api/fleets/dashboard'
       const response = await fetch(url, { signal })
       if (!response.ok) throw new Error('Failed to fetch dashboard data')
       const result = await response.json()
@@ -80,22 +110,26 @@ const FleetsDashboard = ({ dictionary }: Props) => {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }
 
   const fetchCatalogs = async () => {
     try {
-      const [regionsRes, vehicleTypesRes] = await Promise.all([
-        fetch('/api/catalogs?type=regions'),
-        fetch('/api/catalogs?type=vehicleTypes')
+      const [noEcoRes, tipoRes, respRes] = await Promise.all([
+        fetch('/api/catalogs?type=vehicleNoEconomico'),
+        fetch('/api/catalogs?type=vehicleExpenseTypes'),
+        fetch('/api/catalogs?type=vehicleResponsibles')
       ])
-      const [regionsData, vehicleTypesData] = await Promise.all([
-        regionsRes.json(),
-        vehicleTypesRes.json()
+      const [noEco, tipos, resps] = await Promise.all([
+        noEcoRes.json(),
+        tipoRes.json(),
+        respRes.json()
       ])
       setCatalogs({
-        regions: regionsData.data || [],
-        vehicleTypes: vehicleTypesData.data || []
+        vehicleNoEconomico: noEco.data || [],
+        vehicleExpenseTypes: tipos.data || [],
+        vehicleResponsibles: resps.data || []
       })
     } catch (err) {
       console.error('Failed to fetch catalogs:', err)
@@ -104,23 +138,17 @@ const FleetsDashboard = ({ dictionary }: Props) => {
 
   useEffect(() => {
     const controller = new AbortController()
-    fetchData(undefined, controller.signal)
+    fetchData(controller.signal)
     fetchCatalogs()
     return () => controller.abort()
   }, [searchKey])
 
-  const handleFilterChange = (field: string, value: string) => {
+  const handleFilterChange = (field: string, value: string | string[]) => {
     setFilters(prev => ({ ...prev, [field]: value }))
   }
 
   const handleSearch = () => {
-    const params = new URLSearchParams()
-    if (filters.fechaInicio) params.append('fechaInicio', filters.fechaInicio)
-    if (filters.fechaFin) params.append('fechaFin', filters.fechaFin)
-    if (filters.estatus) params.append('estatus', filters.estatus)
-    if (filters.region) params.append('region', filters.region)
-    if (filters.vehicleType) params.append('vehicleType', filters.vehicleType)
-    const queryString = params.toString()
+    setRefreshing(false)
     setSearchKey(prev => prev + 1)
   }
 
@@ -128,42 +156,33 @@ const FleetsDashboard = ({ dictionary }: Props) => {
     setFilters({
       fechaInicio: '',
       fechaFin: '',
-      estatus: '',
-      region: '',
-      vehicleType: ''
+      noEconomico: [],
+      tipoGasto: [],
+      responsable: [],
+      estatus: []
     })
     setSearchKey(prev => prev + 1)
   }
 
   const handleReload = () => {
+    setRefreshing(false)
     setSearchKey(prev => prev + 1)
   }
 
   if (loading) {
-    return (
-      <Card>
-        <CardContent sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-          <CircularProgress />
-        </CardContent>
-      </Card>
-    )
+    return <DashboardLoading />
   }
 
   if (error || !data) {
-    return (
-      <Card>
-        <CardContent>
-          <Typography color='error'>{error || 'No data available'}</Typography>
-        </CardContent>
-      </Card>
-    )
+    return <DashboardError message={error || 'No data available'} />
   }
 
   return (
-    <Grid container spacing={6}>
+    <Grid container spacing={3}>
       <Grid size={{ xs: 12 }}>
         <FleetCounterCards t={t} counters={data.counters} />
       </Grid>
+
       <Grid size={{ xs: 12 }}>
         <FleetFilters
           t={t}
@@ -172,82 +191,141 @@ const FleetsDashboard = ({ dictionary }: Props) => {
           onSearch={handleSearch}
           onClear={handleClear}
           onReload={handleReload}
-          regions={catalogs.regions}
-          vehicleTypes={catalogs.vehicleTypes}
+          vehicleNoEconomico={catalogs.vehicleNoEconomico}
+          vehicleExpenseTypes={catalogs.vehicleExpenseTypes}
+          vehicleResponsibles={catalogs.vehicleResponsibles}
         />
       </Grid>
+
       <Grid size={{ xs: 12 }}>
-        <Typography variant='h6' sx={{ fontWeight: 600, mb: 2, color: 'var(--mui-palette-text-primary)' }}>
-          {t('dashboard.fleets.kpiCards')}
+        <Typography variant='body2' sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--mui-palette-text-disabled)', textTransform: 'uppercase', letterSpacing: 1.2, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <i className='ri-truck-line' style={{ fontSize: '1rem' }} />
+          {t('dashboard.fleets.main')}
         </Typography>
       </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
+
+      <Grid size={{ xs: 12, xl: 8 }}>
         <KpiCard
-          title={t('dashboard.fleets.requestsByMonth')}
-          borderColor='#0d6efd'
-          iconBackground='rgba(13,110,253,.12)'
-          iconColor='#0d6efd'
-          iconClass='ri-bar-chart-line'
+          title={t('dashboard.fleets.monthlyExpense')}
+          subtitle={t('dashboard.fleets.monthlyExpenseSubtitle')}
+          borderColor='#198754'
+          iconBackground='rgba(25,135,84,.12)'
+          iconColor='#198754'
+          iconClass='fa-solid fa-chart-line'
+          loading={refreshing}
           action={
-              <IconButton size='small' onClick={() => setModalRequestsOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
+            <IconButton size='small' onClick={() => setModalMonthlyOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }
         >
-          <RequestsByMonthChart t={t} data={data.monthlyKm} />
+          <MonthlyExpenseChart t={t} data={data.monthlyKm} />
         </KpiCard>
       </Grid>
+
+      <Grid size={{ xs: 12, xl: 4 }}>
+        <KpiCard
+          title={t('dashboard.fleets.status')}
+          subtitle={t('dashboard.fleets.statusDistribution')}
+          borderColor='#0d6efd'
+          iconBackground='rgba(13,110,253,.12)'
+          iconColor='#0d6efd'
+          iconClass='fa-solid fa-chart-pie'
+          loading={refreshing}
+        >
+          <FleetStatusPieChart t={t} data={data.statusData} />
+        </KpiCard>
+      </Grid>
+
       <Grid size={{ xs: 12, md: 6 }}>
         <KpiCard
-          title={t('dashboard.fleets.byVehicle')}
-          borderColor='#28a745'
-          iconBackground='rgba(40,167,69,.12)'
-          iconColor='#28a745'
-          iconClass='ri-truck-line'
-        >
-          <ByVehicleChart t={t} data={data.porVehiculo} />
-        </KpiCard>
-      </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <KpiCard
-          title={t('dashboard.fleets.mileage')}
-          borderColor='#17a2b8'
-          iconBackground='rgba(23,162,184,.12)'
-          iconColor='#17a2b8'
-          iconClass='ri-gauge-line'
-        >
-          <MileageChart t={t} data={data.monthlyKm} />
-        </KpiCard>
-      </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <KpiCard
-          title={t('dashboard.fleets.fuelConsumption')}
-          borderColor='#ffc107'
-          iconBackground='rgba(255,193,7,.12)'
-          iconColor='#ffc107'
-          iconClass='ri-flashlight-line'
-        >
-          <FuelConsumptionChart t={t} data={data.fuelData} />
-        </KpiCard>
-      </Grid>
-      <Grid size={{ xs: 12 }}>
-        <KpiCard
-          title={t('filters.region')}
+          title={t('dashboard.fleets.byUnit')}
+          subtitle={t('dashboard.fleets.byUnitSubtitle')}
           borderColor='#6f42c1'
           iconBackground='rgba(111,66,193,.12)'
           iconColor='#6f42c1'
-          iconClass='ri-map-pin-line'
+          iconClass='fa-solid fa-car'
+          loading={refreshing}
         >
-          <ByRegionChart t={t} data={data.porRegion} />
+          <FleetBarChart data={data.porUnidad} title={t('dashboard.fleets.byUnit')} />
+        </KpiCard>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <KpiCard
+          title={t('dashboard.fleets.byType')}
+          subtitle={t('dashboard.fleets.byTypeSubtitle')}
+          borderColor='#ffc107'
+          iconBackground='rgba(255,193,7,.15)'
+          iconColor='#b45309'
+          iconClass='fa-solid fa-tags'
+          loading={refreshing}
+        >
+          <FleetBarChart data={data.porTipo} title={t('dashboard.fleets.byType')} />
+        </KpiCard>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <KpiCard
+          title={t('dashboard.fleets.byResponsible')}
+          subtitle={t('dashboard.fleets.byResponsibleSubtitle')}
+          borderColor='#20c997'
+          iconBackground='rgba(32,201,151,.12)'
+          iconColor='#20c997'
+          iconClass='fa-solid fa-user-tie'
+          loading={refreshing}
+        >
+          <FleetBarChart data={data.porResponsable} title={t('dashboard.fleets.byResponsible')} />
+        </KpiCard>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <KpiCard
+          title={t('dashboard.fleets.byWorkshop')}
+          subtitle={t('dashboard.fleets.byWorkshopSubtitle')}
+          borderColor='#dc3545'
+          iconBackground='rgba(220,53,69,.12)'
+          iconColor='#dc3545'
+          iconClass='fa-solid fa-wrench'
+          loading={refreshing}
+        >
+          <FleetBarChart data={data.porTaller} title={t('dashboard.fleets.byWorkshop')} />
+        </KpiCard>
+      </Grid>
+
+      <Grid size={{ xs: 12 }}>
+        <KpiCard
+          title={t('dashboard.fleets.insights')}
+          subtitle={t('dashboard.fleets.insightsSubtitle')}
+          borderColor='#6c757d'
+          iconBackground='rgba(108,117,125,.12)'
+          iconColor='#6c757d'
+          iconClass='fa-solid fa-lightbulb'
+          loading={refreshing}
+        >
+          <FleetInsightsPanel t={t} insights={data.insights} />
+        </KpiCard>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <KpiCard title={t('dashboard.fleets.unitsTable')} subtitle='' borderColor='#0d6efd' iconBackground='rgba(13,110,253,.12)' iconColor='#0d6efd' iconClass='fa-solid fa-list' loading={refreshing}>
+          <FleetTable t={t} title='' data={data.unitsTable} height={300} />
+        </KpiCard>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <KpiCard title={t('dashboard.fleets.facturadoPagado')} subtitle='' borderColor='#198754' iconBackground='rgba(25,135,84,.12)' iconColor='#198754' iconClass='fa-solid fa-receipt' loading={refreshing}>
+          <FleetTable t={t} title='' data={data.facturadoPagado} height={300} />
         </KpiCard>
       </Grid>
 
       <ChartModal
-        open={modalRequestsOpen}
-        onClose={() => setModalRequestsOpen(false)}
-        title={t('dashboard.fleets.requestsByMonth')}
+        open={modalMonthlyOpen}
+        onClose={() => setModalMonthlyOpen(false)}
+        title={t('dashboard.fleets.monthlyExpense')}
+        t={t}
       >
-        <RequestsByMonthChart t={t} data={data.monthlyKm} height={450} />
+        <MonthlyExpenseChart t={t} data={data.monthlyKm} height={450} />
       </ChartModal>
     </Grid>
   )

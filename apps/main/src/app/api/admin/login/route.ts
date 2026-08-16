@@ -14,7 +14,8 @@ import {
   deleteMfaChallenge,
   writeAuthAudit,
   getPlatformRole,
-  withTenantContext
+  withTenantContext,
+  getProfilePhoto
 } from '@gaso/shared'
 
 export async function POST(req: Request) {
@@ -244,7 +245,7 @@ export async function POST(req: Request) {
       position: emp.IdPuesto,
       region: emp.IdRegion,
       department: emp.IdDepartamento,
-      image: 'https://gaso-erp.com/dist/img/gasologo.png',
+      image: await getProfilePhoto(user.TenantID, user.EmployeeID),
       tenantId: null,
       tenantSlug: null,
       tenantName: null,

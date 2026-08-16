@@ -19,3 +19,4 @@ export type { AuthContext } from './lib/auth/resolve-session';
 export * from './lib/erp-modules';
 export * from './lib/rbac';
 export * from './lib/plans';
+export { getProfilePhoto, setProfilePhoto } from './lib/profile-photo';

@@ -13,9 +13,10 @@ type Props = {
   onClose: () => void
   title: string
   children: React.ReactNode
+  t?: (key: string) => string
 }
 
-const ChartModal = ({ open, onClose, title, children }: Props) => {
+const ChartModal = ({ open, onClose, title, children, t }: Props) => {
   return (
     <Dialog
       open={open}
@@ -30,7 +31,7 @@ const ChartModal = ({ open, onClose, title, children }: Props) => {
       }}
     >
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 2 }}>
-        <Typography variant='h6' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)' }}>
+        <Typography component='span' variant='subtitle1' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)' }}>
           {title}
         </Typography>
         <IconButton onClick={onClose} size='small' sx={{ color: 'var(--mui-palette-text-secondary)' }}>
@@ -56,7 +57,7 @@ const ChartModal = ({ open, onClose, title, children }: Props) => {
             }
           }}
         >
-          Cerrar
+          {t ? t('filters.close') : 'Cerrar'}
         </Button>
       </DialogActions>
     </Dialog>

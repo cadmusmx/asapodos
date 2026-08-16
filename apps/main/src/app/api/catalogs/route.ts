@@ -13,10 +13,24 @@ import { prisma } from '@/lib/prisma'
 
 export const runtime = 'nodejs'
 
-type CatalogType = 'regions' | 'departments' | 'areas' | 'positions' | 'projects' | 'clients' | 'employees' | 'vehicleTypes' | 'warehouses' | 'expenseTypes'
+type CatalogType =
+  | 'regions'
+  | 'departments'
+  | 'areas'
+  | 'positions'
+  | 'projects'
+  | 'clients'
+  | 'employees'
+  | 'vehicleTypes'
+  | 'warehouses'
+  | 'expenseTypes'
+  | 'vehicleExpenseTypes'
+  | 'vehicleResponsibles'
+  | 'vehicleNoEconomico'
+  | 'vehicleShops'
 
 export const GET = withPermission(
-  'dashboard_hum_cap',
+  'dashboard_veh',
   async (req, { tenantId }) => {
     try {
       const { searchParams } = new URL(req.url)
@@ -149,6 +163,47 @@ export const GET = withPermission(
             ORDER BY NombreSolicitud
           `
           result = tipos || []
+          break
+        }
+
+        case 'vehicleExpenseTypes': {
+          const tipos = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
+            SELECT IdSolicitud as id, ISNULL(NombreSolicitud, 'No Especificado') as nombre
+            FROM GASOGASTOVEH_Cat_Solicitud
+            ORDER BY NombreSolicitud
+          `
+          result = tipos || []
+          break
+        }
+
+        case 'vehicleResponsibles': {
+          const responsibles = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
+            SELECT IdResposable as id, ISNULL(NombreResposable, 'No Especificado') as nombre
+            FROM GASOGASTOVEH_Cat_Responsable
+            ORDER BY NombreResposable
+          `
+          result = responsibles || []
+          break
+        }
+
+        case 'vehicleNoEconomico': {
+          const unidades = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
+            SELECT DISTINCT CAST(noEconomico AS INT) as id, CAST(noEconomico AS VARCHAR(20)) as nombre
+            FROM GASOGASTOVEH
+            WHERE noEconomico IS NOT NULL AND noEconomico != ''
+            ORDER BY CAST(noEconomico AS INT)
+          `
+          result = unidades || []
+          break
+        }
+
+        case 'vehicleShops': {
+          const talleres = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
+            SELECT IdTaller as id, ISNULL(NombreTaller, 'No Especificado') as nombre
+            FROM GASOCO_Cat_Talleres
+            ORDER BY NombreTaller
+          `
+          result = talleres || []
           break
         }
 

@@ -157,6 +157,24 @@ export const GET = withPermission(
         []
       )
 
+      const tcVeh = Prisma.sql`1 = 1`
+
+      const flotillasCounters = await safeQuery(
+        'flotillasCounters',
+        () => tx.$queryRaw<Array<{ total: bigint; aceptadas: bigint; rechazadas: bigint; pagadas: bigint; pendientes: bigint }>>(
+          Prisma.sql`SELECT COUNT_BIG(1) as total, SUM(CASE WHEN EstatusSolicitud = 1 THEN 1 ELSE 0 END) as aceptadas, SUM(CASE WHEN EstatusSolicitud = 2 THEN 1 ELSE 0 END) as rechazadas, SUM(CASE WHEN EstatusSolicitud = 4 THEN 1 ELSE 0 END) as pagadas, SUM(CASE WHEN EstatusSolicitud NOT IN (1,2,4) THEN 1 ELSE 0 END) as pendientes FROM GASOGASTOVEH WHERE ${tcVeh}`
+        ),
+        [{ total: 0n, aceptadas: 0n, rechazadas: 0n, pagadas: 0n, pendientes: 0n }]
+      )
+
+      const flotillasPorMes = await safeQuery(
+        'flotillasPorMes',
+        () => tx.$queryRaw<Array<{ mes: string; year: string; aceptadas: number; rechazadas: number; pagadas: number }>>(
+          Prisma.sql`SELECT DATENAME(MONTH, Fecha) as mes, CAST(YEAR(Fecha) AS VARCHAR(4)) as year, SUM(CASE WHEN EstatusSolicitud = 1 THEN 1 ELSE 0 END) as aceptadas, SUM(CASE WHEN EstatusSolicitud = 2 THEN 1 ELSE 0 END) as rechazadas, SUM(CASE WHEN EstatusSolicitud = 4 THEN 1 ELSE 0 END) as pagadas FROM GASOGASTOVEH WHERE ${tcVeh} AND YEAR(Fecha) = ${year} GROUP BY DATENAME(MONTH, Fecha), CAST(YEAR(Fecha) AS VARCHAR(4)) ORDER BY year, DATENAME(MONTH, Fecha)`
+        ),
+        []
+      )
+
       return NextResponse.json({
         ok: true,
         data: {
@@ -228,11 +246,18 @@ export const GET = withPermission(
             }))
           },
           flotillas: {
-            total: 0,
-            aceptadas: 0,
-            pendientes: 0,
-            rechazadas: 0,
-            porMes: []
+            total: Number(flotillasCounters[0]?.total ?? 0),
+            aceptadas: Number(flotillasCounters[0]?.aceptadas ?? 0),
+            pendientes: Number(flotillasCounters[0]?.pendientes ?? 0),
+            rechazadas: Number(flotillasCounters[0]?.rechazadas ?? 0),
+            pagadas: Number(flotillasCounters[0]?.pagadas ?? 0),
+            porMes: flotillasPorMes.map(f => ({
+              mes: f.mes,
+              year: f.year,
+              aceptadas: f.aceptadas,
+              rechazadas: f.rechazadas,
+              pagadas: f.pagadas
+            }))
           }
         }
       })

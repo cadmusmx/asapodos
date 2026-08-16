@@ -7,10 +7,7 @@
 
 import { useEffect, useState } from 'react'
 import Grid from '@mui/material/Grid2'
-import Card from '@mui/material/Card'
-import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
-import CircularProgress from '@mui/material/CircularProgress'
 import IconButton from '@mui/material/IconButton'
 
 import EmployeeCounterCards from '@views/dashboards/human-capital/EmployeeCounterCards'
@@ -23,6 +20,8 @@ import SeniorityChart from '@views/dashboards/human-capital/SeniorityChart'
 import GenderDistributionChart from '@views/dashboards/human-capital/GenderDistributionChart'
 import KpiCard from '@views/dashboards/components/KpiCard'
 import ChartModal from '@views/dashboards/components/ChartModal'
+import DashboardLoading from '@views/dashboards/components/DashboardLoading'
+import DashboardError from '@views/dashboards/components/DashboardError'
 import FontAwesomeIconComponent from '@views/dashboards/components/FontAwesomeIcon'
 
 type DashboardData = {
@@ -56,6 +55,7 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
   const [data, setData] = useState<DashboardData | null>(null)
   const [catalogs, setCatalogs] = useState<CatalogData>({ areas: [], departments: [], positions: [], regions: [] })
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchKey, setSearchKey] = useState(0)
   const [modalOpen, setModalOpen] = useState(false)
@@ -98,6 +98,7 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
 
   const fetchData = async (signal?: AbortSignal) => {
     try {
+      if (data !== null) setRefreshing(true)
       setLoading(true)
       const params = new URLSearchParams()
       if (filters.activo) params.set('active', filters.activo === 'A' ? 'active' : 'inactive')
@@ -115,6 +116,7 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }
 
@@ -130,6 +132,7 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
   }
 
   const handleSearch = () => {
+    setRefreshing(false)
     setSearchKey(prev => prev + 1)
   }
 
@@ -145,27 +148,16 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
   }
 
   const handleReload = () => {
+    setRefreshing(false)
     setSearchKey(prev => prev + 1)
   }
 
   if (loading) {
-    return (
-      <Card>
-        <CardContent sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-          <CircularProgress />
-        </CardContent>
-      </Card>
-    )
+    return <DashboardLoading />
   }
 
   if (error || !data) {
-    return (
-      <Card>
-        <CardContent>
-          <Typography color='error'>{error || 'No data available'}</Typography>
-        </CardContent>
-      </Card>
-    )
+    return <DashboardError message={error || 'No data available'} />
   }
 
   return (
@@ -297,6 +289,7 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         title={t('dashboard.humanCapital.byPosition')}
+        t={t}
       >
         <ByPositionChart t={t} data={data.porPuesto} height={450} />
       </ChartModal>

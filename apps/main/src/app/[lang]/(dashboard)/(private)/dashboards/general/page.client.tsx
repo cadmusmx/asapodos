@@ -6,7 +6,6 @@ import Grid from '@mui/material/Grid2'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
-import CircularProgress from '@mui/material/CircularProgress'
 import Box from '@mui/material/Box'
 import IconButton from '@mui/material/IconButton'
 
@@ -21,6 +20,8 @@ import CotizacionesChart from '@views/dashboards/general/CotizacionesChart'
 import ProjectsResponsibleChart from '@views/dashboards/general/ProjectsResponsibleChart'
 import ProjectsByMonthChart from '@views/dashboards/general/ProjectsByMonthChart'
 import ChartModal from '@views/dashboards/components/ChartModal'
+import DashboardLoading from '@views/dashboards/components/DashboardLoading'
+import DashboardError from '@views/dashboards/components/DashboardError'
 
 type DashboardData = {
   humanCapital: {
@@ -100,6 +101,7 @@ const GeneralDashboard = ({ dictionary }: Props) => {
 
     const fetchData = async () => {
       setLoading(true)
+
       try {
         const params = new URLSearchParams()
         if (filters.year) params.set('year', filters.year)
@@ -161,23 +163,11 @@ const GeneralDashboard = ({ dictionary }: Props) => {
   }
 
   if (loading) {
-    return (
-      <Card>
-        <CardContent sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-          <CircularProgress />
-        </CardContent>
-      </Card>
-    )
+    return <DashboardLoading />
   }
 
   if (error || !data) {
-    return (
-      <Card>
-        <CardContent>
-          <Typography color='error'>{error || 'No data available'}</Typography>
-        </CardContent>
-      </Card>
-    )
+    return <DashboardError message={error || 'No data available'} />
   }
 
   const renderMetricBadges = (badges: Array<{ label: string; value: number | string; color: string; bg: string; icon: string }>) => (
@@ -451,27 +441,27 @@ const GeneralDashboard = ({ dictionary }: Props) => {
       </Grid>
 
       {/* Ver Más Modals */}
-      <ChartModal open={modalHCDeptOpen} onClose={() => setModalHCDeptOpen(false)} title={t('dashboard.general.byDepartment')}>
+      <ChartModal open={modalHCDeptOpen} onClose={() => setModalHCDeptOpen(false)} title={t('dashboard.general.byDepartment')} t={t}>
         <HumanCapitalDeptChart t={t} data={data.humanCapital.porDepto} height={450} />
       </ChartModal>
 
-      <ChartModal open={modalHCHiresOpen} onClose={() => setModalHCHiresOpen(false)} title={t('dashboard.general.hiresTerminations')}>
+      <ChartModal open={modalHCHiresOpen} onClose={() => setModalHCHiresOpen(false)} title={t('dashboard.general.hiresTerminations')} t={t}>
         <HumanCapitalHiresChart t={t} data={data.humanCapital.altasBajas} height={450} />
       </ChartModal>
 
-      <ChartModal open={modalGasMesOpen} onClose={() => setModalGasMesOpen(false)} title={t('dashboard.general.requestsByMonth')}>
+      <ChartModal open={modalGasMesOpen} onClose={() => setModalGasMesOpen(false)} title={t('dashboard.general.requestsByMonth')} t={t}>
         <OperatingExpensesChart t={t} data={data.gastosPorMes} height={450} />
       </ChartModal>
 
-      <ChartModal open={modalGasProjOpen} onClose={() => setModalGasProjOpen(false)} title={t('dashboard.general.expensesByProject')}>
+      <ChartModal open={modalGasProjOpen} onClose={() => setModalGasProjOpen(false)} title={t('dashboard.general.expensesByProject')} t={t}>
         <ExpensesByProjectChart t={t} data={data.gastosPorProyecto} height={450} />
       </ChartModal>
 
-      <ChartModal open={modalFlotillasOpen} onClose={() => setModalFlotillasOpen(false)} title={t('dashboard.general.fleets')}>
+      <ChartModal open={modalFlotillasOpen} onClose={() => setModalFlotillasOpen(false)} title={t('dashboard.general.fleets')} t={t}>
         <FleetsChart t={t} data={data.flotillas.porMes} height={450} />
       </ChartModal>
 
-      <ChartModal open={modalProjRespOpen} onClose={() => setModalProjRespOpen(false)} title={t('dashboard.general.byResponsible')}>
+      <ChartModal open={modalProjRespOpen} onClose={() => setModalProjRespOpen(false)} title={t('dashboard.general.byResponsible')} t={t}>
         <ProjectsResponsibleChart t={t} data={data.proyectos.porResponsable} height={450} />
       </ChartModal>
     </div>

@@ -1,5 +1,6 @@
 import type { TenantSettings } from './tenant-settings'
 import type { PlanFeatureKey, PlanTier, TenantSubscriptionStatus } from './plan'
+import { EmployeeDocument } from './human-capital'
 
 export type MeResponse = {
   user: {

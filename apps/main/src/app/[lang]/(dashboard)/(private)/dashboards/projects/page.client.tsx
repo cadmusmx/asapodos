@@ -7,10 +7,7 @@
 
 import { useEffect, useState } from 'react'
 import Grid from '@mui/material/Grid2'
-import Card from '@mui/material/Card'
-import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
-import CircularProgress from '@mui/material/CircularProgress'
 import IconButton from '@mui/material/IconButton'
 
 import ProjectCounterCards from '@views/dashboards/projects/ProjectCounterCards'
@@ -22,6 +19,9 @@ import FinancialStatus from '@views/dashboards/projects/FinancialStatus'
 import ProfitabilityChart from '@views/dashboards/projects/ProfitabilityChart'
 import KpiCard from '@views/dashboards/components/KpiCard'
 import ChartModal from '@views/dashboards/components/ChartModal'
+import DashboardLoading from '@views/dashboards/components/DashboardLoading'
+import DashboardError from '@views/dashboards/components/DashboardError'
+import { getCurrentYearRange } from '@/utils/date-range'
 
 type ProjectItem = {
   id: number
@@ -61,14 +61,16 @@ type Props = {
 const ProjectsDashboard = ({ dictionary }: Props) => {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchKey, setSearchKey] = useState(0)
   const [modalTotalExpenseOpen, setModalTotalExpenseOpen] = useState(false)
   const [modalBudgetVsActualOpen, setModalBudgetVsActualOpen] = useState(false)
   const [modalTopEmployeesOpen, setModalTopEmployeesOpen] = useState(false)
+  const defaultDates = getCurrentYearRange()
   const [filters, setFilters] = useState({
-    fechaInicio: '',
-    fechaFin: '',
+    fechaInicio: defaultDates.fechaInicio,
+    fechaFin: defaultDates.fechaFin,
     cliente: '',
     estatus: '',
     region: '',
@@ -109,6 +111,7 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
   const fetchData = async (currentFilters?: typeof filters, signal?: AbortSignal) => {
     const activeFilters = currentFilters ?? filters
     try {
+      if (data !== null) setRefreshing(true)
       setLoading(true)
       const params = new URLSearchParams()
       if (activeFilters.fechaInicio) params.set('fechaInicio', activeFilters.fechaInicio)
@@ -128,6 +131,7 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }
 
@@ -143,11 +147,12 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
   }
 
   const handleSearch = () => {
+    setRefreshing(false)
     setSearchKey(prev => prev + 1)
   }
 
   const handleClear = () => {
-    const emptyFilters = {
+    setFilters({
       fechaInicio: '',
       fechaFin: '',
       cliente: '',
@@ -155,33 +160,21 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
       region: '',
       departamento: '',
       responsable: ''
-    }
-    setFilters(emptyFilters)
+    })
     setSearchKey(prev => prev + 1)
   }
 
   const handleReload = () => {
+    setRefreshing(false)
     setSearchKey(prev => prev + 1)
   }
 
   if (loading) {
-    return (
-      <Card>
-        <CardContent sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-          <CircularProgress />
-        </CardContent>
-      </Card>
-    )
+    return <DashboardLoading />
   }
 
   if (error || !data) {
-    return (
-      <Card>
-        <CardContent>
-          <Typography color='error'>{error || 'No data available'}</Typography>
-        </CardContent>
-      </Card>
-    )
+    return <DashboardError message={error || 'No data available'} />
   }
 
   return (
@@ -306,6 +299,7 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
         open={modalTotalExpenseOpen}
         onClose={() => setModalTotalExpenseOpen(false)}
         title={t('dashboard.projects.totalExpenseByProject')}
+        t={t}
       >
         <TotalExpenseByProjectChart t={t} data={data.proyectos} height={450} />
       </ChartModal>
@@ -314,6 +308,7 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
         open={modalBudgetVsActualOpen}
         onClose={() => setModalBudgetVsActualOpen(false)}
         title={t('dashboard.projects.budgetVsActual')}
+        t={t}
       >
         <BudgetVsActualChart t={t} data={data.proyectosPorcentaje} height={450} />
       </ChartModal>
@@ -322,6 +317,7 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
         open={modalTopEmployeesOpen}
         onClose={() => setModalTopEmployeesOpen(false)}
         title={t('dashboard.projects.topEmployees')}
+        t={t}
       >
         <TopEmployeesChart t={t} data={data.topEmpleados} height={450} />
       </ChartModal>

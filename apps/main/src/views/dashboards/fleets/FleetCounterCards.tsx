@@ -1,105 +1,147 @@
 'use client'
 
+import Grid from '@mui/material/Grid2'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
-import Grid from '@mui/material/Grid2'
 
-type CountersData = {
-  total: number
-  active: number
-  inactive: number
-  totalKms: number
-  totalFuel: number
-}
+const formatMXN = (value: number) =>
+  new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value)
 
 type Props = {
   t: (key: string) => string
-  counters: CountersData
+  counters: {
+    gastoTotal: number
+    solicitado: number
+    unidades: number
+    promedio: number
+    solicitudes: number
+    diferencia: number
+  }
 }
 
 const FleetCounterCards = ({ t, counters }: Props) => {
-  const items = [
-    {
-      label: t('dashboard.fleets.totalVehicles'),
-      value: counters.total,
-      color: 'var(--mui-palette-primary-main)',
-      iconBg: 'rgba(var(--mui-palette-primary-mainChannel) / 0.12)',
-      icon: 'ri-truck-line'
-    },
-    {
-      label: t('dashboard.fleets.active'),
-      value: counters.active,
-      color: 'var(--mui-palette-success-main)',
-      iconBg: 'rgba(var(--mui-palette-success-mainChannel) / 0.12)',
-      icon: 'ri-checkbox-circle-line'
-    },
-    {
-      label: t('dashboard.fleets.inactive'),
-      value: counters.inactive,
-      color: 'var(--mui-palette-text-secondary)',
-      iconBg: 'rgba(var(--mui-palette-grey-500Channel) / 0.12)',
-      icon: 'ri-close-line'
-    },
-    {
-      label: t('dashboard.fleets.totalKms'),
-      value: counters.totalKms.toLocaleString(),
-      color: 'var(--mui-palette-info-main)',
-      iconBg: 'rgba(var(--mui-palette-info-mainChannel) / 0.12)',
-      icon: 'ri-gauge-line'
-    },
-    {
-      label: t('dashboard.fleets.totalFuel'),
-      value: `$${counters.totalFuel.toLocaleString()}`,
-      color: 'var(--mui-palette-warning-main)',
-      iconBg: 'rgba(var(--mui-palette-warning-mainChannel) / 0.25)',
-      icon: 'ri-flashlight-line'
-    }
-  ]
-
   return (
-    <Grid container spacing={2}>
-      {items.map((item, index) => (
-        <Grid size={{ xs: 6, md: 2.4 }} key={index}>
-          <Card
-            sx={{
-              borderRadius: '16px',
-              border: '1px solid var(--mui-palette-divider)',
-              borderTop: `3px solid ${item.color}`,
-              transition: 'transform .2s',
-              height: '100%',
-              '&:hover': {
-                transform: 'translateY(-3px)'
-              }
-            }}
-          >
-            <CardContent sx={{ p: '1rem !important', textAlign: 'center' }}>
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 14,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.5rem',
-                  background: item.iconBg,
-                  color: item.color,
-                  margin: '0 auto 0.5rem'
-                }}
-              >
-                <i className={item.icon} />
+    <Grid container spacing={3}>
+      <Grid size={{ xs: 12, sm: 6, lg: 2 }}>
+        <Card sx={{ borderRadius: '14px', border: '1px solid var(--mui-palette-divider)', height: '100%' }}>
+          <CardContent sx={{ p: '1.25rem !important', '&:last-child': { pb: '1.25rem !important' } }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 10, background: 'var(--mui-palette-primary-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 20, flexShrink: 0 }}>
+                <i className='ri-file-invoice-dollar-line' />
               </div>
-              <Typography variant='h5' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)' }}>
-                {typeof item.value === 'number' ? item.value.toLocaleString() : item.value}
-              </Typography>
-              <Typography variant='body2' color='text.secondary' sx={{ fontSize: '0.8rem' }}>
-                {item.label}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      ))}
+              <div>
+                <Typography variant='body2' sx={{ color: 'var(--mui-palette-text-secondary)', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}>
+                  {t('dashboard.fleets.totalExpense')}
+                </Typography>
+                <Typography variant='h4' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1.2, fontSize: '1.1rem' }}>
+                  {formatMXN(counters.gastoTotal)}
+                </Typography>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 6, lg: 2 }}>
+        <Card sx={{ borderRadius: '14px', border: '1px solid var(--mui-palette-divider)', height: '100%' }}>
+          <CardContent sx={{ p: '1.25rem !important', '&:last-child': { pb: '1.25rem !important' } }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 10, background: 'var(--mui-palette-success-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 20, flexShrink: 0 }}>
+                <i className='ri-money-check-alt-line' />
+              </div>
+              <div>
+                <Typography variant='body2' sx={{ color: 'var(--mui-palette-text-secondary)', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}>
+                  {t('dashboard.fleets.requested')}
+                </Typography>
+                <Typography variant='h4' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1.2, fontSize: '1.1rem' }}>
+                  {formatMXN(counters.solicitado)}
+                </Typography>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 6, lg: 2 }}>
+        <Card sx={{ borderRadius: '14px', border: '1px solid var(--mui-palette-divider)', height: '100%' }}>
+          <CardContent sx={{ p: '1.25rem !important', '&:last-child': { pb: '1.25rem !important' } }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 10, background: 'var(--mui-palette-info-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 20, flexShrink: 0 }}>
+                <i className='ri-truck-line' />
+              </div>
+              <div>
+                <Typography variant='body2' sx={{ color: 'var(--mui-palette-text-secondary)', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}>
+                  {t('dashboard.fleets.units')}
+                </Typography>
+                <Typography variant='h4' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1.2 }}>
+                  {counters.unidades}
+                </Typography>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 6, lg: 2 }}>
+        <Card sx={{ borderRadius: '14px', border: '1px solid var(--mui-palette-divider)', height: '100%' }}>
+          <CardContent sx={{ p: '1.25rem !important', '&:last-child': { pb: '1.25rem !important' } }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 10, background: 'var(--mui-palette-warning-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 20, flexShrink: 0 }}>
+                <i className='ri-calculator-line' />
+              </div>
+              <div>
+                <Typography variant='body2' sx={{ color: 'var(--mui-palette-text-secondary)', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}>
+                  {t('dashboard.fleets.avgPerUnit')}
+                </Typography>
+                <Typography variant='h4' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1.2, fontSize: '1.1rem' }}>
+                  {formatMXN(counters.promedio)}
+                </Typography>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 6, lg: 2 }}>
+        <Card sx={{ borderRadius: '14px', border: '1px solid var(--mui-palette-divider)', height: '100%' }}>
+          <CardContent sx={{ p: '1.25rem !important', '&:last-child': { pb: '1.25rem !important' } }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 10, background: 'var(--mui-palette-secondary-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 20, flexShrink: 0 }}>
+                <i className='ri-file-list-3-line' />
+              </div>
+              <div>
+                <Typography variant='body2' sx={{ color: 'var(--mui-palette-text-secondary)', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}>
+                  {t('dashboard.fleets.requests')}
+                </Typography>
+                <Typography variant='h4' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1.2 }}>
+                  {counters.solicitudes}
+                </Typography>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 6, lg: 2 }}>
+        <Card sx={{ borderRadius: '14px', border: '1px solid var(--mui-palette-divider)', height: '100%' }}>
+          <CardContent sx={{ p: '1.25rem !important', '&:last-child': { pb: '1.25rem !important' } }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 10, background: 'var(--mui-palette-error-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 20, flexShrink: 0 }}>
+                <i className='ri-alert-line' />
+              </div>
+              <div>
+                <Typography variant='body2' sx={{ color: 'var(--mui-palette-text-secondary)', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}>
+                  {t('dashboard.fleets.difference')}
+                </Typography>
+                <Typography variant='h4' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1.2, fontSize: '1.1rem' }}>
+                  {formatMXN(counters.diferencia)}
+                </Typography>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </Grid>
     </Grid>
   )
 }

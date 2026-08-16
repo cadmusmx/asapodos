@@ -27,6 +27,9 @@ importers:
       '@emotion/styled':
         specifier: 11.14.0
         version: 11.14.0(@emotion/react@11.14.0(@types/react@18.3.18)(react@18.3.1))(@types/react@18.3.18)(react@18.3.1)
+      '@floating-ui/react':
+        specifier: 0.27.2
+        version: 0.27.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@gaso/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -42,6 +45,12 @@ importers:
       '@mui/utils':
         specifier: ^9.0.1
         version: 9.0.1(@types/react@18.3.18)(react@18.3.1)
+      '@otplib/preset-default':
+        specifier: ^12.0.1
+        version: 12.0.1
+      '@prisma/client':
+        specifier: 6.19.2
+        version: 6.19.2(prisma@6.19.2(typescript@5.5.4))(typescript@5.5.4)
       classnames:
         specifier: 2.5.1
         version: 2.5.1

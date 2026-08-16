@@ -9,14 +9,14 @@ import { useEffect, useState } from 'react'
 import Grid from '@mui/material/Grid2'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
-import Typography from '@mui/material/Typography'
-import CircularProgress from '@mui/material/CircularProgress'
 import IconButton from '@mui/material/IconButton'
 
 import WarehouseCounterCards from '@views/dashboards/warehouses/WarehouseCounterCards'
 import WarehouseFilters from '@views/dashboards/warehouses/WarehouseFilters'
 import KpiCard from '@views/dashboards/components/KpiCard'
 import ChartModal from '@views/dashboards/components/ChartModal'
+import DashboardLoading from '@views/dashboards/components/DashboardLoading'
+import DashboardError from '@views/dashboards/components/DashboardError'
 import OccupancyChart from '@views/dashboards/warehouses/OccupancyChart'
 import StatusChart from '@views/dashboards/warehouses/StatusChart'
 import CapacityVsOccupiedChart from '@views/dashboards/warehouses/CapacityVsOccupiedChart'
@@ -66,6 +66,7 @@ const WarehousesDashboard = ({ dictionary }: Props) => {
   const [data, setData] = useState<DashboardData | null>(null)
   const [catalogs, setCatalogs] = useState<CatalogData>({ regions: [], warehouses: [] })
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchKey, setSearchKey] = useState(0)
   const [modalCapacityOpen, setModalCapacityOpen] = useState(false)
@@ -82,6 +83,7 @@ const WarehousesDashboard = ({ dictionary }: Props) => {
 
   const fetchData = async () => {
     try {
+      if (data !== null) setRefreshing(true)
       setLoading(true)
       const params = new URLSearchParams()
       if (filters.region) params.set('region', filters.region)
@@ -97,6 +99,7 @@ const WarehousesDashboard = ({ dictionary }: Props) => {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }
 
@@ -129,31 +132,25 @@ const WarehousesDashboard = ({ dictionary }: Props) => {
   }
 
   const handleSearch = () => {
+    setRefreshing(false)
     setSearchKey(prev => prev + 1)
   }
 
   const handleReload = () => {
+    setRefreshing(false)
+    setSearchKey(prev => prev + 1)
+  }
+
+  const handleClear = () => {
     setSearchKey(prev => prev + 1)
   }
 
   if (loading) {
-    return (
-      <Card>
-        <CardContent sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-          <CircularProgress />
-        </CardContent>
-      </Card>
-    )
+    return <DashboardLoading />
   }
 
   if (error || !data) {
-    return (
-      <Card>
-        <CardContent>
-          <Typography color='error'>{error || 'No data available'}</Typography>
-        </CardContent>
-      </Card>
-    )
+    return <DashboardError message={error || 'No data available'} />
   }
 
   return (
@@ -167,6 +164,7 @@ const WarehousesDashboard = ({ dictionary }: Props) => {
           values={filters}
           onChange={handleFilterChange}
           onSearch={handleSearch}
+          onClear={handleClear}
           onReload={handleReload}
           regions={catalogs.regions.map(r => r.nombre)}
           cities={data.cities}
@@ -179,6 +177,7 @@ const WarehousesDashboard = ({ dictionary }: Props) => {
           iconBackground='rgba(13,110,253,.12)'
           iconColor='#0d6efd'
           iconClass='ri-pie-chart-2-line'
+          loading={refreshing}
         >
           <OccupancyChart
             t={t}
@@ -194,6 +193,7 @@ const WarehousesDashboard = ({ dictionary }: Props) => {
           iconBackground='rgba(40,167,69,.12)'
           iconColor='#28a745'
           iconClass='ri-checkbox-circle-line'
+          loading={refreshing}
         >
           <StatusChart t={t} data={data.estadosCount} />
         </KpiCard>
@@ -205,6 +205,7 @@ const WarehousesDashboard = ({ dictionary }: Props) => {
           iconBackground='rgba(23,162,184,.12)'
           iconColor='#17a2b8'
           iconClass='ri-bar-chart-box-line'
+          loading={refreshing}
           action={
               <IconButton size='small' onClick={() => setModalCapacityOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
@@ -221,6 +222,7 @@ const WarehousesDashboard = ({ dictionary }: Props) => {
           iconBackground='rgba(255,193,7,.12)'
           iconColor='#ffc107'
           iconClass='ri-line-chart-line'
+          loading={refreshing}
         >
           <OccupancyLevelsChart t={t} data={data.occupancyLevels} />
         </KpiCard>
@@ -232,6 +234,7 @@ const WarehousesDashboard = ({ dictionary }: Props) => {
           iconBackground='rgba(111,66,193,.12)'
           iconColor='#6f42c1'
           iconClass='ri-warehouse-line'
+          loading={refreshing}
         >
           <WarehouseCards t={t} data={data.warehouseItems} />
         </KpiCard>
@@ -244,6 +247,7 @@ const WarehousesDashboard = ({ dictionary }: Props) => {
         open={modalCapacityOpen}
         onClose={() => setModalCapacityOpen(false)}
         title={t('dashboard.warehouses.capacityVsOccupied')}
+        t={t}
       >
         <CapacityVsOccupiedChart t={t} data={data.capacidadVsOcupado} height={450} />
       </ChartModal>

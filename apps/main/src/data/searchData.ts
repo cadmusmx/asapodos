@@ -290,8 +290,8 @@ const data: SearchData[] = [
   {
     id: '40',
     name: 'Account Settings',
-    url: '/pages/account-settings',
-    icon: 'ri-user-settings-line',
+    url: '/settings',
+    icon: 'ri-settings-4-line',
     section: 'Pages'
   },
   {

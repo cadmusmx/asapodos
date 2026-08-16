@@ -42,7 +42,7 @@ export const erpNavigationModules: ErpNavigationModule[] = [
       { key: 'wh-inventory', labelKey: 'warehouses.inventory', href: '/warehouses/inventory', icon: 'ri-file-list-3-line', viewCode: 'inventory' },
       { key: 'wh-ericsson', labelKey: 'warehouses.ericssonInventory', href: '/warehouses/ericsson-inventory', icon: 'ri-npmjs-line', viewCode: 'ericsson_inventory' },
       { key: 'wh-list', labelKey: 'warehouses.warehouseList', href: '/warehouses/warehouse-list', icon: 'ri-layout-grid-line', viewCode: 'warehouses_list' },
-      { key: 'wh-map', labelKey: 'warehouses.warehouseMap', href: '/warehouses/warehouse-map', icon: 'ri-map-pin-line', viewCode: 'warehouses_map' },
+      { key: 'wh-map', labelKey: 'warehouses.warehouseMapNavLabel', href: '/warehouses/warehouse-map', icon: 'ri-map-pin-line', viewCode: 'warehouses_map' },
       { key: 'wh-movements', labelKey: 'warehouses.inventoryMovements', href: '/warehouses/inventory-movements', icon: 'ri-exchange-line', viewCode: 'inventory_movements' },
       { key: 'wh-validation', labelKey: 'warehouses.materialValidation', href: '/warehouses/material-validation', icon: 'ri-file-check-line', viewCode: 'material_validation' },
       { key: 'wh-logistics', labelKey: 'warehouses.materialLogistics', href: '/warehouses/material-logistics', icon: 'ri-inbox-archive-line', viewCode: 'material_logistics' },
@@ -123,7 +123,13 @@ export const erpNavigationModules: ErpNavigationModule[] = [
 
 /** Resuelve un labelKey ('a.b' o 'a') contra dictionary.navigation. */
 export const getDictionaryValue = (dictionary: any, path: string): string => {
-  return path.split('.').reduce((currentValue, currentKey) => currentValue?.[currentKey], dictionary?.navigation) ?? path
+  const value = path.split('.').reduce((currentValue, currentKey) => currentValue?.[currentKey], dictionary?.navigation)
+
+  if (typeof value !== 'string') {
+    return path
+  }
+
+  return value
 }
 
 type VisibleNavParams = {

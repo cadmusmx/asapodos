@@ -65,7 +65,7 @@ const shortcuts: ShortcutsType[] = [
     subtitle: 'User Dashboard'
   },
   {
-    url: '/pages/account-settings',
+    url: '/settings',
     icon: 'ri-settings-4-line',
     title: 'Settings',
     subtitle: 'Account Settings'

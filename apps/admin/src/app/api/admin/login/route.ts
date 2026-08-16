@@ -14,7 +14,8 @@ import {
   writeAuthAudit,
   getPlatformRole,
   setTenantContext,
-  withTenantContext
+  withTenantContext,
+  getProfilePhoto
 } from '@gaso/shared'
 
 const ADMIN_TENANT = process.env.ADMIN_TENANT ?? 'gasohub.com'
@@ -261,7 +262,7 @@ export async function POST(req: Request) {
       position: emp.IdPuesto,
       region: emp.IdRegion,
       department: emp.IdDepartamento,
-      image: 'https://gaso-erp.com/dist/img/gasologo.png',
+      image: await getProfilePhoto(tenantId, user.EmployeeID),
       tenantId,
       tenantSlug: 'gaso-admin-platform',
       tenantName: 'Gaso Admin Platform',
