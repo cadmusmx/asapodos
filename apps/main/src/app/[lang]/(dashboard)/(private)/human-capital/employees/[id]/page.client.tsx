@@ -12,6 +12,8 @@ import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
 
+import ContactsTab from './ContactsTab';
+
 type EmployeeHeader = {
   employeeId: number;
   employeeNumber: string | null;
@@ -99,11 +101,7 @@ const EmployeeExpediente = ({ employeeId }: EmployeeExpedienteProps) => {
         </Tabs>
 
         <CardContent>
-          {tab === 0 ? (
-            <Typography variant='body2' color='text.secondary'>
-              Contactos — próximamente (C1).
-            </Typography>
-          ) : null}
+          {tab === 0 ? (<ContactsTab employeeId={employeeId} />) : null}
           {tab === 1 ? (
             <Typography variant='body2' color='text.secondary'>
               Datos extra — próximamente (C2).
