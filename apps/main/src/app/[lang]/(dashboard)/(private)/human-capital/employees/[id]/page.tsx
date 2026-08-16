@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
 
+import { PERM } from '@gaso/shared'
+
 import type { Locale } from '@configs/i18n'
 
 import { getTargetByReason, requireViewAccess } from '@/lib/auth/require-view-access'
@@ -22,7 +24,12 @@ const Page = async (props: { params: Promise<{ lang: Locale; id: string }> }) =>
     redirect(getLocalizedUrl('/human-capital/employees', lang))
   }
 
-  return <EmployeeExpediente employeeId={employeeId} />
+  const canCreate = (access.mask & PERM.W) === PERM.W
+  const canEdit = (access.mask & PERM.U) === PERM.U
+  const canDelete = (access.mask & PERM.D) === PERM.D
+
+  return <EmployeeExpediente employeeId={employeeId} canCreate={canCreate} canEdit={canEdit} canDelete={canDelete} />
+
 }
 
 export default Page

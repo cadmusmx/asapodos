@@ -25,9 +25,12 @@ type EmployeeHeader = {
 
 type EmployeeExpedienteProps = {
   employeeId: number;
+  canCreate?: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
 };
 
-const EmployeeExpediente = ({ employeeId }: EmployeeExpedienteProps) => {
+const EmployeeExpediente = ({ employeeId, canCreate = false, canEdit = false, canDelete = false }: EmployeeExpedienteProps) => {
   const [employee, setEmployee] = useState<EmployeeHeader | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -101,7 +104,7 @@ const EmployeeExpediente = ({ employeeId }: EmployeeExpedienteProps) => {
         </Tabs>
 
         <CardContent>
-          {tab === 0 ? (<ContactsTab employeeId={employeeId} />) : null}
+          {tab === 0 ? <ContactsTab employeeId={employeeId} canCreate={canCreate} canEdit={canEdit} canDelete={canDelete} /> : null}
           {tab === 1 ? (
             <Typography variant='body2' color='text.secondary'>
               Datos extra — próximamente (C2).

@@ -116,14 +116,10 @@ export async function PUT(req: Request) {
     return NextResponse.json({ message: 'No autenticado' }, { status: 401 })
   }
 
-  const { id: userId, tenantId: sessionTenantId, admin } = session.user
+  const { id: userId, tenantId: sessionTenantId } = session.user
 
   if (!userId || typeof userId !== 'number') {
     return NextResponse.json({ message: 'Sesión sin identificador de usuario válido' }, { status: 401 })
-  }
-
-  if (admin !== true) {
-    return NextResponse.json({ message: 'No autorizado' }, { status: 403 })
   }
 
   let tenantId: string
