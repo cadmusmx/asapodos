@@ -13,15 +13,8 @@ import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
 
 import ContactsTab from './ContactsTab';
-
-type EmployeeHeader = {
-  employeeId: number;
-  employeeNumber: string | null;
-  fullName: string;
-  email: string | null;
-  employmentStatus: string | null;
-  isActive: boolean;
-};
+import DatosExtraTab from './DatosExtraTab';
+import type { HumanCapitalEmployee } from '@/types/human-capital';
 
 type EmployeeExpedienteProps = {
   employeeId: number;
@@ -31,7 +24,7 @@ type EmployeeExpedienteProps = {
 };
 
 const EmployeeExpediente = ({ employeeId, canCreate = false, canEdit = false, canDelete = false }: EmployeeExpedienteProps) => {
-  const [employee, setEmployee] = useState<EmployeeHeader | null>(null);
+  const [employee, setEmployee] = useState<HumanCapitalEmployee | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState(0);
@@ -42,7 +35,7 @@ const EmployeeExpediente = ({ employeeId, canCreate = false, canEdit = false, ca
 
     try {
       const response = await fetch(`/api/human-capital/employees/${employeeId}`);
-      const data = (await response.json().catch(() => null)) as { data?: EmployeeHeader; message?: string } | null;
+      const data = (await response.json().catch(() => null)) as { data?: HumanCapitalEmployee; message?: string } | null;
 
       if (!response.ok || !data?.data) {
         throw new Error(data && data.message ? data.message : 'No se pudo cargar el empleado.');
@@ -105,11 +98,7 @@ const EmployeeExpediente = ({ employeeId, canCreate = false, canEdit = false, ca
 
         <CardContent>
           {tab === 0 ? <ContactsTab employeeId={employeeId} canCreate={canCreate} canEdit={canEdit} canDelete={canDelete} /> : null}
-          {tab === 1 ? (
-            <Typography variant='body2' color='text.secondary'>
-              Datos extra — próximamente (C2).
-            </Typography>
-          ) : null}
+          {tab === 1 ? <DatosExtraTab employeeId={employeeId} canEdit={canEdit} /> : null}
           {tab === 2 ? (
             <Typography variant='body2' color='text.secondary'>
               Documentos — próximamente (C3).

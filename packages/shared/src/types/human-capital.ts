@@ -57,3 +57,12 @@ export const EMPLOYEE_RELATIONSHIPS: Record<EmployeeRelationship, number> = {
   Cunado: 7,
   Otro: 8
 };
+
+export const SEXO_OPTIONS: Array<{ value: 'M' | 'F'; label: string }> = [
+  { value: 'M', label: 'Masculino' },
+  { value: 'F', label: 'Femenino' }
+];
+
+export const TIPO_SANGRE_OPTIONS: string[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+
+export const REGION_OPTIONS: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
