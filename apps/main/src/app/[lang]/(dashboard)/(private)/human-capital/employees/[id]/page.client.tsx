@@ -12,9 +12,10 @@ import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
 
+import type { HumanCapitalEmployee } from '@/types/human-capital';
 import ContactsTab from './ContactsTab';
 import DatosExtraTab from './DatosExtraTab';
-import type { HumanCapitalEmployee } from '@/types/human-capital';
+import DocumentsTab from './DocumentsTab';
 
 type EmployeeExpedienteProps = {
   employeeId: number;
@@ -99,11 +100,7 @@ const EmployeeExpediente = ({ employeeId, canCreate = false, canEdit = false, ca
         <CardContent>
           {tab === 0 ? <ContactsTab employeeId={employeeId} canCreate={canCreate} canEdit={canEdit} canDelete={canDelete} /> : null}
           {tab === 1 ? <DatosExtraTab employeeId={employeeId} canEdit={canEdit} /> : null}
-          {tab === 2 ? (
-            <Typography variant='body2' color='text.secondary'>
-              Documentos — próximamente (C3).
-            </Typography>
-          ) : null}
+          {tab === 2 ? <DocumentsTab employeeId={employeeId} canCreate={canCreate} canDelete={canDelete} /> : null}
         </CardContent>
       </Card>
     </Box>

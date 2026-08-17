@@ -16,7 +16,7 @@ import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import { SEXO_OPTIONS, TIPO_SANGRE_OPTIONS, REGION_OPTIONS } from '@gaso/shared/types/human-capital';
+import { REGION_OPTIONS, SEXO_OPTIONS, TIPO_SANGRE_OPTIONS } from '@gaso/shared';
 
 type EmployeeData = {
   curp: string | null;

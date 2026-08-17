@@ -1,4 +1,3 @@
-// apps/main/src/app/[lang]/(dashboard)/(private)/human-capital/employees/[id]/ContactsTab.tsx
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
