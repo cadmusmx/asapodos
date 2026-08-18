@@ -2,7 +2,7 @@ import { EMPLOYEE_DOCUMENTS } from '../constants/employee-catalogs'
 import { withTenantContext } from './tenant-context'
 
 const PROFILE_PHOTO_S3_BASE =
-  process.env.PROFILE_PHOTO_S3_BASE_URL ?? 'https://argosb.s3.us-east-1.amazonaws.com/' // El bucket ya no es argosb
+  process.env.PROFILE_PHOTO_S3_BASE_URL ?? 'https://argosb.s3.us-east-1.amazonaws.com/' // El bucket ya no es argosb es gasosass
 
 // Nota: la tabla `HumanCapital.EmployeeFiles` tiene la columna IsUrl por los documentos migrados de los usuarios legacy de Gaso
 // vienen con la URL completa https://argosb.s3.us-east-1.amazonaws.com/file (solo para estos documentos)
