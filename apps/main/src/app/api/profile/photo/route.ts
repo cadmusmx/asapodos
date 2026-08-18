@@ -80,7 +80,8 @@ export async function POST(req: Request) {
 
     const buffer = Buffer.from(await file.arrayBuffer())
     const ts = new Date().toISOString().replace(/[:.]/g, '').slice(0, 15)
-    const folder = S3_PUBLIC_BASE_URL && S3_PUBLIC_BASE_URL.includes('Qa') ? 'Qa/' : 'Pr/'
+    const folder = `${process.env.S3_FOLDER ?? 'Pr'}/`;
+
     const key = `${folder}${slug}/profile-photos/web/${ts}-web${ext}`
 
     await s3.send(
@@ -115,7 +116,7 @@ export async function POST(req: Request) {
       oldData: null,
       newData: { employeeId: userId, fotoPerfil: url },
       idOrigin: ID_ORIGIN_WEB
-    }).catch(() => {})
+    }).catch(() => { })
 
     return NextResponse.json({ success: true, url })
   } catch (e) {
