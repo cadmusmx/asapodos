@@ -23,6 +23,7 @@ import UserDropdown from '@components/layout/shared/UserDropdown'
 
 // Hook Imports
 import { useMe } from '@/hooks/useMe'
+import { useTranslate } from '@/contexts/dictionaryContext'
 
 // Util Imports
 import { verticalLayoutClasses } from '@layouts/utils/layoutClasses'
@@ -122,6 +123,7 @@ const notifications: NotificationsType[] = [
 const NavbarContent = () => {
   const { data: me, isLoading, error } = useMe()
   const { data: session } = useSession()
+  const { t } = useTranslate()
 
   const sessionUser = session?.user as TenantSessionUser | undefined
 
@@ -141,8 +143,8 @@ const NavbarContent = () => {
 
   const tenantLabel =
     isLoading && !hasTenant
-      ? 'Cargando empresa...'
-      : tenantName || tenantSlug || 'Empresa no disponible'
+      ? t('tenant.loading')
+      : tenantName || tenantSlug || t('tenant.unavailable')
 
   return (
     <div className={classnames(verticalLayoutClasses.navbarContent, 'flex items-center justify-between gap-4 is-full')}>
@@ -152,7 +154,7 @@ const NavbarContent = () => {
 
         <div className='hidden md:flex items-center gap-2 mis-2'>
           <Typography variant='body2' color='text.secondary'>
-            Empresa:
+            {t('tenant.label')}
           </Typography>
 
           <Chip

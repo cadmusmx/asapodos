@@ -7,7 +7,7 @@ import { getToken } from 'next-auth/jwt'
 // excluyendo apis auth, internal y archivos estáticos como imágenes.
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|api/auth/|api/internal/|api/admin/|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|woff|woff2|ttf|otf)$).*)'
+    '/((?!_next/static|_next/image|favicon.ico|api/auth/|api/internal/|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|woff|woff2|ttf|otf)$).*)'
   ]
 }
 

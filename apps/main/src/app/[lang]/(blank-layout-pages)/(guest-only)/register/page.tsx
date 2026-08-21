@@ -1,16 +1,14 @@
 // Next Imports
-import type { Metadata } from 'next'
-
 // Component Imports
 import Register from '@views/Register'
 
 // Server Action Imports
 import { getServerMode } from '@core/utils/serverHelpers'
 
-export const metadata: Metadata = {
-  title: 'Register',
-  description: 'Register to your account'
-}
+// Lib Imports
+import { withTenantTitle } from '@/lib/page-metadata'
+
+export const generateMetadata = () => withTenantTitle('Register', 'Register to your account')
 
 const RegisterPage = async () => {
   // Vars

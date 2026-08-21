@@ -20,6 +20,7 @@ import { AUDIT_ACTION_LABELS } from '@gaso/shared'
 import tableStyles from '@core/styles/table.module.css'
 
 import AuditDetailDialog from '@/views/audit/AuditDetailDialog'
+import { useTranslatePage } from '@/contexts/dictionaryContext'
 
 import type { ProfileActivityResponse } from '@/types/profile'
 
@@ -49,13 +50,14 @@ const ActivityTab = ({ onError }: Props) => {
   const [loading, setLoading] = useState(false)
   const [detailRow, setDetailRow] = useState<ActivityRow | null>(null)
   const onErrorRef = useRef(onError)
+  const { t } = useTranslatePage()
 
   onErrorRef.current = onError
 
   const columns = useMemo(
     () => [
       columnHelper.accessor('changedAt', {
-        header: 'Fecha',
+        header: t('userProfile.activityTab.date'),
         cell: info => {
           const v = info.getValue()
 
@@ -67,7 +69,7 @@ const ActivityTab = ({ onError }: Props) => {
         }
       }),
       columnHelper.accessor('action', {
-        header: 'Acción',
+        header: t('userProfile.activityTab.action'),
         cell: info => {
           const code = info.getValue()
           const label = AUDIT_ACTION_LABELS[code as keyof typeof AUDIT_ACTION_LABELS] ?? code
@@ -76,7 +78,7 @@ const ActivityTab = ({ onError }: Props) => {
         }
       }),
       columnHelper.accessor('tableName', {
-        header: 'Entidad',
+        header: t('userProfile.activityTab.entity'),
         cell: info => (
           <Typography variant='body2' sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
             {info.getValue()}
@@ -84,16 +86,16 @@ const ActivityTab = ({ onError }: Props) => {
         )
       }),
       columnHelper.accessor('appUser', {
-        header: 'Usuario',
+        header: t('userProfile.activityTab.user'),
         cell: info => info.getValue() ?? '—'
       }),
       columnHelper.accessor('origin', {
-        header: 'Origen',
+        header: t('userProfile.activityTab.origin'),
         cell: info => info.getValue() ?? '—'
       }),
       columnHelper.display({
         id: 'detail',
-        header: 'Detalle',
+        header: t('userProfile.activityTab.detail'),
         cell: ({ row }) => {
           const r = row.original
           const hasOld = r.oldData != null
@@ -101,7 +103,7 @@ const ActivityTab = ({ onError }: Props) => {
 
           if (!hasOld && !hasNew) return '—'
 
-          const label = hasOld && hasNew ? 'Ver cambios' : hasNew ? 'Ver datos' : 'Ver datos'
+          const label = hasOld && hasNew ? t('userProfile.activityTab.viewChanges') : t('userProfile.activityTab.viewData')
 
           return (
             <Button
@@ -142,7 +144,7 @@ const ActivityTab = ({ onError }: Props) => {
       if (!res.ok || !raw) {
         const err = raw as { message?: string } | null
 
-        throw new Error(err?.message ?? 'Error al cargar la actividad')
+        throw new Error(err?.message ?? t('userProfile.activityTab.errorLoading'))
       }
 
       const data = raw as ProfileActivityResponse
@@ -150,7 +152,7 @@ const ActivityTab = ({ onError }: Props) => {
       setRows(data.data as ActivityRow[])
       setTotal(data.total)
     } catch (e) {
-      onErrorRef.current(e instanceof Error ? e.message : 'Error al cargar la actividad')
+      onErrorRef.current(e instanceof Error ? e.message : t('userProfile.activityTab.errorLoading'))
     } finally {
       setLoading(false)
     }
@@ -195,7 +197,7 @@ const ActivityTab = ({ onError }: Props) => {
                           style={{ fontSize: '2rem', color: 'var(--mui-palette-text-disabled)' }}
                         />
                         <Typography variant='body2' color='text.secondary'>
-                          No hay actividad registrada
+                          {t('userProfile.activityTab.noActivity')}
                         </Typography>
                       </Box>
                     </td>
@@ -243,7 +245,7 @@ const ActivityTab = ({ onError }: Props) => {
             setPageSize(Number(e.target.value))
             setPage(0)
           }}
-          labelRowsPerPage='Filas por página'
+          labelRowsPerPage={t('userProfile.activityTab.rowsPerPage')}
         />
       </Box>
 

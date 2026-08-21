@@ -52,7 +52,6 @@ function parseBody(raw: unknown): ParsedBody {
  *
  * Se blinda con withPermission('permissions_access', U):
  *    para ESCRIBIR permisos primero hay que poder ACTUALIZAR la vista de administración.
- * El guardarraíl de fondo (isAdmin en vivo, alcance, techo, canonicidad) vive en assignPermission.
  * Auditoría PERM_CHG tras el commit (commit -> audit, nunca bloquea).
  */
 export const POST = withPermission(

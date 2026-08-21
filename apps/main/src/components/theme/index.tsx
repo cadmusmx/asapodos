@@ -23,9 +23,12 @@ import ModeChanger from './ModeChanger'
 
 // Config Imports
 import themeConfig from '@configs/themeConfig'
+import primaryColorConfig from '@configs/primaryColorConfig'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
+import { useMe } from '@/hooks/useMe'
+import { useInitialBranding } from '@/contexts/brandingContext'
 
 // Core Theme Imports
 import defaultCoreTheme from '@core/theme'
@@ -45,6 +48,8 @@ const CustomThemeProvider = (props: Props) => {
 
   // Hooks
   const { settings } = useSettings()
+  const { data: meData } = useMe()
+  const initialBranding = useInitialBranding()
   const isDark = useMedia('(prefers-color-scheme: dark)', systemMode === 'dark')
 
   if (isServer) {
@@ -57,6 +62,9 @@ const CustomThemeProvider = (props: Props) => {
     }
   }
 
+    const tenantPrimaryColor = meData?.settings?.branding?.primaryColor ?? initialBranding?.primaryColor ?? primaryColorConfig[0].main
+    const tenantFontFamily = meData?.settings?.branding?.fontFamily ?? initialBranding?.fontFamily ?? null
+
   // Merge the primary color scheme override with the core theme
   const theme = useMemo(() => {
     const newTheme = {
@@ -64,18 +72,18 @@ const CustomThemeProvider = (props: Props) => {
         light: {
           palette: {
             primary: {
-              main: settings.primaryColor,
-              light: lighten(settings.primaryColor as string, 0.2),
-              dark: darken(settings.primaryColor as string, 0.1)
+              main: tenantPrimaryColor,
+              light: lighten(tenantPrimaryColor, 0.2),
+              dark: darken(tenantPrimaryColor, 0.1)
             }
           }
         },
         dark: {
           palette: {
             primary: {
-              main: settings.primaryColor,
-              light: lighten(settings.primaryColor as string, 0.2),
-              dark: darken(settings.primaryColor as string, 0.1)
+              main: tenantPrimaryColor,
+              light: lighten(tenantPrimaryColor, 0.2),
+              dark: darken(tenantPrimaryColor, 0.1)
             }
           }
         }
@@ -85,12 +93,12 @@ const CustomThemeProvider = (props: Props) => {
       }
     }
 
-    const coreTheme = deepmerge(defaultCoreTheme(settings, currentMode, direction), newTheme)
+    const coreTheme = deepmerge(defaultCoreTheme(settings, currentMode, direction, tenantFontFamily), newTheme)
 
     return createTheme(coreTheme)
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.primaryColor, settings.skin, currentMode])
+  }, [tenantPrimaryColor, tenantFontFamily, settings.skin, currentMode])
 
   return (
     <AppRouterCacheProvider

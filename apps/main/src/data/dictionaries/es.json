@@ -342,7 +342,161 @@
       "siteCheckIn": "Check-In en Sitio"
     },
     "purchasing": "Compras",
-    "clients": "Clientes"
+    "clients": "Clientes",
+    "settings": {
+      "title": "Ajustes"
+    },
+    "navbar": {
+      "userMenu": {
+        "myProfile": "Mi perfil",
+        "settings": "Ajustes",
+        "logout": "Cerrar sesión"
+      },
+      "mode": {
+        "light": "Claro",
+        "dark": "Oscuro",
+        "system": "Sistema",
+        "lightMode": "Modo claro",
+        "darkMode": "Modo oscuro",
+        "systemMode": "Modo sistema"
+      },
+      "notifications": {
+        "title": "Notificaciones",
+        "new": "nuevas",
+        "markAllRead": "Marcar todas como leídas",
+        "markAllUnread": "Marcar todas como no leídas",
+        "viewAll": "Ver todas las notificaciones"
+      },
+      "shortcuts": {
+        "title": "Accesos directos",
+        "add": "Añadir acceso directo"
+      },
+      "search": {
+        "placeholder": "Buscar ⌘K",
+        "navigate": "para navegar",
+        "open": "para abrir",
+        "close": "para cerrar",
+        "noResult": "Sin resultados para \"{query}\"",
+        "trySearching": "Prueba a buscar"
+      },
+      "tenant": {
+        "label": "Empresa:",
+        "loading": "Cargando empresa...",
+        "unavailable": "Empresa no disponible"
+      }
+    }
+  },
+  "userProfile": {
+    "tabs": {
+      "personalInfo": "Información personal",
+      "employeeInfo": "Datos de empleado",
+      "security": "Seguridad",
+      "activity": "Actividad"
+    },
+    "loadingProfile": "Cargando perfil...",
+    "loadProfileError": "Error al cargar el perfil",
+    "uploadPhotoError": "Error al subir la foto",
+    "photoUploadSuccess": "Foto actualizada correctamente",
+    "photoUpload": {
+      "invalidType": "Formato no permitido. Usa una imagen JPG o PNG.",
+      "fileTooBig": "La imagen es demasiado grande. Máximo {mb} MB.",
+      "change": "Cambiar",
+      "changePhoto": "Cambiar foto de perfil"
+    },
+    "securityTab": {
+      "cancel": "Cancelar",
+      "saving": "Guardando...",
+      "changePassword": "Cambiar contraseña",
+      "accountSecurity": "Seguridad de la cuenta",
+      "accountSecuritySub": "Gestiona la seguridad de tu cuenta",
+      "passwordHint": "Tu contraseña debe tener al menos 8 caracteres. Se recomienda usar una combinación de letras, números y símbolos.",
+      "wantToChangePassword": "¿Deseas cambiar tu contraseña de acceso? Haz clic en el botón siguiente.",
+      "currentPasswordRequired": "La contraseña actual es requerida",
+      "newPasswordRequired": "La nueva contraseña es requerida",
+      "minChars": "La nueva contraseña debe tener al menos 8 caracteres",
+      "confirmationRequired": "La confirmación es requerida",
+      "passwordMismatch": "La nueva contraseña y su confirmación no coinciden",
+      "errorChangingPassword": "Error al cambiar la contraseña",
+      "passwordChangedSuccess": "Contraseña actualizada correctamente",
+      "currentPassword": "Contraseña actual",
+      "newPassword": "Nueva contraseña",
+      "confirmPassword": "Confirmar nueva contraseña",
+      "hideCurrentPassword": "Ocultar contraseña actual",
+      "showCurrentPassword": "Mostrar contraseña actual",
+      "hideNewPassword": "Ocultar nueva contraseña",
+      "showNewPassword": "Mostrar nueva contraseña",
+      "hideConfirmation": "Ocultar confirmación",
+      "showConfirmation": "Mostrar confirmación",
+      "minCharsHint": "Mínimo 8 caracteres"
+    },
+    "personalInfoTab": {
+      "accountInfo": "Información de la cuenta",
+      "accessData": "Datos de acceso a la plataforma",
+      "fullName": "Nombre completo",
+      "username": "Nombre de usuario",
+      "email": "Correo electrónico",
+      "employeeNumber": "Número de empleado",
+      "readOnly": "Solo lectura"
+    },
+    "employeeInfoTab": {
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "onLeave": "Permiso",
+      "terminated": "Terminado",
+      "noEmployeeInfo": "No hay información de empleado asociada a tu cuenta. Contacta a un administrador si crees que esto es un error.",
+      "employeeData": "Datos del empleado",
+      "orgInfo": "Información organizacional asignada a tu cuenta",
+      "noEmployeeNum": "Sin número de empleado",
+      "department": "Departamento",
+      "position": "Puesto",
+      "area": "Área",
+      "region": "Región",
+      "hireDate": "Fecha de ingreso",
+      "status": "Estado",
+      "identifiers": "Identificadores",
+      "taxIds": "Claves fiscales y de seguridad social"
+    },
+    "activityTab": {
+      "date": "Fecha",
+      "action": "Acción",
+      "entity": "Entidad",
+      "user": "Usuario",
+      "origin": "Origen",
+      "detail": "Detalle",
+      "viewChanges": "Ver cambios",
+      "viewData": "Ver datos",
+      "errorLoading": "Error al cargar la actividad",
+      "noActivity": "No hay actividad registrada",
+      "rowsPerPage": "Filas por página"
+    }
+  },
+  "branding": {
+    "title": "Branding",
+    "subtitle": "Configura la apariencia visual de tu tenant.",
+    "visibleName": "Nombre visible",
+    "visibleNameHint": "Nombre que se muestra en la barra superior y en el título del navegador.",
+    "logo": "Logo",
+    "logoHint": "PNG, JPG, JPEG, SVG o WebP. Máximo 5 MB.",
+    "favicon": "Favicon",
+    "faviconHint": "PNG, ICO o SVG. Máximo 1 MB.",
+    "primaryColor": "Color primario",
+    "colorHex": "Hex",
+    "colorHexHint": "Usa formato #RGB o #RRGGBB",
+    "typography": "Tipografía",
+    "typographyHint": "Fuente principal usada en toda la aplicación.",
+    "upload": "Subir",
+    "change": "Cambiar",
+    "remove": "Quitar",
+    "loading": "Cargando...",
+    "reload": "Recargar",
+    "save": "Guardar configuración",
+    "saving": "Guardando...",
+    "savedSuccess": "Configuración guardada correctamente.",
+    "retry": "Reintentar",
+    "invalidFileType": "Tipo de archivo no permitido.",
+    "fileTooLarge": "El archivo excede {mb} MB.",
+    "uploadError": "Error al subir el archivo.",
+    "networkError": "Error de red al subir el archivo."
   },
   "start": {
     "heroTitle": "Gaso Comunicaciones",

@@ -39,7 +39,7 @@ const Layout = async (props: ChildrenType & { params: Promise<{ lang: Locale }> 
   const systemMode = await getSystemMode()
 
   return (
-    <Providers direction={direction}>
+    <Providers direction={direction} dictionary={dictionary}>
       <AuthGuard locale={params.lang}>
         <LayoutWrapper
           systemMode={systemMode}

@@ -1,30 +1,24 @@
 import { EMPLOYEE_DOCUMENTS } from '../constants/employee-catalogs'
 import { withTenantContext } from './tenant-context'
 
-const PROFILE_PHOTO_S3_BASE =
-  process.env.PROFILE_PHOTO_S3_BASE_URL ?? 'https://argosb.s3.us-east-1.amazonaws.com/' // El bucket ya no es argosb es gasosass
+const S3_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_S3_PUBLIC_BASE_URL ?? 'https://gasosass.s3.us-east-1.amazonaws.com/';
 
-// Nota: la tabla `HumanCapital.EmployeeFiles` tiene la columna IsUrl por los documentos migrados de los usuarios legacy de Gaso
-// vienen con la URL completa https://argosb.s3.us-east-1.amazonaws.com/file (solo para estos documentos)
-// los nuevos documentos que se cargeun de aqui en adelante deben ser IsUrl en 0 y guardar solo la key del archivo S3.
-// estos archivos ya son de otro Bucket y las carpetas deben ser Qa o Pr
-function resolveProfilePhotoUrl(raw: string | null | undefined): string {
-  if (!raw || raw === 'null' || raw === 'undefined') return ''
-  const src = String(raw).trim()
-  if (!src) return ''
-  if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:image/')) {
-    return src
-  }
-  const key = src.replace(/^(\.\.\/)+/, '').replace(/^(\.\/)+/, '').replace(/^\/+/, '')
-  return `${PROFILE_PHOTO_S3_BASE.replace(/\/+$/, '')}/${key}`
-}
+// IsUrl=1 → FilePath ya es URL completa (docs legacy). IsUrl=0 → key en el bucket nuevo.
+const resolveUrl = (filePath: string, isUrl: boolean): string => {
+  const src = (filePath ?? '').trim();
 
-// No usar DocumentType era dato de la migración, usar DocumentTypeID en su lugar
+  if (!src) return '';
+  if (isUrl || src.startsWith('http://') || src.startsWith('https://')) return src;
+
+  const key = src.replace(/^\/+/, '');
+
+  return S3_PUBLIC_BASE_URL ? `${S3_PUBLIC_BASE_URL.replace(/\/+$/, '')}/${key}` : key;
+};
 
 export async function getProfilePhoto(tenantId: string, employeeId: number): Promise<string> {
   return withTenantContext(tenantId, async (tx) => {
-    const rows = await tx.$queryRaw<Array<{ FilePath: string }>>`
-      SELECT TOP 1 FilePath
+    const rows = await tx.$queryRaw<Array<{ FilePath: string, IsUrl: boolean }>>`
+      SELECT TOP 1 FilePath, IsUrl
       FROM HumanCapital.EmployeeFiles
       WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
         AND EmployeeID = ${employeeId}
@@ -32,7 +26,7 @@ export async function getProfilePhoto(tenantId: string, employeeId: number): Pro
       ORDER BY FileID DESC
     `
     const row = rows[0]
-    return row ? resolveProfilePhotoUrl(row.FilePath) : ''
+    return row ? resolveUrl(row.FilePath, row.IsUrl) : ''
   })
 }
 
@@ -58,13 +52,13 @@ export async function setProfilePhoto(
 
     if (exists) {
       await tx.$executeRaw`
-      UPDATE HumanCapital.EmployeeFiles
-      SET FilePath = ${trimmed},
-      IsUrl = ${isUrl},
-      UpdatedAt = SYSUTCDATETIME()
-      WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
-      AND EmployeeID = ${employeeId}
-      AND DocumentTypeID = ${EMPLOYEE_DOCUMENTS.FotoPerfil}
+        UPDATE HumanCapital.EmployeeFiles
+        SET FilePath = ${trimmed},
+            IsUrl = ${isUrl},
+            UpdatedAt = SYSUTCDATETIME()
+        WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
+          AND EmployeeID = ${employeeId}
+          AND DocumentTypeID = ${EMPLOYEE_DOCUMENTS.FotoPerfil}
       `
     } else {
       // NO usar columna IsActive en EmployeeFiles (fue de uso temporal)

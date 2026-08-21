@@ -19,6 +19,8 @@ import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 
+import { useTranslatePage } from '@/contexts/dictionaryContext'
+
 type PasswordFormState = {
   currentPassword: string
   newPassword: string
@@ -33,6 +35,7 @@ type Props = {
 const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const { t } = useTranslatePage()
 
   const [form, setForm] = useState<PasswordFormState>({
     currentPassword: '',
@@ -51,19 +54,19 @@ const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
     const errors: Record<string, string> = {}
 
     if (!form.currentPassword) {
-      errors.currentPassword = 'La contraseña actual es requerida'
+      errors.currentPassword = t('userProfile.securityTab.currentPasswordRequired')
     }
 
     if (!form.newPassword) {
-      errors.newPassword = 'La nueva contraseña es requerida'
+      errors.newPassword = t('userProfile.securityTab.newPasswordRequired')
     } else if (form.newPassword.length < 8) {
-      errors.newPassword = 'La nueva contraseña debe tener al menos 8 caracteres'
+      errors.newPassword = t('userProfile.securityTab.minChars')
     }
 
     if (!form.confirmPassword) {
-      errors.confirmPassword = 'La confirmación es requerida'
+      errors.confirmPassword = t('userProfile.securityTab.confirmationRequired')
     } else if (form.newPassword !== form.confirmPassword) {
-      errors.confirmPassword = 'La nueva contraseña y su confirmación no coinciden'
+      errors.confirmPassword = t('userProfile.securityTab.passwordMismatch')
     }
 
     setFieldErrors(errors)
@@ -86,15 +89,15 @@ const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
       const data = await res.json().catch(() => null)
 
       if (!res.ok) {
-        throw new Error(data?.message ?? 'Error al cambiar la contraseña')
+        throw new Error(data?.message ?? t('userProfile.securityTab.errorChangingPassword'))
       }
 
-      onPasswordChanged('Contraseña actualizada correctamente')
+      onPasswordChanged(t('userProfile.securityTab.passwordChangedSuccess'))
       setDialogOpen(false)
       setForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
       setFieldErrors({})
     } catch (e) {
-      onPasswordError(e instanceof Error ? e.message : 'Error al cambiar la contraseña')
+      onPasswordError(e instanceof Error ? e.message : t('userProfile.securityTab.errorChangingPassword'))
     } finally {
       setSaving(false)
     }
@@ -114,26 +117,26 @@ const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
       <Stack spacing={3}>
         <Card>
           <CardHeader
-            title='Seguridad de la cuenta'
-            subheader='Gestiona la seguridad de tu cuenta'
+            title={t('userProfile.securityTab.accountSecurity')}
+            subheader={t('userProfile.securityTab.accountSecuritySub')}
             titleTypographyProps={{ variant: 'h6' }}
           />
           <CardContent>
             <Stack spacing={2}>
               <Alert severity='info'>
-                Tu contraseña debe tener al menos 8 caracteres. Se recomienda usar una combinación de letras, números y símbolos.
+                {t('userProfile.securityTab.passwordHint')}
               </Alert>
 
               <Box>
                 <Typography variant='body2' mb={2}>
-                  ¿Deseas cambiar tu contraseña de acceso? Haz clic en el botón siguiente.
+                  {t('userProfile.securityTab.wantToChangePassword')}
                 </Typography>
                 <Button
                   variant='contained'
                   startIcon={<i className='ri-lock-password-line' />}
                   onClick={() => setDialogOpen(true)}
                 >
-                  Cambiar contraseña
+                  {t('userProfile.securityTab.changePassword')}
                 </Button>
               </Box>
             </Stack>
@@ -142,12 +145,12 @@ const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
       </Stack>
 
       <Dialog open={dialogOpen} onClose={handleClose} maxWidth='sm' fullWidth>
-        <DialogTitle variant='h6'>Cambiar contraseña</DialogTitle>
+        <DialogTitle variant='h6'>{t('userProfile.securityTab.changePassword')}</DialogTitle>
 
         <DialogContent>
           <Stack spacing={3} sx={{ pt: 1 }}>
             <TextField
-              label='Contraseña actual'
+              label={t('userProfile.securityTab.currentPassword')}
               type={showPassword.current ? 'text' : 'password'}
               value={form.currentPassword}
               onChange={e => setForm(f => ({ ...f, currentPassword: e.target.value }))}
@@ -164,7 +167,7 @@ const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
                     <InputAdornment position='end'>
                       <IconButton
                         edge='end'
-                        aria-label={showPassword.current ? 'Ocultar contraseña actual' : 'Mostrar contraseña actual'}
+                        aria-label={showPassword.current ? t('userProfile.securityTab.hideCurrentPassword') : t('userProfile.securityTab.showCurrentPassword')}
                         onClick={() => togglePassword('current')}
                       >
                         <i className={showPassword.current ? 'ri-eye-off-line' : 'ri-eye-line'} />
@@ -176,7 +179,7 @@ const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
             />
 
             <TextField
-              label='Nueva contraseña'
+              label={t('userProfile.securityTab.newPassword')}
               type={showPassword.new ? 'text' : 'password'}
               value={form.newPassword}
               onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))}
@@ -184,7 +187,7 @@ const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
                 if (fieldErrors.newPassword) validate()
               }}
               error={Boolean(fieldErrors.newPassword)}
-              helperText={fieldErrors.newPassword || 'Mínimo 8 caracteres'}
+              helperText={fieldErrors.newPassword || t('userProfile.securityTab.minCharsHint')}
               fullWidth
               size='small'
               slotProps={{
@@ -193,7 +196,7 @@ const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
                     <InputAdornment position='end'>
                       <IconButton
                         edge='end'
-                        aria-label={showPassword.new ? 'Ocultar nueva contraseña' : 'Mostrar nueva contraseña'}
+                        aria-label={showPassword.new ? t('userProfile.securityTab.hideNewPassword') : t('userProfile.securityTab.showNewPassword')}
                         onClick={() => togglePassword('new')}
                       >
                         <i className={showPassword.new ? 'ri-eye-off-line' : 'ri-eye-line'} />
@@ -205,7 +208,7 @@ const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
             />
 
             <TextField
-              label='Confirmar nueva contraseña'
+              label={t('userProfile.securityTab.confirmPassword')}
               type={showPassword.confirm ? 'text' : 'password'}
               value={form.confirmPassword}
               onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))}
@@ -222,7 +225,7 @@ const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
                     <InputAdornment position='end'>
                       <IconButton
                         edge='end'
-                        aria-label={showPassword.confirm ? 'Ocultar confirmación' : 'Mostrar confirmación'}
+                        aria-label={showPassword.confirm ? t('userProfile.securityTab.hideConfirmation') : t('userProfile.securityTab.showConfirmation')}
                         onClick={() => togglePassword('confirm')}
                       >
                         <i className={showPassword.confirm ? 'ri-eye-off-line' : 'ri-eye-line'} />
@@ -237,7 +240,7 @@ const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
 
         <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button onClick={handleClose} disabled={saving}>
-            Cancelar
+            {t('userProfile.securityTab.cancel')}
           </Button>
           <Button
             variant='contained'
@@ -250,7 +253,7 @@ const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
             }
             startIcon={saving ? <CircularProgress size={16} color='inherit' /> : null}
           >
-            {saving ? 'Guardando...' : 'Cambiar contraseña'}
+            {saving ? t('userProfile.securityTab.saving') : t('userProfile.securityTab.changePassword')}
           </Button>
         </DialogActions>
       </Dialog>

@@ -1,16 +1,21 @@
 import type { TenantSettings } from './tenant-settings'
 import type { PlanFeatureKey, PlanTier, TenantSubscriptionStatus } from './plan'
-import { EmployeeDocument } from './human-capital'
 
 export type MeResponse = {
   user: {
     id: number
+    user: string
     name: string
     email: string | null
+    phone: string | null
     area: number | null
+    areaName: string | null
     department: number | null
+    departmentName: string | null
     position: number | null
+    positionName: string | null
     region: number | null
+    profilePhoto: string | null
   }
   tenant: {
     id: string
@@ -38,10 +43,16 @@ export type TenantRow = {
 
 export type UserRow = {
   IdUsuario: number
+  Usuario: string
   Nombre: string
   Email: string | null   // Employees.Email puede ser NULL
+  Phone: string | null
+  FotoPerfil: string | null
   IdArea: number | null
+  Area: string | null
   IdDepartamento: number | null
+  Departamento: string | null
   IdPuesto: number | null
+  Puesto: string | null
   IdRegion: number | null
 }

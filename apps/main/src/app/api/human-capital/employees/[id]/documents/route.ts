@@ -103,7 +103,7 @@ export const POST = withPermission(
     const slug = getTenantSlugFromHeaders(req.headers) || tenantId;
     const buffer = Buffer.from(await file.arrayBuffer());
     const ts = new Date().toISOString().replace(/[:.]/g, '').slice(0, 15);
-    const folder = (process.env.S3_PUBLIC_BASE_URL ?? '').includes('Qa') ? 'Qa/' : 'Pr/';
+    const folder = `${process.env.S3_FOLDER ?? 'Pr'}/`;
     const documento = DOCUMENT_CODE_BY_ID[documentTypeId] ?? 'Otro';
     const key = `${folder}${slug}/human_capital/employees/${employeeId}/${documento}-${ts}${ext}`;
 

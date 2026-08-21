@@ -342,7 +342,161 @@
       "siteCheckIn": "Site Check-In"
     },
     "purchasing": "Purchasing",
-    "clients": "Clients"
+    "clients": "Clients",
+    "settings": {
+      "title": "Settings"
+    },
+    "navbar": {
+      "userMenu": {
+        "myProfile": "My Profile",
+        "settings": "Settings",
+        "logout": "Logout"
+      },
+      "mode": {
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System",
+        "lightMode": "Light Mode",
+        "darkMode": "Dark Mode",
+        "systemMode": "System Mode"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "new": "new",
+        "markAllRead": "Mark all as read",
+        "markAllUnread": "Mark all as unread",
+        "viewAll": "View All Notifications"
+      },
+      "shortcuts": {
+        "title": "Shortcuts",
+        "add": "Add Shortcut"
+      },
+      "search": {
+        "placeholder": "Search ⌘K",
+        "navigate": "to navigate",
+        "open": "to open",
+        "close": "to close",
+        "noResult": "No result for \"{query}\"",
+        "trySearching": "Try searching for"
+      },
+      "tenant": {
+        "label": "Company:",
+        "loading": "Loading company...",
+        "unavailable": "Company unavailable"
+      }
+    }
+  },
+  "userProfile": {
+    "tabs": {
+      "personalInfo": "Personal Information",
+      "employeeInfo": "Employee Data",
+      "security": "Security",
+      "activity": "Activity"
+    },
+    "loadingProfile": "Loading profile...",
+    "loadProfileError": "Error loading profile",
+    "uploadPhotoError": "Error uploading photo",
+    "photoUploadSuccess": "Photo updated successfully",
+    "photoUpload": {
+      "invalidType": "Invalid format. Use a JPG or PNG image.",
+      "fileTooBig": "The image is too large. Maximum {mb} MB.",
+      "change": "Change",
+      "changePhoto": "Change profile photo"
+    },
+    "securityTab": {
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "changePassword": "Change password",
+      "accountSecurity": "Account Security",
+      "accountSecuritySub": "Manage your account security",
+      "passwordHint": "Your password must have at least 8 characters. Using a combination of letters, numbers, and symbols is recommended.",
+      "wantToChangePassword": "Want to change your access password? Click the button below.",
+      "currentPasswordRequired": "Current password is required",
+      "newPasswordRequired": "New password is required",
+      "minChars": "New password must be at least 8 characters",
+      "confirmationRequired": "Password confirmation is required",
+      "passwordMismatch": "New password and confirmation do not match",
+      "errorChangingPassword": "Error changing password",
+      "passwordChangedSuccess": "Password updated successfully",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "hideCurrentPassword": "Hide current password",
+      "showCurrentPassword": "Show current password",
+      "hideNewPassword": "Hide new password",
+      "showNewPassword": "Show new password",
+      "hideConfirmation": "Hide confirmation",
+      "showConfirmation": "Show confirmation",
+      "minCharsHint": "Minimum 8 characters"
+    },
+    "personalInfoTab": {
+      "accountInfo": "Account Information",
+      "accessData": "Platform access data",
+      "fullName": "Full name",
+      "username": "Username",
+      "email": "Email address",
+      "employeeNumber": "Employee number",
+      "readOnly": "Read only"
+    },
+    "employeeInfoTab": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "onLeave": "On leave",
+      "terminated": "Terminated",
+      "noEmployeeInfo": "There is no employee information associated with your account. Contact an administrator if you believe this is an error.",
+      "employeeData": "Employee Data",
+      "orgInfo": "Organizational information assigned to your account",
+      "noEmployeeNum": "No employee number",
+      "department": "Department",
+      "position": "Position",
+      "area": "Area",
+      "region": "Region",
+      "hireDate": "Hire date",
+      "status": "Status",
+      "identifiers": "Identifiers",
+      "taxIds": "Tax and social security identifiers"
+    },
+    "activityTab": {
+      "date": "Date",
+      "action": "Action",
+      "entity": "Entity",
+      "user": "User",
+      "origin": "Origin",
+      "detail": "Detail",
+      "viewChanges": "View changes",
+      "viewData": "View data",
+      "errorLoading": "Error loading activity",
+      "noActivity": "No activity recorded",
+      "rowsPerPage": "Rows per page"
+    }
+  },
+  "branding": {
+    "title": "Branding",
+    "subtitle": "Configure the visual appearance of your tenant.",
+    "visibleName": "Visible name",
+    "visibleNameHint": "Name shown in the top bar and in the browser tab title.",
+    "logo": "Logo",
+    "logoHint": "PNG, JPG, JPEG, SVG or WebP. Max 5 MB.",
+    "favicon": "Favicon",
+    "faviconHint": "PNG, ICO or SVG. Max 1 MB.",
+    "primaryColor": "Primary color",
+    "colorHex": "Hex",
+    "colorHexHint": "Use format #RGB or #RRGGBB",
+    "typography": "Typography",
+    "typographyHint": "Main font used throughout the application.",
+    "upload": "Upload",
+    "change": "Change",
+    "remove": "Remove",
+    "loading": "Loading...",
+    "reload": "Reload",
+    "save": "Save settings",
+    "saving": "Saving...",
+    "savedSuccess": "Settings saved successfully.",
+    "retry": "Retry",
+    "invalidFileType": "File type not allowed.",
+    "fileTooLarge": "File exceeds {mb} MB.",
+    "uploadError": "Error uploading file.",
+    "networkError": "Network error uploading file."
   },
   "start": {
     "heroTitle": "Gaso Communications",

@@ -19,11 +19,17 @@ import EmployeeInfoTab from './tabs/EmployeeInfoTab'
 import PersonalInfoTab from './tabs/PersonalInfoTab'
 import SecurityTab from './tabs/SecurityTab'
 
+import { useTranslatePage } from '@/contexts/dictionaryContext'
+
 import type { ProfileResponse } from '@/types/profile'
 
 type FeedbackState = { type: 'success' | 'error' | 'info'; message: string } | null
 
-const UserProfileView = () => {
+type Props = {
+  dictionary: any
+}
+
+const UserProfileView = ({ dictionary }: Props) => {
   const [profile, setProfile] = useState<ProfileResponse | null>(null)
   const [loadingProfile, setLoadingProfile] = useState(true)
   const [profileError, setProfileError] = useState<string | null>(null)
@@ -36,6 +42,8 @@ const UserProfileView = () => {
     message: '',
     severity: 'success'
   })
+
+  const { t } = useTranslatePage()
 
   const showSuccess = useCallback((message: string) => {
     setSnackbar({ open: true, message, severity: 'success' })
@@ -57,11 +65,11 @@ const UserProfileView = () => {
       const res = await fetch('/api/profile')
       const data = await res.json().catch(() => null)
 
-      if (!res.ok || !data) throw new Error(data?.message ?? 'Error al cargar el perfil')
+      if (!res.ok || !data) throw new Error(data?.message ?? t('userProfile.loadProfileError'))
 
       setProfile(data)
     } catch (e) {
-      setProfileError(e instanceof Error ? e.message : 'Error al cargar el perfil')
+      setProfileError(e instanceof Error ? e.message : t('userProfile.loadProfileError'))
     } finally {
       setLoadingProfile(false)
     }
@@ -78,12 +86,12 @@ const UserProfileView = () => {
       const res = await fetch('/api/profile/photo', { method: 'POST', body: form })
       const data = await res.json().catch(() => null)
 
-      if (!res.ok || !data?.success) throw new Error(data?.message ?? 'Error al subir la foto')
+      if (!res.ok || !data?.success) throw new Error(data?.message ?? t('userProfile.uploadPhotoError'))
 
-      showSuccess('Foto actualizada correctamente')
+      showSuccess(t('userProfile.photoUploadSuccess'))
       await loadProfile()
     } catch (e) {
-      showError(e instanceof Error ? e.message : 'Error al subir la foto')
+      showError(e instanceof Error ? e.message : t('userProfile.uploadPhotoError'))
     } finally {
       setUploadingPhoto(false)
     }
@@ -112,7 +120,7 @@ const UserProfileView = () => {
   if (loadingProfile) {
     return (
       <Box p={5}>
-        <Alert severity='info'>Cargando perfil...</Alert>
+        <Alert severity='info'>{t('userProfile.loadingProfile')}</Alert>
       </Box>
     )
   }
@@ -150,7 +158,7 @@ const UserProfileView = () => {
                 label={
                   <Box display='flex' alignItems='center' gap={1}>
                     <i className='ri-user-3-line' />
-                    Información personal
+                    {t('userProfile.tabs.personalInfo')}
                   </Box>
                 }
                 value='personal'
@@ -159,7 +167,7 @@ const UserProfileView = () => {
                 label={
                   <Box display='flex' alignItems='center' gap={1}>
                     <i className='ri-team-line' />
-                    Datos de empleado
+                    {t('userProfile.tabs.employeeInfo')}
                   </Box>
                 }
                 value='employee'
@@ -168,7 +176,7 @@ const UserProfileView = () => {
                 label={
                   <Box display='flex' alignItems='center' gap={1}>
                     <i className='ri-lock-line' />
-                    Seguridad
+                    {t('userProfile.tabs.security')}
                   </Box>
                 }
                 value='security'
@@ -177,7 +185,7 @@ const UserProfileView = () => {
                 label={
                   <Box display='flex' alignItems='center' gap={1}>
                     <i className='ri-history-line' />
-                    Actividad
+                    {t('userProfile.tabs.activity')}
                   </Box>
                 }
                 value='activity'

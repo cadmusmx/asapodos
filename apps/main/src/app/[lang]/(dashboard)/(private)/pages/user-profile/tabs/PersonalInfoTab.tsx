@@ -9,6 +9,8 @@ import Grid from '@mui/material/Grid2'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 
+import { useTranslatePage } from '@/contexts/dictionaryContext'
+
 import type { ProfileResponse } from '@/types/profile'
 
 type Props = {
@@ -16,14 +18,15 @@ type Props = {
 }
 
 const PersonalInfoTab = ({ profile }: Props) => {
+  const { t } = useTranslatePage()
   const emp = profile.employee
 
   return (
     <Stack spacing={3}>
       <Card>
         <CardHeader
-          title='Información de la cuenta'
-          subheader='Datos de acceso a la plataforma'
+          title={t('userProfile.personalInfoTab.accountInfo')}
+          subheader={t('userProfile.personalInfoTab.accessData')}
           titleTypographyProps={{ variant: 'h6' }}
         />
         <CardContent>
@@ -31,13 +34,13 @@ const PersonalInfoTab = ({ profile }: Props) => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <Box>
                 <Typography variant='caption' color='text.secondary' gutterBottom>
-                  Nombre completo
+                  {t('userProfile.personalInfoTab.fullName')}
                 </Typography>
                 <Box display='flex' alignItems='center' gap={1}>
                   <Typography variant='body1'>
                     {emp?.fullName ?? profile.nombre ?? '—'}
                   </Typography>
-                  <Chip label='Solo lectura' size='small' variant='outlined' color='default' />
+                  <Chip label={t('userProfile.personalInfoTab.readOnly')} size='small' variant='outlined' color='default' />
                 </Box>
               </Box>
             </Grid>
@@ -45,11 +48,11 @@ const PersonalInfoTab = ({ profile }: Props) => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <Box>
                 <Typography variant='caption' color='text.secondary' gutterBottom>
-                  Nombre de usuario
+                  {t('userProfile.personalInfoTab.username')}
                 </Typography>
                 <Box display='flex' alignItems='center' gap={1}>
                   <Typography variant='body1'>@{profile.usuario}</Typography>
-                  <Chip label='Solo lectura' size='small' variant='outlined' color='default' />
+                  <Chip label={t('userProfile.personalInfoTab.readOnly')} size='small' variant='outlined' color='default' />
                 </Box>
               </Box>
             </Grid>
@@ -57,11 +60,11 @@ const PersonalInfoTab = ({ profile }: Props) => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <Box>
                 <Typography variant='caption' color='text.secondary' gutterBottom>
-                  Correo electrónico
+                  {t('userProfile.personalInfoTab.email')}
                 </Typography>
                 <Box display='flex' alignItems='center' gap={1}>
                   <Typography variant='body1'>{profile.email ?? '—'}</Typography>
-                  <Chip label='Solo lectura' size='small' variant='outlined' color='default' />
+                  <Chip label={t('userProfile.personalInfoTab.readOnly')} size='small' variant='outlined' color='default' />
                 </Box>
               </Box>
             </Grid>
@@ -69,11 +72,11 @@ const PersonalInfoTab = ({ profile }: Props) => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <Box>
                 <Typography variant='caption' color='text.secondary' gutterBottom>
-                  Número de empleado
+                  {t('userProfile.personalInfoTab.employeeNumber')}
                 </Typography>
                 <Box display='flex' alignItems='center' gap={1}>
                   <Typography variant='body1'>{emp?.employeeNumber ?? '—'}</Typography>
-                  <Chip label='Solo lectura' size='small' variant='outlined' color='default' />
+                  <Chip label={t('userProfile.personalInfoTab.readOnly')} size='small' variant='outlined' color='default' />
                 </Box>
               </Box>
             </Grid>

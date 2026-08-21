@@ -23,6 +23,7 @@ import { signOut, useSession } from 'next-auth/react'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
+import { useTranslate } from '@/contexts/dictionaryContext'
 
 // Styled component for badge content
 const BadgeContentSpan = styled('span')({
@@ -39,6 +40,7 @@ const UserDropdown = () => {
   const anchorRef = useRef<HTMLDivElement>(null)
   const { data: session } = useSession()
   const { settings } = useSettings()
+  const { t } = useTranslate()
 
   const handleDropdownOpen = () => {
     !open ? setOpen(true) : setOpen(false)
@@ -115,7 +117,7 @@ const UserDropdown = () => {
                       onClick={handleUserLogout}
                       sx={{ '& .MuiButton-endIcon': { marginInlineStart: 1.5 } }}
                     >
-                      Logout
+                      {t('userMenu.logout')}
                     </Button>
                   </div>
                 </MenuList>

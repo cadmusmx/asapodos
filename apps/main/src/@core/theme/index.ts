@@ -1,5 +1,5 @@
 // Next Imports
-import { Inter } from 'next/font/google'
+import { Inter, Geist, Plus_Jakarta_Sans } from 'next/font/google'
 
 // MUI Imports
 import type { Theme } from '@mui/material/styles'
@@ -17,8 +17,31 @@ import customShadows from './customShadows'
 import typography from './typography'
 
 const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700', '800', '900'] })
+const geist = Geist({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700', '800', '900'] })
+const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700', '800'] })
 
-const theme = (settings: Settings, mode: SystemMode, direction: Theme['direction']): Theme => {
+export const FONT_OPTIONS = [
+  { value: 'Inter', label: 'Inter', fontFamily: 'Inter, sans-serif', instance: inter },
+  { value: 'Geist', label: 'Geist', fontFamily: 'Geist, sans-serif', instance: geist },
+  { value: 'Plus Jakarta Sans', label: 'Plus Jakarta Sans', fontFamily: '"Plus Jakarta Sans", sans-serif', instance: plusJakartaSans }
+] as const
+
+export type FontOption = typeof FONT_OPTIONS[number]
+
+const fontFamilyMap: Record<string, string> = {
+  Inter: inter.style.fontFamily,
+  Geist: geist.style.fontFamily,
+  'Plus Jakarta Sans': plusJakartaSans.style.fontFamily
+}
+
+const theme = (
+  settings: Settings,
+  mode: SystemMode,
+  direction: Theme['direction'],
+  fontFamily?: string | null
+): Theme => {
+  const resolvedFontFamily = fontFamily && fontFamilyMap[fontFamily] ? fontFamilyMap[fontFamily] : inter.style.fontFamily
+
   return {
     direction,
     components: overrides(settings.skin as Skin),
@@ -35,7 +58,7 @@ const theme = (settings: Settings, mode: SystemMode, direction: Theme['direction
       }
     },
     shadows: shadows(mode),
-    typography: typography(inter.style.fontFamily),
+    typography: typography(resolvedFontFamily),
     customShadows: customShadows(mode),
     mainColorChannels: {
       light: '46 38 61',

@@ -27,6 +27,7 @@ import NoResult from './NoResult'
 // Hook Imports
 import useVerticalNav from '@menu/hooks/useVerticalNav'
 import { useSettings } from '@core/hooks/useSettings'
+import { useTranslate } from '@/contexts/dictionaryContext'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
@@ -116,6 +117,8 @@ const getFilteredResults = (sections: Section[]) => {
 
 // Footer component for the search menu
 const CommandFooter = () => {
+  const { t } = useTranslate()
+
   return (
     <div cmdk-footer=''>
       <div className='flex items-center gap-1'>
@@ -125,17 +128,17 @@ const CommandFooter = () => {
         <kbd>
           <i className='ri-arrow-down-line text-base' />
         </kbd>
-        <span>to navigate</span>
+        <span>{t('search.navigate')}</span>
       </div>
       <div className='flex items-center gap-1'>
         <kbd>
           <i className='ri-corner-down-left-line text-base' />
         </kbd>
-        <span>to open</span>
+        <span>{t('search.open')}</span>
       </div>
       <div className='flex items-center gap-1'>
         <kbd>esc</kbd>
-        <span>to close</span>
+        <span>{t('search.close')}</span>
       </div>
     </div>
   )
@@ -153,6 +156,7 @@ const NavSearch = () => {
   const { lang: locale } = useParams()
   const { isBreakpointReached } = useVerticalNav()
   const isAboveMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'))
+  const { t } = useTranslate()
 
   // When an item is selected from the search results
   const onSearchItemSelect = (item: Item) => {
@@ -220,12 +224,12 @@ const NavSearch = () => {
           <i className='ri-search-line text-textPrimary' />
         </IconButton>
       ) : (
-        <div className='flex items-center gap-2 cursor-pointer' onClick={() => setOpen(true)}>
-          <IconButton className='text-textPrimary' onClick={() => setOpen(true)}>
-            <i className='ri-search-line text-textPrimary' />
-          </IconButton>
-          <div className='whitespace-nowrap select-none text-textDisabled'>Search ⌘K</div>
-        </div>
+          <div className='flex items-center gap-2 cursor-pointer' onClick={() => setOpen(true)}>
+            <IconButton className='text-textPrimary' onClick={() => setOpen(true)}>
+              <i className='ri-search-line text-textPrimary' />
+            </IconButton>
+            <div className='whitespace-nowrap select-none text-textDisabled'>{t('search.placeholder')}</div>
+          </div>
       )}
       <CommandDialog open={open} onOpenChange={setOpen}>
         <div className='flex items-center justify-between border-be pli-4 plb-3 gap-2'>

@@ -13,7 +13,8 @@
     "build:icons": "tsx src/assets/iconify-icons/bundle-icons-css.ts",
     "migrate": "dotenv -e .env -- npx prisma migrate dev",
     "postinstall": "prisma generate && npm run build:icons",
-    "removeI18n": "tsx src/remove-translation-scripts/index.ts"
+    "removeI18n": "tsx src/remove-translation-scripts/index.ts",
+    "test": "vitest"
   },
   "dependencies": {
     "@auth/prisma-adapter": "2.7.4",
@@ -122,7 +123,8 @@
     "tailwindcss": "3.4.17",
     "tailwindcss-logical": "3.0.1",
     "tsx": "4.19.2",
-    "typescript": "5.5.4"
+    "typescript": "5.5.4",
+    "vitest": "^2.1.8"
   },
   "overrides": {
     "rimraf": "^5.0.7"

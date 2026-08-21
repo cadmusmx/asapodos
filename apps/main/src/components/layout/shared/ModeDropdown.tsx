@@ -18,6 +18,7 @@ import type { Mode } from '@core/types'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
+import { useTranslate } from '@/contexts/dictionaryContext'
 
 const ModeDropdown = () => {
   // States
@@ -29,6 +30,10 @@ const ModeDropdown = () => {
 
   // Hooks
   const { settings, updateSettings } = useSettings()
+  const { t } = useTranslate()
+
+  const modeTooltipKey = `mode.${settings.mode}Mode` as const
+  const modeTooltip = t(modeTooltipKey)
 
   const handleClose = () => {
     setOpen(false)
@@ -60,7 +65,7 @@ const ModeDropdown = () => {
   return (
     <>
       <Tooltip
-        title={settings.mode + ' Mode'}
+        title={modeTooltip}
         onOpen={() => setTooltipOpen(true)}
         onClose={() => setTooltipOpen(false)}
         open={open ? false : tooltipOpen ? true : false}
@@ -92,7 +97,7 @@ const ModeDropdown = () => {
                     selected={settings.mode === 'light'}
                   >
                     <i className='ri-sun-line' />
-                    Light
+                    {t('mode.light')}
                   </MenuItem>
                   <MenuItem
                     className='gap-3'
@@ -100,7 +105,7 @@ const ModeDropdown = () => {
                     selected={settings.mode === 'dark'}
                   >
                     <i className='ri-moon-clear-line' />
-                    Dark
+                    {t('mode.dark')}
                   </MenuItem>
                   <MenuItem
                     className='gap-3'
@@ -108,7 +113,7 @@ const ModeDropdown = () => {
                     selected={settings.mode === 'system'}
                   >
                     <i className='ri-computer-line' />
-                    System
+                    {t('mode.system')}
                   </MenuItem>
                 </MenuList>
               </ClickAwayListener>

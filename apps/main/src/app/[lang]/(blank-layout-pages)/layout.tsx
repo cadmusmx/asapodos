@@ -12,6 +12,9 @@ import { i18n } from '@configs/i18n'
 // Util Imports
 import { getSystemMode } from '@core/utils/serverHelpers'
 
+// Lib Imports
+import { getPublicBranding } from '@/lib/tenant-settings/public-branding'
+
 type Props = ChildrenType & {
   params: Promise<{ lang: Locale }>
 }
@@ -23,9 +26,10 @@ const Layout = async (props: Props) => {
   // Vars
   const direction = i18n.langDirection[params.lang]
   const systemMode = await getSystemMode()
+  const initialBranding = await getPublicBranding()
 
   return (
-    <Providers direction={direction}>
+    <Providers direction={direction} initialBranding={initialBranding}>
       <BlankLayout systemMode={systemMode}>{children}</BlankLayout>
     </Providers>
   )

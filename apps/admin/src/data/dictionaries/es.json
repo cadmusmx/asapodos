@@ -1,0 +1,19 @@
+{
+  "navigation": {
+    "navbar": {
+      "userMenu": {
+        "myProfile": "Mi perfil",
+        "settings": "Ajustes",
+        "logout": "Cerrar sesión"
+      },
+      "mode": {
+        "light": "Claro",
+        "dark": "Oscuro",
+        "system": "Sistema",
+        "lightMode": "Modo claro",
+        "darkMode": "Modo oscuro",
+        "systemMode": "Modo sistema"
+      }
+    }
+  }
+}

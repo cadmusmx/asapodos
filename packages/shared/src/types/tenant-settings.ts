@@ -13,6 +13,8 @@ export type TenantBrandingSettings = {
   displayName: string
   logoUrl: string | null
   primaryColor: string | null
+  faviconUrl: string | null
+  fontFamily: string | null
 }
 
 export type TenantLimitSettings = {

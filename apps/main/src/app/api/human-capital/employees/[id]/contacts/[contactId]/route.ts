@@ -80,7 +80,6 @@ export const PATCH = withPermission(
             WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
               AND EmployeeID = ${employeeId}
               AND ContactID = ${contactId}
-              AND IsActive = 1
           `
         )
       );

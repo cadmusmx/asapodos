@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from 'next/server'
 
 import {
@@ -8,7 +7,8 @@ import {
   ID_ORIGIN_WEB,
   withTenantContext,
   resolveUserViews,
-  getEnabledMenuGroups
+  getEnabledMenuGroups,
+  EMPLOYEE_DOCUMENTS
 } from '@gaso/shared'
 
 import type { PlanTier, TenantSubscriptionStatus } from '@gaso/shared/types/plan'
@@ -59,16 +59,26 @@ export async function GET(req: Request) {
       const [userRows, tenantRows, settingsRows, subscriptionRows, resolvedViews, planModules] = await Promise.all([
         tx.$queryRaw<UserRow[]>`
           SELECT
-            u.IdUsuario,
-            LTRIM(RTRIM(e.FirstName + ' ' + e.LastName)) AS Nombre,
+          u.IdUsuario,
+          u.Usuario,
+          LTRIM(RTRIM(e.FirstName + ' ' + e.LastName)) AS Nombre,
             e.Email,
-            e.DepartmentID AS IdDepartamento,
-            e.PositionID   AS IdPuesto,
-            ed.AreaID      AS IdArea,
-            ed.RegionID    AS IdRegion
+            e.Phone,
+            ef.FilePath 	  AS FotoPerfil,
+            e.DepartmentID 	AS IdDepartamento,
+            d.Name 			    AS Departamento,
+            e.PositionID   	AS IdPuesto,
+            p.Name 		   	  AS Puesto,
+            ed.AreaID      	AS IdArea,
+            a.Name 			    AS Area,
+            ed.RegionID    	AS IdRegion
           FROM dbo.GASOCO_Cat_Usuarios u
           INNER JOIN HumanCapital.Employees e ON e.TenantID = u.TenantID AND e.EmployeeID = u.EmployeeID
           LEFT JOIN HumanCapital.EmployeeData ed ON ed.TenantID = e.TenantID AND ed.EmployeeID = e.EmployeeID
+          LEFT JOIN HumanCapital.EmployeeFiles ef ON ef.TenantID = e.TenantID AND ef.EmployeeID = e.EmployeeID AND ef.DocumentTypeID = ${EMPLOYEE_DOCUMENTS.FotoPerfil}
+          LEFT JOIN HumanCapital.Areas a ON a.AreaID = ed.AreaID
+          LEFT JOIN HumanCapital.Departments d ON d.DepartmentID = e.DepartmentID
+          LEFT JOIN HumanCapital.Positions p ON p.PositionID = e.PositionID
           WHERE u.IdUsuario = ${userId} AND u.TenantID = CAST(${tenantId} AS uniqueidentifier)
         `,
         tx.$queryRaw<TenantRow[]>`
@@ -125,12 +135,18 @@ export async function GET(req: Request) {
       const body: MeResponse = {
         user: {
           id: user.IdUsuario,
+          user: user.Usuario,
           name: user.Nombre,
           email: user.Email,
+          phone: user.Phone ?? null,
           area: user.IdArea ?? null,
+          areaName: user.Area ?? null,
           department: user.IdDepartamento ?? null,
+          departmentName: user.Departamento ?? null,
           position: user.IdPuesto ?? null,
+          positionName: user.Puesto ?? null,
           region: user.IdRegion ?? null,
+          profilePhoto: user.FotoPerfil ?? null
         },
         tenant: {
           id: tenantId,
@@ -152,7 +168,7 @@ export async function GET(req: Request) {
       return body
     })
 
-    /* writeTransactionLog({
+    writeTransactionLog({
       tenantId,
       tableName: 'Api.Me',
       action: 'READ',
@@ -160,7 +176,7 @@ export async function GET(req: Request) {
       appUser: result.user.email ?? null,
       idOrigin,
       newData: { hasTenantSettings: true }
-    }).catch(() => { }) */
+    }).catch(() => { })
 
     return NextResponse.json(result)
   } catch (e) {

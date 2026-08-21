@@ -36,6 +36,7 @@ import themeConfig from '@configs/themeConfig'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
+import { useTranslate } from '@/contexts/dictionaryContext'
 
 // Util Imports
 import { getInitials } from '@/utils/getInitials'
@@ -120,6 +121,7 @@ const NotificationDropdown = ({ notifications }: { notifications: NotificationsT
   const hidden = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
   const isSmallScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'))
   const { settings } = useSettings()
+  const { t } = useTranslate()
 
   const handleClose = () => {
     setOpen(false)
@@ -212,13 +214,13 @@ const NotificationDropdown = ({ notifications }: { notifications: NotificationsT
                 <div className='bs-full flex flex-col'>
                   <div className='flex items-center justify-between plb-2 pli-4 is-full gap-4'>
                     <Typography variant='h5' className='flex-auto'>
-                      Notifications
+                      {t('notifications.title')}
                     </Typography>
                     {notificationCount > 0 && (
-                      <Chip size='small' variant='tonal' color='primary' label={`${notificationCount} New`} />
+                      <Chip size='small' variant='tonal' color='primary' label={`${notificationCount} ${t('notifications.new')}`} />
                     )}
                     <Tooltip
-                      title={readAll ? 'Mark all as unread' : 'Mark all as read'}
+                      title={readAll ? t('notifications.markAllUnread') : t('notifications.markAllRead')}
                       placement={placement === 'bottom-end' ? 'left' : 'right'}
                       slotProps={{
                         popper: {
@@ -294,7 +296,7 @@ const NotificationDropdown = ({ notifications }: { notifications: NotificationsT
                   <Divider />
                   <div className='p-4'>
                     <Button fullWidth variant='contained' size='small'>
-                      View All Notifications
+                      {t('notifications.viewAll')}
                     </Button>
                   </div>
                 </div>

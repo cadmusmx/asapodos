@@ -8,6 +8,8 @@ import Typography from '@mui/material/Typography'
 
 import CustomAvatar from '@core/components/mui/Avatar'
 
+import { useTranslatePage } from '@/contexts/dictionaryContext'
+
 import type { ProfileResponse } from '@/types/profile'
 
 type Props = {
@@ -21,6 +23,7 @@ const MAX_PHOTO_SIZE_MB = 5
 const ALLOWED_TYPES = ['image/jpeg', 'image/png']
 
 const ProfileHeader = ({ profile, uploadingPhoto, onPhotoUpload, onPhotoError }: Props) => {
+  const { t } = useTranslatePage()
   const emp = profile.employee
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,14 +32,14 @@ const ProfileHeader = ({ profile, uploadingPhoto, onPhotoUpload, onPhotoError }:
     if (!file) return
 
     if (!ALLOWED_TYPES.includes(file.type)) {
-      onPhotoError('Formato no permitido. Usa una imagen JPG o PNG.')
+      onPhotoError(t('userProfile.photoUpload.invalidType'))
       e.target.value = ''
 
       return
     }
 
     if (file.size > MAX_PHOTO_SIZE_MB * 1024 * 1024) {
-      onPhotoError(`La imagen es demasiado grande. Máximo ${MAX_PHOTO_SIZE_MB} MB.`)
+      onPhotoError(t('userProfile.photoUpload.fileTooBig', { mb: MAX_PHOTO_SIZE_MB }))
       e.target.value = ''
 
       return
@@ -122,17 +125,16 @@ const ProfileHeader = ({ profile, uploadingPhoto, onPhotoUpload, onPhotoError }:
                     variant='caption'
                     sx={{ color: 'white', mt: 0.5, fontWeight: 500, textAlign: 'center', lineHeight: 1.2 }}
                   >
-                    Cambiar
+                    {t('userProfile.photoUpload.change')}
                   </Typography>
                 </Box>
               )}
-
               <input
                 type='file'
                 accept='image/jpeg,image/png'
                 hidden
                 onChange={handleFileChange}
-                aria-label='Cambiar foto de perfil'
+                aria-label={t('userProfile.photoUpload.changePhoto')}
                 disabled={uploadingPhoto}
               />
             </Box>

@@ -1,16 +1,14 @@
 // Next Imports
-import type { Metadata } from 'next'
-
 // Component Imports
 import ForgotPassword from '@views/ForgotPassword'
 
 // Server Action Imports
 import { getServerMode } from '@core/utils/serverHelpers'
 
-export const metadata: Metadata = {
-  title: 'Forgot Password',
-  description: 'Forgotten Password to your account'
-}
+// Lib Imports
+import { withTenantTitle } from '@/lib/page-metadata'
+
+export const generateMetadata = () => withTenantTitle('Forgot Password', 'Forgotten Password to your account')
 
 const ForgotPasswordPage = async () => {
   // Vars

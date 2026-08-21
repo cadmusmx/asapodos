@@ -29,6 +29,7 @@ import type { Locale } from '@configs/i18n'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
+import { useTranslate } from '@/contexts/dictionaryContext'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
@@ -55,6 +56,7 @@ const UserDropdown = () => {
   const { data: session } = useSession()
   const { settings } = useSettings()
   const { lang: locale } = useParams()
+  const { t } = useTranslate()
 
   const handleDropdownOpen = () => {
     !open ? setOpen(true) : setOpen(false)
@@ -131,11 +133,11 @@ const UserDropdown = () => {
                   <Divider className='mlb-1' />
                   <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/user-profile')}>
                     <i className='ri-user-3-line' />
-                    <Typography color='text.primary'>My Profile</Typography>
+                    <Typography color='text.primary'>{t('userMenu.myProfile')}</Typography>
                   </MenuItem>
                   <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/settings')}>
                     <i className='ri-settings-4-line' />
-                    <Typography color='text.primary'>Settings</Typography>
+                    <Typography color='text.primary'>{t('userMenu.settings')}</Typography>
                   </MenuItem>
                   <div className='flex items-center plb-2 pli-4'>
                     <Button
@@ -147,7 +149,7 @@ const UserDropdown = () => {
                       onClick={handleUserLogout}
                       sx={{ '& .MuiButton-endIcon': { marginInlineStart: 1.5 } }}
                     >
-                      Logout
+                      {t('userMenu.logout')}
                     </Button>
                   </div>
                 </MenuList>

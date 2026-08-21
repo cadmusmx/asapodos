@@ -4,7 +4,9 @@ export const defaultTenantSettings: TenantSettings = {
   branding: {
     displayName: '',
     logoUrl: null,
-    primaryColor: null
+    primaryColor: null,
+    faviconUrl: null,
+    fontFamily: null
   },
   limits: {
     maxUsers: null,

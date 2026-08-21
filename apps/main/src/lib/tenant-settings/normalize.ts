@@ -50,11 +50,39 @@ const readNullableNumber = (value: unknown): number | null => {
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
 
+const sanitizeAssetUrl = (value: string | null): string | null => {
+  if (!value || value === 'null' || value === 'undefined') return null
+
+  const src = String(value).trim()
+
+  if (!src) return null
+
+  if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:image/')) {
+    return src
+  }
+
+  return null
+}
+
 const normalizeBranding = (value: Record<string, unknown>): TenantBrandingSettings => ({
   displayName: readString(value.displayName, defaultTenantSettings.branding.displayName),
-  logoUrl: readNullableString(value.logoUrl),
-  primaryColor: readNullableString(value.primaryColor)
+  logoUrl: sanitizeAssetUrl(readNullableString(value.logoUrl)),
+  primaryColor: normalizePrimaryColor(readNullableString(value.primaryColor)),
+  faviconUrl: sanitizeAssetUrl(readNullableString(value.faviconUrl)),
+  fontFamily: readNullableString(value.fontFamily)
 })
+
+export const normalizePrimaryColor = (color: string | null): string | null => {
+  if (!color) return null
+
+  const hex = color.trim().toLowerCase()
+
+  if (/^#[0-9a-f]{3}$/.test(hex) || /^#[0-9a-f]{6}$/.test(hex)) {
+    return hex
+  }
+
+  return null
+}
 
 const normalizeLimits = (value: Record<string, unknown>): TenantLimitSettings => ({
   maxUsers: readNullableNumber(value.maxUsers),

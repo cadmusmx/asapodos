@@ -2,21 +2,19 @@ import { NextResponse } from 'next/server'
 
 import type { Prisma } from '@prisma/client'
 
-import { getServerSession } from 'next-auth'
-
 import type { TenantRow } from '@gaso/shared/types/me'
 
 import type { TenantSettings } from '@gaso/shared/types/tenant-settings'
 
-import { authOptions } from '@/libs/auth'
-import { getTenantFromHeaders } from '@/lib/tenant-context'
-import { writeTransactionLog } from '@/lib/audit/transaction-log'
+import { withPermission, PERM, writeTransactionLog } from '@gaso/shared'
+
 import type {
   TenantSettingsRow
 } from '@/lib/tenant-settings/normalize';
 import {
   normalizeTenantSettingsFromRow,
-  serializeTenantSettings
+  serializeTenantSettings,
+  normalizePrimaryColor
 } from '@/lib/tenant-settings/normalize'
 
 export const runtime = 'nodejs'
@@ -25,206 +23,189 @@ type TenantSettingsBody = {
   settings?: TenantSettings
 }
 
-export async function GET(req: Request) {
-  const session = await getServerSession(authOptions)
+export const GET = withPermission<TenantSettingsBody>(
+  'tenant_settings',
+  async (req, rbac) => {
+    const { auth, tenantId } = rbac
+    const userId = auth.userId
 
-  if (!session?.user) {
-    return NextResponse.json({ message: 'No autenticado' }, { status: 401 })
-  }
+    try {
+      const result = await withTenantSettingsContext(tenantId, async tx => {
+        const [tenantRows, settingsRows] = await Promise.all([
+          tx.$queryRaw<TenantRow[]>`
+            SELECT
+            TenantID,
+            CompanyName,
+            CAST(CASE WHEN Status IN ('ACTIVE', 'TRIAL') THEN 1 ELSE 0 END AS bit) AS isActive,
+            Dominio
+            FROM Security.Tenants
+            WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
+          `,
+          tx.$queryRaw<TenantSettingsRow[]>`
+            SELECT BrandingJson, LimitsJson
+            FROM Security.TenantSettings
+            WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
+          `
+        ])
 
-  const { id: userId, tenantId: sessionTenantId } = session.user
+        const tenant = tenantRows[0]
 
-  if (!userId || typeof userId !== 'number') {
-    return NextResponse.json({ message: 'Sesión sin identificador de usuario válido' }, { status: 401 })
-  }
+        if (!tenant) throw new Error('TENANT_NOT_FOUND')
 
-  let tenantId: string
+        return {
+          tenant: {
+            id: tenantId,
+            slug: tenant.Dominio ?? '',
+            name: tenant.CompanyName ?? '',
+            isActive: tenant.isActive
+          },
+          settings: normalizeTenantSettingsFromRow(settingsRows[0] ?? null)
+        }
+      })
 
-  try {
-    const { id } = getTenantFromHeaders(req.headers)
+      writeTransactionLog({
+        tenantId,
+        tableName: 'Security.TenantSettings',
+        action: 'READ',
+        userId,
+        appUser: auth.email ?? null,
+        newData: { tenantId }
+      }).catch(() => { })
 
-    tenantId = id
-  } catch {
-    return NextResponse.json({ message: 'Contexto de tenant no disponible' }, { status: 401 })
-  }
+      return NextResponse.json(result)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
 
-  if (sessionTenantId && sessionTenantId.toLowerCase() !== tenantId.toLowerCase()) {
-    return NextResponse.json({ message: 'Sesión de tenant no válida' }, { status: 403 })
-  }
+      if (message === 'TENANT_NOT_FOUND') {
+        return NextResponse.json({ message: 'Tenant no encontrado' }, { status: 404 })
+      }
 
-  try {
-    const result = await withTenantSettingsContext(tenantId, async tx => {
-      const [tenantRows, settingsRows] = await Promise.all([
-        tx.$queryRaw<TenantRow[]>`
-          SELECT
-          TenantID,
-          CompanyName,
-          CAST(CASE WHEN Status IN ('ACTIVE', 'TRIAL') THEN 1 ELSE 0 END AS bit) AS isActive,
-          Dominio
-          FROM Security.Tenants
-          WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
-        `,
-        tx.$queryRaw<TenantSettingsRow[]>`
-          SELECT BrandingJson, LimitsJson
-          FROM Security.TenantSettings
-          WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
+      console.error('[TENANT_SETTINGS_GET_ERROR]', message)
+
+      return NextResponse.json({ message: 'Error al cargar configuración del tenant' }, { status: 500 })
+    }
+  },
+  { bit: PERM.R }
+)
+
+export const PUT = withPermission<TenantSettingsBody>(
+  'tenant_settings',
+  async (req, rbac) => {
+    const { auth, tenantId } = rbac
+    const userId = auth.userId
+
+    let body: TenantSettingsBody
+
+    try {
+      body = await req.json()
+    } catch {
+      return NextResponse.json({ message: 'JSON inválido' }, { status: 400 })
+    }
+
+    if (!body.settings) {
+      return NextResponse.json({ message: 'Configuración requerida' }, { status: 400 })
+    }
+
+    const incomingBranding = body.settings.branding
+    const validatedPrimaryColor = normalizePrimaryColor(incomingBranding.primaryColor ?? null)
+
+    const normalizedSettings: TenantSettings = {
+      ...body.settings,
+      branding: {
+        ...incomingBranding,
+        primaryColor: validatedPrimaryColor
+      }
+    }
+
+    const serializedSettings = serializeTenantSettings(normalizedSettings)
+
+    try {
+      let oldBranding = normalizedSettings.branding
+
+      const result = await withTenantSettingsContext(tenantId, async tx => {
+        const [oldRows, tenantRows] = await Promise.all([
+          tx.$queryRaw<TenantSettingsRow[]>`
+            SELECT BrandingJson, LimitsJson
+            FROM Security.TenantSettings
+            WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
+          `,
+          tx.$queryRaw<TenantRow[]>`
+            SELECT
+            TenantID,
+            CompanyName,
+            CAST(CASE WHEN Status IN ('ACTIVE', 'TRIAL') THEN 1 ELSE 0 END AS bit) AS isActive,
+            Dominio
+            FROM Security.Tenants
+            WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
+          `
+        ])
+
+        const oldSettings = normalizeTenantSettingsFromRow(oldRows[0] ?? null)
+
+        oldBranding = oldSettings.branding
+
+        const tenant = tenantRows[0]
+
+        if (!tenant) throw new Error('TENANT_NOT_FOUND')
+
+        await tx.$executeRaw`
+          MERGE Security.TenantSettings AS target
+          USING (
+            SELECT
+              CAST(${tenantId} AS uniqueidentifier) AS TenantID,
+              ${serializedSettings.brandingJson} AS BrandingJson,
+              ${serializedSettings.limitsJson} AS LimitsJson,
+              ${userId} AS UpdatedBy
+          ) AS source
+          ON target.TenantID = source.TenantID
+          WHEN MATCHED THEN
+            UPDATE SET
+              BrandingJson = source.BrandingJson,
+              LimitsJson = source.LimitsJson,
+              UpdatedAt = SYSUTCDATETIME(),
+              UpdatedBy = source.UpdatedBy
+          WHEN NOT MATCHED THEN
+            INSERT (TenantID, BrandingJson, LimitsJson, UpdatedBy)
+            VALUES (source.TenantID, source.BrandingJson, source.LimitsJson, source.UpdatedBy);
         `
-      ])
 
-      const tenant = tenantRows[0]
+        return {
+          tenant: {
+            id: tenantId,
+            slug: tenant.Dominio ?? '',
+            name: tenant.CompanyName ?? '',
+            isActive: tenant.isActive
+          },
+          settings: normalizedSettings
+        }
+      })
 
-      if (!tenant) throw new Error('TENANT_NOT_FOUND')
+      writeTransactionLog({
+        tenantId,
+        tableName: 'Security.TenantSettings',
+        action: 'UPDATE',
+        userId,
+        appUser: auth.email ?? null,
+        oldData: { branding: oldBranding },
+        newData: { branding: normalizedSettings.branding },
+        idOrigin: 1
+      }).catch(() => { })
 
-      return {
-        tenant: {
-          id: tenantId,
-          slug: tenant.Dominio ?? '',
-          name: tenant.CompanyName ?? '',
-          isActive: tenant.isActive
-        },
-        settings: normalizeTenantSettingsFromRow(settingsRows[0] ?? null)
+      return NextResponse.json(result)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+
+      if (message === 'TENANT_NOT_FOUND') {
+        return NextResponse.json({ message: 'Tenant no encontrado' }, { status: 404 })
       }
-    })
 
-    writeTransactionLog({
-      tenantId,
-      tableName: 'Security.TenantSettings',
-      action: 'READ',
-      userId,
-      appUser: session.user.email ?? null,
-      newData: { tenantId }
-    }).catch(() => { })
+      console.error('[TENANT_SETTINGS_PUT_ERROR]', message)
 
-    return NextResponse.json(result)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error'
-
-    if (message === 'TENANT_NOT_FOUND') {
-      return NextResponse.json({ message: 'Tenant no encontrado' }, { status: 404 })
+      return NextResponse.json({ message: 'Error al guardar configuración del tenant' }, { status: 500 })
     }
-
-    console.error('[TENANT_SETTINGS_GET_ERROR]', message)
-
-    return NextResponse.json({ message: 'Error al cargar configuración del tenant' }, { status: 500 })
-  }
-}
-
-export async function PUT(req: Request) {
-  const session = await getServerSession(authOptions)
-
-  if (!session?.user) {
-    return NextResponse.json({ message: 'No autenticado' }, { status: 401 })
-  }
-
-  const { id: userId, tenantId: sessionTenantId } = session.user
-
-  if (!userId || typeof userId !== 'number') {
-    return NextResponse.json({ message: 'Sesión sin identificador de usuario válido' }, { status: 401 })
-  }
-
-  let tenantId: string
-
-  try {
-    const { id } = getTenantFromHeaders(req.headers)
-
-    tenantId = id
-  } catch {
-    return NextResponse.json({ message: 'Contexto de tenant no disponible' }, { status: 401 })
-  }
-
-  if (sessionTenantId && sessionTenantId.toLowerCase() !== tenantId.toLowerCase()) {
-    return NextResponse.json({ message: 'Sesión de tenant no válida' }, { status: 403 })
-  }
-
-  let body: TenantSettingsBody
-
-  try {
-    body = await req.json()
-  } catch {
-    return NextResponse.json({ message: 'JSON inválido' }, { status: 400 })
-  }
-
-  if (!body.settings) {
-    return NextResponse.json({ message: 'Configuración requerida' }, { status: 400 })
-  }
-
-  const normalizedSettings = normalizeTenantSettingsFromRow({
-    BrandingJson: JSON.stringify(body.settings.branding),
-    LimitsJson: JSON.stringify(body.settings.limits),
-  })
-
-  const serializedSettings = serializeTenantSettings(normalizedSettings)
-
-  try {
-    const result = await withTenantSettingsContext(tenantId, async tx => {
-      const tenantRows = await tx.$queryRaw<TenantRow[]>`
-        SELECT
-        TenantID,
-        CompanyName,
-        CAST(CASE WHEN Status IN ('ACTIVE', 'TRIAL') THEN 1 ELSE 0 END AS bit) AS isActive,
-        Dominio
-        FROM Security.Tenants
-        WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
-      `
-
-      const tenant = tenantRows[0]
-
-      if (!tenant) throw new Error('TENANT_NOT_FOUND')
-
-      await tx.$executeRaw`
-        MERGE Security.TenantSettings AS target
-        USING (
-          SELECT
-            CAST(${tenantId} AS uniqueidentifier) AS TenantID,
-            ${serializedSettings.brandingJson} AS BrandingJson,
-            ${serializedSettings.limitsJson} AS LimitsJson,
-            ${userId} AS UpdatedBy
-        ) AS source
-        ON target.TenantID = source.TenantID
-        WHEN MATCHED THEN
-          UPDATE SET
-            BrandingJson = source.BrandingJson,
-            LimitsJson = source.LimitsJson,
-            UpdatedAt = SYSUTCDATETIME(),
-            UpdatedBy = source.UpdatedBy
-        WHEN NOT MATCHED THEN
-          INSERT (TenantID, BrandingJson, LimitsJson, UpdatedBy)
-          VALUES (source.TenantID, source.BrandingJson, source.LimitsJson, source.UpdatedBy);
-      `
-
-      return {
-        tenant: {
-          id: tenantId,
-          slug: tenant.Dominio ?? '',
-          name: tenant.CompanyName ?? '',
-          isActive: tenant.isActive
-        },
-        settings: normalizedSettings
-      }
-    })
-
-    writeTransactionLog({
-      tenantId,
-      tableName: 'Security.TenantSettings',
-      action: 'UPDATE',
-      userId,
-      appUser: session.user.email ?? null,
-      newData: result.settings
-    }).catch(() => { })
-
-    return NextResponse.json(result)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error'
-
-    if (message === 'TENANT_NOT_FOUND') {
-      return NextResponse.json({ message: 'Tenant no encontrado' }, { status: 404 })
-    }
-
-    console.error('[TENANT_SETTINGS_PUT_ERROR]', message)
-
-    return NextResponse.json({ message: 'Error al guardar configuración del tenant' }, { status: 500 })
-  }
-}
+  },
+  { bit: PERM.U }
+)
 
 async function withTenantSettingsContext<T>(
   tenantId: string,

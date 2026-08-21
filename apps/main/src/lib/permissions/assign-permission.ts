@@ -12,7 +12,7 @@ import type { Prisma } from '@prisma/client';
  * Guardarraíl (todo dentro de UNA transacción, datos leídos EN VIVO para evitar
  * TOCTOU; orden fail-closed):
  *   1. viewCode existe en Security.Views.      -> ValidationError 400
- *   2. actor existe en el tenant y isAdmin == 1 (en vivo).     -> ForbiddenError 403
+ *   2. actor existe en el tenant.     -> ForbiddenError 403
  *   3. target existe en el tenant (en vivo).     -> ForbiddenError 403
  *   4. target no es otro admin (salvo que sea el propio actor).      -> ForbiddenError 403
  *   5. alcance: actor en depto privilegiado, o mismo depto que el target.      -> 403
