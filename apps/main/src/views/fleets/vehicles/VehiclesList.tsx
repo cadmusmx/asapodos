@@ -310,26 +310,30 @@ const VehiclesList = ({ canEdit }: { canEdit: boolean }) => {
                 ))}
               </TextField>
             </Grid>
-            <Grid size={{ xs: 6, sm: 3, md: 2 }}>
-              <TextField
-                select
-                fullWidth
-                size='small'
-                label='Departamento'
-                value={departamento}
-                onChange={e => {
-                  setDepartamento(e.target.value);
-                  resetToFirst();
-                }}
-              >
-                <MenuItem value=''>Todos</MenuItem>
-                {options.departamentos.map(o => (
-                  <MenuItem key={o.Id} value={String(o.Id)}>
-                    {o.Nombre}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
+
+            {options.departamentos.length > 0 && (
+              <Grid size={{ xs: 6, sm: 3, md: 2 }}>
+                <TextField
+                  select
+                  fullWidth
+                  size='small'
+                  label='Departamento'
+                  value={departamento}
+                  onChange={e => {
+                    setDepartamento(e.target.value);
+                    resetToFirst();
+                  }}
+                >
+                  <MenuItem value=''>Todos</MenuItem>
+                  {options.departamentos.map(o => (
+                    <MenuItem key={o.Id} value={String(o.Id)}>
+                      {o.Nombre}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+            )}
+
             {/* Conductor: se oculta hasta que haya asignaciones (Slice 2). */}
             {options.conductores.length > 0 && (
               <Grid size={{ xs: 6, sm: 3, md: 2 }}>

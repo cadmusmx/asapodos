@@ -54,11 +54,12 @@ export const GET = withPermission(
             if (search) {
                 conditions.push(
                     Prisma.sql`(
-            e.EmployeeNumber LIKE ${search} ESCAPE '|'
-            OR e.FirstName LIKE ${search} ESCAPE '|'
-            OR e.LastName LIKE ${search} ESCAPE '|'
-            OR e.Email LIKE ${search} ESCAPE '|'
-          )`
+                    e.EmployeeNumber LIKE ${search} ESCAPE '|'
+                    OR e.FirstName LIKE ${search} ESCAPE '|'
+                    OR e.LastName LIKE ${search} ESCAPE '|'
+                    OR (e.FirstName + ' ' + e.LastName) LIKE ${search} ESCAPE '|'
+                    OR e.Email LIKE ${search} ESCAPE '|'
+                  )`
                 )
             }
 

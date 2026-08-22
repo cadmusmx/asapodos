@@ -12,7 +12,7 @@ interface VehicleStatsRow {
   VerificacionProxima: number | bigint;
 }
 
-// POST /api/vehicles/vehicles/stats — tarjetas de métricas. Respeta los MISMOS filtros
+// POST /api/fleets/vehicles/stats — tarjetas de métricas. Respeta los MISMOS filtros
 // que el listado (sin paginado) para que las cifras concuerden. POST que LEE (bit R).
 // Sin JOINs: los 4 agregados salen de columnas de `v` bajo el WHERE compartido.
 export const POST = withPermission(

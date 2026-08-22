@@ -28,7 +28,7 @@ interface VehicleListRow {
   TotalRows: number | bigint;
 }
 
-// POST /api/vehicles/vehicles/search — listado filtrado + paginado. POST que LEE (bit R).
+// POST /api/fleets/vehicles/search — listado filtrado + paginado. POST que LEE (bit R).
 // Query: ?pagina=1&limite=10&orden=DESC&sort=placa. Filtros por body.
 export const POST = withPermission(
   'vehicles',
