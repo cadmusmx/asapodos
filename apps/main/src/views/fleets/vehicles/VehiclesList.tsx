@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 // Next Imports
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 
 // MUI Imports
 import Card from '@mui/material/Card';
@@ -31,7 +31,7 @@ import type {
   EstatusOption,
 } from '@/app/api/fleets/vehicles/filters/route';
 
-import VehiclesStatCards, { type VehicleStats } from './VehiclesStatCards';
+import VehiclesStatCards, { type VehicleStats } from './components/VehiclesStatCards';
 
 // Fila del listado (proyección del cliente; Fleet no está en Prisma).
 interface VehicleRow {
@@ -88,12 +88,8 @@ const VerificacionChip = ({ dias }: { dias: number | null }) => {
   return <Chip size='small' variant='tonal' color='success' label={`${dias} días`} />;
 };
 
-const VehiclesList = ({ canEdit }: { canEdit: boolean }) => {
-  const router = useRouter();
+const VehiclesList = ({ canEdit, canCreate }: { canEdit: boolean; canCreate: boolean }) => {
   const { lang } = useParams();
-
-  // Detalle llega en el Slice 2; el botón ya lo deja cableado.
-  const goToDetail = (idAuto: number) => router.push(`/${lang}/fleets/vehicles/${idAuto}`);
 
   // Filtros
   const [q, setQ] = useState('');
@@ -249,7 +245,15 @@ const VehiclesList = ({ canEdit }: { canEdit: boolean }) => {
         id: 'actions',
         header: '',
         cell: ({ row }) => (
-          <Button size='small' variant='outlined' color='info' onClick={() => goToDetail(row.original.IdAuto)}>
+          <Button
+            size='small'
+            variant='outlined'
+            color='info'
+            component='a'
+            href={`/${lang}/fleets/vehicles/${row.original.IdAuto}`}
+            target='_blank'
+            rel='noopener noreferrer'
+          >
             {canEdit ? 'Ver / Editar' : 'Ver'}
           </Button>
         ),
@@ -271,9 +275,38 @@ const VehiclesList = ({ canEdit }: { canEdit: boolean }) => {
   return (
     <>
       <VehiclesStatCards stats={stats} loading={statsLoading} />
-
       <Card>
-        <CardHeader title='Gestión Vehicular' subheader='Flotilla del tenant' />
+        <CardHeader
+          title='Gestión Vehicular'
+          subheader='Flotilla del tenant'
+          action={
+            <div className='flex gap-4'>
+              {canCreate ? (
+                <Button
+                  variant='contained'
+                  startIcon={<i className='ri-add-line' />}
+                  component='a'
+                  href={`/${lang}/fleets/vehicles/new`}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                >
+                  Nuevo vehículo
+                </Button>
+              ) : null}
+              <Button
+                size='small'
+                variant='outlined'
+                color='secondary'
+                component='a'
+                href={`/${lang}/fleets/vehicles/catalogs`}
+                target='_blank'
+                rel='noopener noreferrer'
+              >
+                Catálogos
+              </Button>
+            </div>
+          }
+        />
         <CardContent>
           {/* Filtros */}
           <Grid container spacing={2} className='mbe-4'>

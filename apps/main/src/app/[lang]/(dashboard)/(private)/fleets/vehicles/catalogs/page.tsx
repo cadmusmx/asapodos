@@ -2,14 +2,14 @@ import { redirect } from 'next/navigation';
 
 import { PERM } from '@gaso/shared';
 
-import VehiclesList from '@views/fleets/vehicles/VehiclesList';
-
+import VehiclesCatalogs from '@/views/fleets/vehicles/VehiclesCatalogs';
 import type { Locale } from '@configs/i18n';
 
 import { getTargetByReason, requireViewAccess } from '@/lib/auth/require-view-access';
 import { getLocalizedUrl } from '@/utils/i18n';
 
-const VehiclesPage = async (props: { params: Promise<{ lang: Locale }> }) => {
+// entra con R; W/U/D habilitan crear, editar/reactivar y desactivar.
+const MaterialValidationCatalogsPage = async (props: { params: Promise<{ lang: Locale }> }) => {
   const { lang } = await props.params;
 
   const access = await requireViewAccess('vehicles', PERM.R);
@@ -18,10 +18,11 @@ const VehiclesPage = async (props: { params: Promise<{ lang: Locale }> }) => {
     redirect(getLocalizedUrl(getTargetByReason(access.reason), lang));
   }
 
-  const canEdit = (access.mask & PERM.U) === PERM.U;
   const canCreate = (access.mask & PERM.W) === PERM.W;
+  const canEdit = (access.mask & PERM.U) === PERM.U;
+  const canDelete = (access.mask & PERM.D) === PERM.D;
 
-  return <VehiclesList canEdit={canEdit} canCreate={canCreate} />;
+  return <VehiclesCatalogs canCreate={canCreate} canEdit={canEdit} canDelete={canDelete} />;
 };
 
-export default VehiclesPage;
+export default MaterialValidationCatalogsPage;

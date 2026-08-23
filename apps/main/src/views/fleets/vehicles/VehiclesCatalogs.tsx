@@ -28,12 +28,11 @@ import { toast } from 'react-toastify';
 // Style Imports
 import styles from '@core/styles/table.module.css';
 
-const BASE = '/api/human-capital/catalogs';
+const BASE = '/api/fleets/vehicles/catalogs';
 
 const CATALOG_TABS = [
-  { key: 'departamentos', label: 'Departamentos', singular: 'departamento' },
-  { key: 'puestos', label: 'Puestos', singular: 'puesto' },
-  { key: 'areas', label: 'Areas', singular: 'area' },
+  { key: 'propietarios', label: 'Propietarios', singular: 'propietario' },
+  { key: 'empresas', label: 'Empresas Aseguradoras', singular: 'empresa' },
 ] as const;
 
 type CatalogKey = (typeof CATALOG_TABS)[number]['key'];
@@ -60,8 +59,8 @@ interface Props {
   canDelete: boolean;
 }
 
-const HumanCapitalCatalogs = ({ canCreate, canEdit, canDelete }: Props) => {
-  const [tab, setTab] = useState<CatalogKey>('departamentos');
+const VehiclesCatalogs = ({ canCreate, canEdit, canDelete }: Props) => {
+  const [tab, setTab] = useState<CatalogKey>('propietarios');
   const [rows, setRows] = useState<CatalogRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -190,8 +189,8 @@ const HumanCapitalCatalogs = ({ canCreate, canEdit, canDelete }: Props) => {
   return (
     <Card>
       <CardHeader
-        title='Catálogos de Capital Humano'
-        subheader='Las filas globales son compartidas por la plataforma y no se pueden modificar.'
+        title='Catálogos de Vehiculos'
+        subheader='Propietarios de vehiculos (personas físicas o morales) y Empresas de seguros.'
         action={
           canCreate ? (
             <Button variant='contained' startIcon={<i className='ri-add-line' />} onClick={openCreate}>
@@ -310,4 +309,4 @@ const HumanCapitalCatalogs = ({ canCreate, canEdit, canDelete }: Props) => {
   );
 };
 
-export default HumanCapitalCatalogs;
+export default VehiclesCatalogs;
