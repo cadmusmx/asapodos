@@ -127,7 +127,7 @@ export const PUT = withPermission<RouteCtx>(
 
         // TenantID explícito además de RLS (convención del codebase).
         await tx.$executeRaw`
-          UPDATE ${T} SET UpdatedBy=${auth.userId}, ${Prisma.join(sets, ', ')}
+          UPDATE ${T} SET ${Prisma.join(sets, ', ')}
           WHERE ${ID} = ${id} AND TenantID = ${tenantId}
         `;
 
