@@ -18,7 +18,7 @@ import type {
 export const runtime = 'nodejs';
 
 export const GET = withPermission(
-  'employees',
+  'vehicles',
   async (_req, { tenantId }) => {
     const result = await withTenantContext(tenantId, async tx => {
       const departments = await tx.$queryRaw<HumanCapitalDepartmentRow[]>(

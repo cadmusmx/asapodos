@@ -53,15 +53,10 @@ const ConductorAutocomplete = ({ value, onChange, disabled }: Props) => {
 
         const json = (await res.json()) as { data: Array<Record<string, unknown>> };
 
-        // Defensa por si el shape es fullName o firstName/lastName.
         setOptions(
           json.data.map(e => {
-            const id = Number(e.employeeId);
-
-            const fullName =
-              (e.fullName as string | undefined) ??
-              `${(e.firstName as string | undefined) ?? ''} ${(e.lastName as string | undefined) ?? ''}`.trim();
-
+            const id = Number(e.id);
+            const fullName = (e.fullName as string | undefined) ?? '';
             const num = (e.employeeNumber as string | undefined) ?? null;
 
             return { id, label: num ? `${fullName} (${num})` : fullName };
@@ -91,6 +86,7 @@ const ConductorAutocomplete = ({ value, onChange, disabled }: Props) => {
       options={merged}
       loading={loading}
       disabled={disabled || forbidden}
+      filterOptions={x => x}
       isOptionEqualToValue={(o, v) => o.id === v.id}
       getOptionLabel={o => o.label}
       noOptionsText={input.trim().length < 2 ? 'Escribe para buscar…' : 'Sin resultados'}

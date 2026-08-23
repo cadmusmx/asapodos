@@ -81,7 +81,7 @@ export const POST = withPermission<RouteCtx>(
         const dup = await tx.$queryRaw<Array<{ Id: number; Activo: boolean; TenantID: string | null }>>`
           SELECT TOP 1 ${ID} AS Id, IsActive AS Activo, TenantID
           FROM ${T}
-          WHERE Nombre = ${nombre} AND (TenantID = ${tenantId} OR TenantID IS NULL)
+          WHERE Nombre = ${nombre} AND TenantID = ${tenantId}
         `;
 
         if (dup.length > 0) {

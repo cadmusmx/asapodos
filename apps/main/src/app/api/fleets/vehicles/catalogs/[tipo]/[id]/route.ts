@@ -16,7 +16,7 @@ interface CatalogRowRaw {
   Activo: boolean;
 }
 
-/** Resuelve y autoriza la fila: 404 si no existe/no visible, 403 si es global. */
+/** Resuelve y autoriza la fila: 404 si no existe/no visible. */
 async function resolveOwnRow(
   tx: Prisma.TransactionClient,
   tipo: CatalogKey,
@@ -27,13 +27,11 @@ async function resolveOwnRow(
   const T = Prisma.raw(`Fleet.${table}`);
   const ID = Prisma.raw(namePk);
 
-  // TenantID explícito además de RLS (convención del codebase). Se incluye el
-  // caso global (NULL) a propósito: hay que VER la fila global para responder
-  // 403 con mensaje claro; filtrarla daría un 404 engañoso.
+  // TenantID explícito además de RLS (convención del codebase).
   const rows = await tx.$queryRaw<CatalogRowRaw[]>`
     SELECT ${ID} AS Id, Nombre, TenantID, IsActive AS Activo
     FROM ${T}
-    WHERE ${ID} = ${id} AND (TenantID = ${tenantId} OR TenantID IS NULL)
+    WHERE ${ID} = ${id} AND TenantID = ${tenantId}
   `;
 
   if (rows.length === 0) return { error: { status: 404 as const, message: 'Registro no encontrado' } };
@@ -107,7 +105,7 @@ export const PUT = withPermission<RouteCtx>(
           const dup = await tx.$queryRaw<Array<{ Id: number; TenantID: string | null }>>`
             SELECT TOP 1 ${ID} AS Id, TenantID
             FROM ${T}
-            WHERE Nombre = ${nombre} AND ${ID} <> ${id} AND (TenantID = ${tenantId} OR TenantID IS NULL)
+            WHERE Nombre = ${nombre} AND ${ID} <> ${id} AND TenantID = ${tenantId}
           `;
 
           if (dup.length > 0) {
@@ -163,7 +161,7 @@ export const PUT = withPermission<RouteCtx>(
 // DELETE · borrado lógico (D)
 // Idempotente: desactivar algo ya inactivo responde 200 sin cambios.
 export const DELETE = withPermission<RouteCtx>(
-  'employees',
+  'vehicles',
   async (_req, { auth, tenantId }, routeCtx) => {
     try {
       const { tipo, id: rawId } = await routeCtx.params;
