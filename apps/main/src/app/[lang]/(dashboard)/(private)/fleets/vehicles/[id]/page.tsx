@@ -25,8 +25,10 @@ const VehicleDetailPage = async (props: { params: Promise<{ lang: Locale; id: st
   }
 
   const canEdit = (access.mask & PERM.U) === PERM.U;
+  const canUpload = (access.mask & PERM.W) === PERM.W;
+  const canDelete = (access.mask & PERM.D) === PERM.D;
 
-  return <VehicleDetail vehicleId={vehicleId} canEdit={canEdit} />;
+  return <VehicleDetail vehicleId={vehicleId} canEdit={canEdit} canUpload={canUpload} canDelete={canDelete} />;
 };
 
 export default VehicleDetailPage;

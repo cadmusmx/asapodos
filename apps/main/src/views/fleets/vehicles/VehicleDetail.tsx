@@ -17,6 +17,7 @@ import Snackbar from '@mui/material/Snackbar';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import VehicleFormFields from './components/VehicleFormFields';
+import VehicleDocuments from './components/VehicleDocuments';
 import { EMPTY_CATALOGS, EMPTY_FORM, toFormValues, toPayload } from './types';
 import type { FormCatalogs, VehicleDetailData, VehicleFormValues } from './types';
 
@@ -41,7 +42,17 @@ const ReadField = ({ label, value }: { label: string; value: React.ReactNode }) 
   </Grid>
 );
 
-const VehicleDetail = ({ vehicleId, canEdit }: { vehicleId: number; canEdit: boolean }) => {
+const VehicleDetail = ({
+  vehicleId,
+  canEdit,
+  canUpload,
+  canDelete,
+}: {
+  vehicleId: number;
+  canEdit: boolean;
+  canUpload: boolean;
+  canDelete: boolean;
+}) => {
   const [detail, setDetail] = useState<VehicleDetailData | null>(null);
   const [catalogs, setCatalogs] = useState<FormCatalogs>(EMPTY_CATALOGS);
   const [editing, setEditing] = useState(false);
@@ -142,92 +153,100 @@ const VehicleDetail = ({ vehicleId, canEdit }: { vehicleId: number; canEdit: boo
   const title = `${d.Placa ?? 'Sin placa'}${d.NoEconomico ? ` · Eco. ${d.NoEconomico}` : ''}`;
 
   return (
-    <Card>
-      <CardHeader
-        title={title}
-        subheader={[d.MarcaNombre, d.Modelo, d.TipoVehiculoNombre].filter(Boolean).join(' · ') || undefined}
-        action={
-          !editing && canEdit ? (
-            <Button variant='contained' startIcon={<i className='ri-edit-line' />} onClick={() => setEditing(true)}>
-              Editar
-            </Button>
-          ) : null
-        }
-      />
-      <CardContent>
-        {error && <Alert severity='error' className='mbe-4'>{error}</Alert>}
-
-        {editing ? (
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <VehicleFormFields control={control} catalogs={catalogs} disabled={saving} />
-            <div className='flex gap-3 justify-end mbs-6'>
-              <Button variant='outlined' color='secondary' onClick={cancel} disabled={saving}>
-                Cancelar
+    <>
+      <Card>
+        <CardHeader
+          title={title}
+          subheader={[d.MarcaNombre, d.Modelo, d.TipoVehiculoNombre].filter(Boolean).join(' · ') || undefined}
+          action={
+            !editing && canEdit ? (
+              <Button variant='contained' startIcon={<i className='ri-edit-line' />} onClick={() => setEditing(true)}>
+                Editar
               </Button>
-              <Button type='submit' variant='contained' disabled={saving} startIcon={saving ? <CircularProgress size={16} /> : undefined}>
-                Guardar
-              </Button>
-            </div>
-          </form>
-        ) : (
-          <Grid container spacing={4}>
-            <Grid size={{ xs: 12 }}>
-              <Typography variant='subtitle2' color='text.secondary' className='mbe-1'>Vigencias</Typography>
-              <Divider />
-            </Grid>
-            <ReadField label='Póliza' value={<VigenciaChip value={d.VigenciaPoliza} />} />
-            <ReadField label='Tarjeta' value={<VigenciaChip value={d.VigenciaTarjeta} />} />
-            <ReadField label='Verificación' value={<VerificacionChip dias={d.VerificacionDiasRestantes} />} />
-            <ReadField label='Estatus' value={d.EstatusNombre} />
+            ) : null
+          }
+        />
+        <CardContent>
+          {error && <Alert severity='error' className='mbe-4'>{error}</Alert>}
 
-            <Grid size={{ xs: 12 }}>
-              <Typography variant='subtitle2' color='text.secondary' className='mbe-1'>Identificación</Typography>
-              <Divider />
-            </Grid>
-            <ReadField label='VIN / Serie' value={d.SerialVehiculo} />
-            <ReadField label='No. Motor' value={d.SerialMotor} />
-            <ReadField label='Marca' value={d.MarcaNombre} />
-            <ReadField label='Línea' value={d.Linea} />
-            <ReadField label='Color' value={d.ColorNombre} />
-            <ReadField label='Combustible' value={d.CombustibleNombre} />
-            <ReadField label='Puertas' value={d.Puertas} />
-            <ReadField label='Tracción' value={d.Traccion} />
+          {editing ? (
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <VehicleFormFields control={control} catalogs={catalogs} disabled={saving} />
+              <div className='flex gap-3 justify-end mbs-6'>
+                <Button variant='outlined' color='secondary' onClick={cancel} disabled={saving}>
+                  Cancelar
+                </Button>
+                <Button type='submit' variant='contained' disabled={saving} startIcon={saving ? <CircularProgress size={16} /> : undefined}>
+                  Guardar
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <Grid container spacing={4}>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant='subtitle2' color='text.secondary' className='mbe-1'>Vigencias</Typography>
+                <Divider />
+              </Grid>
+              <ReadField label='Póliza' value={<VigenciaChip value={d.VigenciaPoliza} />} />
+              <ReadField label='Tarjeta' value={<VigenciaChip value={d.VigenciaTarjeta} />} />
+              <ReadField label='Verificación' value={<VerificacionChip dias={d.VerificacionDiasRestantes} />} />
+              <ReadField label='Estatus' value={d.EstatusNombre} />
 
-            <Grid size={{ xs: 12 }}>
-              <Typography variant='subtitle2' color='text.secondary' className='mbe-1'>Documentación</Typography>
-              <Divider />
-            </Grid>
-            <ReadField label='Póliza' value={d.Poliza} />
-            <ReadField label='Aseguradora' value={d.AseguradoraNombre} />
-            <ReadField label='Vence póliza' value={d.FechaVencimientoPoliza?.slice(0, 10)} />
-            <ReadField label='Estado (placa)' value={d.EstadoPlacaNombre} />
-            <ReadField label='Vence tarjeta' value={d.FechaVencimientoTarjeta?.slice(0, 10)} />
+              <Grid size={{ xs: 12 }}>
+                <Typography variant='subtitle2' color='text.secondary' className='mbe-1'>Identificación</Typography>
+                <Divider />
+              </Grid>
+              <ReadField label='VIN / Serie' value={d.SerialVehiculo} />
+              <ReadField label='No. Motor' value={d.SerialMotor} />
+              <ReadField label='Marca' value={d.MarcaNombre} />
+              <ReadField label='Línea' value={d.Linea} />
+              <ReadField label='Color' value={d.ColorNombre} />
+              <ReadField label='Combustible' value={d.CombustibleNombre} />
+              <ReadField label='Puertas' value={d.Puertas} />
+              <ReadField label='Tracción' value={d.Traccion} />
 
-            <Grid size={{ xs: 12 }}>
-              <Typography variant='subtitle2' color='text.secondary' className='mbe-1'>Asignación</Typography>
-              <Divider />
-            </Grid>
-            <ReadField label='Departamento' value={d.DepartamentoNombre} />
-            <ReadField label='Conductor' value={d.ConductorNombre ?? 'Sin asignar'} />
-            <ReadField label='Propietario' value={d.PropietarioNombre} />
-            <ReadField label='Ubicación' value={d.Ubicacion} />
-            <ReadField label='Región' value={d.Region} />
-            <ReadField label='Kilometraje' value={d.Kilometraje} />
+              <Grid size={{ xs: 12 }}>
+                <Typography variant='subtitle2' color='text.secondary' className='mbe-1'>Documentación</Typography>
+                <Divider />
+              </Grid>
+              <ReadField label='Póliza' value={d.Poliza} />
+              <ReadField label='Aseguradora' value={d.AseguradoraNombre} />
+              <ReadField label='Vence póliza' value={d.FechaVencimientoPoliza?.slice(0, 10)} />
+              <ReadField label='Estado (placa)' value={d.EstadoPlacaNombre} />
+              <ReadField label='Vence tarjeta' value={d.FechaVencimientoTarjeta?.slice(0, 10)} />
 
-            {d.Notas && (
-              <>
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant='subtitle2' color='text.secondary' className='mbe-1'>Notas</Typography>
-                  <Divider />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant='body2'>{d.Notas}</Typography>
-                </Grid>
-              </>
-            )}
-          </Grid>
-        )}
-      </CardContent>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant='subtitle2' color='text.secondary' className='mbe-1'>Asignación</Typography>
+                <Divider />
+              </Grid>
+              <ReadField label='Departamento' value={d.DepartamentoNombre} />
+              <ReadField label='Conductor' value={d.ConductorNombre ?? 'Sin asignar'} />
+              <ReadField label='Propietario' value={d.PropietarioNombre} />
+              <ReadField label='Ubicación' value={d.Ubicacion} />
+              <ReadField label='Región' value={d.Region} />
+              <ReadField label='Kilometraje' value={d.Kilometraje} />
+
+              {d.Notas && (
+                <>
+                  <Grid size={{ xs: 12 }}>
+                    <Typography variant='subtitle2' color='text.secondary' className='mbe-1'>Notas</Typography>
+                    <Divider />
+                  </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <Typography variant='body2'>{d.Notas}</Typography>
+                  </Grid>
+                </>
+              )}
+            </Grid>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className='mbs-6'>
+        <CardContent>
+          <VehicleDocuments vehicleId={vehicleId} canUpload={canUpload} canDelete={canDelete} />
+        </CardContent>
+      </Card>
 
       <Snackbar
         open={!!ok}
@@ -236,7 +255,7 @@ const VehicleDetail = ({ vehicleId, canEdit }: { vehicleId: number; canEdit: boo
         message={ok ?? ''}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       />
-    </Card>
+    </>
   );
 };
 

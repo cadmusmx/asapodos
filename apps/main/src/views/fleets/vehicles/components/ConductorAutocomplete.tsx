@@ -14,8 +14,8 @@ interface Props {
   disabled?: boolean;
 }
 
-// Reutiliza el endpoint de empleados (protegido por 'employees'). Sin ese permiso
-// el fetch da 403 -> deshabilita el campo con aviso (no rompe el resto del form).
+// Reutiliza el endpoint de empleados (protegido por 'employees').
+// Sin ese permiso el fetch da 403 -> deshabilita el campo con aviso (no rompe el resto del form).
 const ConductorAutocomplete = ({ value, onChange, disabled }: Props) => {
   const [input, setInput] = useState('');
   const [options, setOptions] = useState<ConductorOption[]>([]);

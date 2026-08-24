@@ -26,6 +26,7 @@ interface VehicleListRow {
   VigenciaTarjeta: string | null;
   VerificacionDiasRestantes: number | null;
   TotalRows: number | bigint;
+  DocumentCount: number | bigint;
 }
 
 // POST /api/fleets/vehicles/search — listado filtrado + paginado. POST que LEE (bit R).
@@ -69,6 +70,8 @@ export const POST = withPermission(
           CASE WHEN v.FechaProximaVerificacion IS NULL THEN NULL
                ELSE IIF(DATEDIFF(day, CAST(GETDATE() AS date), v.FechaProximaVerificacion) < 0, 0,
                         DATEDIFF(day, CAST(GETDATE() AS date), v.FechaProximaVerificacion)) END AS VerificacionDiasRestantes,
+          (SELECT COUNT(*) FROM Fleet.VehicleFiles df
+             WHERE df.TenantID = v.TenantID AND df.VehicleID = v.IdAuto) AS DocumentCount,
           COUNT(*) OVER() AS TotalRows
         FROM Fleet.Vehicles v
         LEFT JOIN dbo.Cat_MarcaAuto ma       ON ma.IdMarca = v.Marca
@@ -84,7 +87,11 @@ export const POST = withPermission(
 
       // COUNT(*) OVER() = total del set filtrado ANTES del OFFSET/FETCH.
       const total = rows.length ? toNumber(rows[0].TotalRows) : 0;
-      const items = rows.map(({ TotalRows, ...rest }) => rest);
+
+      const items = rows.map(({ TotalRows, DocumentCount, ...rest }) => ({
+        ...rest,
+        DocumentCount: toNumber(DocumentCount),
+      }));
 
       return NextResponse.json({ rows: items, total, pagina, limite });
     } catch (e) {

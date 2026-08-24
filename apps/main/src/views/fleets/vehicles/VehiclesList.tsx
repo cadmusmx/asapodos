@@ -32,6 +32,7 @@ import type {
 } from '@/app/api/fleets/vehicles/filters/route';
 
 import VehiclesStatCards, { type VehicleStats } from './components/VehiclesStatCards';
+import VehicleDocumentsModal from './components/VehicleDocumentsModal';
 
 // Fila del listado (proyección del cliente; Fleet no está en Prisma).
 interface VehicleRow {
@@ -52,6 +53,7 @@ interface VehicleRow {
   VigenciaPoliza: 'VIGENTE' | 'VENCIDA' | null;
   VigenciaTarjeta: 'VIGENTE' | 'VENCIDA' | null;
   VerificacionDiasRestantes: number | null;
+  DocumentCount: number;
 }
 
 interface FilterOptions {
@@ -96,6 +98,7 @@ const VehiclesList = ({ canEdit, canCreate }: { canEdit: boolean; canCreate: boo
   const [estatus, setEstatus] = useState('');
   const [departamento, setDepartamento] = useState('');
   const [conductor, setConductor] = useState('');
+  const [docModal, setDocModal] = useState<{ id: number; title: string } | null>(null);
 
   // Paginación (0-indexed como TanStack; la API es 1-indexed)
   const [pageIndex, setPageIndex] = useState(0);
@@ -245,21 +248,35 @@ const VehiclesList = ({ canEdit, canCreate }: { canEdit: boolean; canCreate: boo
         id: 'actions',
         header: '',
         cell: ({ row }) => (
-          <Button
-            size='small'
-            variant='outlined'
-            color='info'
-            component='a'
-            href={`/${lang}/fleets/vehicles/${row.original.IdAuto}`}
-            target='_blank'
-            rel='noopener noreferrer'
-          >
-            {canEdit ? 'Ver / Editar' : 'Ver'}
-          </Button>
+          <div className='flex gap-2'>
+            <Button
+              size='small'
+              variant='outlined'
+              color='info'
+              component='a'
+              href={`/${lang}/fleets/vehicles/${row.original.IdAuto}`}
+              target='_blank'
+              rel='noopener noreferrer'
+            >
+              {canEdit ? 'Ver / Editar' : 'Ver'}
+            </Button>
+            {row.original.DocumentCount > 0 && (
+              <Button
+                size='small'
+                variant='outlined'
+                color='secondary'
+                startIcon={<i className='ri-attachment-2' />}
+                onClick={() =>
+                  setDocModal({ id: row.original.IdAuto, title: row.original.Placa ?? `#${row.original.IdAuto}` })
+                }
+              >
+                Documentos
+              </Button>
+            )}
+          </div>
         ),
       }),
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [canEdit, lang],
   );
 
@@ -447,6 +464,12 @@ const VehiclesList = ({ canEdit, canCreate }: { canEdit: boolean; canCreate: boo
           />
         </CardContent>
       </Card>
+      <VehicleDocumentsModal
+        vehicleId={docModal?.id ?? null}
+        title={docModal?.title}
+        open={!!docModal}
+        onClose={() => setDocModal(null)}
+      />
     </>
   );
 };

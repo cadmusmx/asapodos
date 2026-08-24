@@ -68,6 +68,16 @@ export interface VehicleFormValues {
   conductor: ConductorOption | null;
 }
 
+export interface VehicleDocFile {
+  fileId: number;
+  documentTypeId: number | null;
+  documentTypeName: string | null;
+  url: string;
+}
+
+export interface VehicleDocType { id: number; nombre: string };
+
+
 export const EMPTY_FORM: VehicleFormValues = {
   placa: '', noEconomico: '', serialVehiculo: '', serialMotor: '', modelo: '', linea: '',
   marca: '', kilometraje: '', idEstadoPlaca: '', color: '', poliza: '', empresa: '',
@@ -116,3 +126,13 @@ export function toPayload(v: VehicleFormValues): Record<string, unknown> {
     conductorEmployeeID: v.conductor?.id ?? null,
   };
 }
+
+// Icono RemixIcon según la extensión de la key/URL.
+export const docIconFor = (url: string): string => {
+  const u = (url ?? '').toLowerCase();
+
+  if (u.endsWith('.pdf')) return 'ri-file-pdf-2-line';
+  if (/\.(jpe?g|png|webp|gif)$/.test(u)) return 'ri-image-line';
+
+  return 'ri-file-line';
+};
