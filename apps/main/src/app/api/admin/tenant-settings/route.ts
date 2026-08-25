@@ -23,7 +23,9 @@ type TenantSettingsBody = {
   settings?: TenantSettings
 }
 
-export const GET = withPermission<TenantSettingsBody>(
+// export const GET = withPermission<TenantSettingsBody>(
+
+export const GET = withPermission(
   'tenant_settings',
   async (req, rbac) => {
     const { auth, tenantId } = rbac

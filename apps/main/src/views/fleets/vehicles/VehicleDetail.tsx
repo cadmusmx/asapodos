@@ -150,7 +150,7 @@ const VehicleDetail = ({
   }
 
   const d = detail;
-  const title = `${d.Placa ?? 'Sin placa'}${d.NoEconomico ? ` · Eco. ${d.NoEconomico}` : ''}`;
+  const title = `${d.Placa ?? 'Sin placa'}${d.NoEconomico ? ` · No. Eco. ${d.NoEconomico}` : ''}`;
 
   return (
     <>

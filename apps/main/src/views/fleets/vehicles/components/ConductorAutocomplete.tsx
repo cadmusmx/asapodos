@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
@@ -21,6 +21,7 @@ const ConductorAutocomplete = ({ value, onChange, disabled }: Props) => {
   const [options, setOptions] = useState<ConductorOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [forbidden, setForbidden] = useState(false);
+  const lastQuery = useRef('');
 
   useEffect(() => {
     if (forbidden) return;
@@ -29,6 +30,7 @@ const ConductorAutocomplete = ({ value, onChange, disabled }: Props) => {
 
     if (q.length < 2) {
       setOptions([]);
+      lastQuery.current = ''; // permite re-buscar el mismo término tras limpiar
 
       return;
     }
@@ -36,6 +38,8 @@ const ConductorAutocomplete = ({ value, onChange, disabled }: Props) => {
     const controller = new AbortController();
 
     const timer = setTimeout(async () => {
+      if (q === lastQuery.current) return;
+      lastQuery.current = q;
       setLoading(true);
 
       try {
@@ -82,13 +86,19 @@ const ConductorAutocomplete = ({ value, onChange, disabled }: Props) => {
     <Autocomplete
       value={value}
       onChange={(_, v) => onChange(v)}
-      onInputChange={(_, v) => setInput(v)}
+      onInputChange={(_, v, reason) => {
+        // Solo el tecleo del usuario dispara búsqueda.
+        // 'reset' (al seleccionar una opción, MUI copia su label al input) y el resto NO deben re-consultar la API.
+        if (reason === 'input') setInput(v);
+        else if (reason === 'clear') setInput('');
+      }}
       options={merged}
       loading={loading}
       disabled={disabled || forbidden}
       filterOptions={x => x}
       isOptionEqualToValue={(o, v) => o.id === v.id}
       getOptionLabel={o => o.label}
+      loadingText='Buscando…'
       noOptionsText={input.trim().length < 2 ? 'Escribe para buscar…' : 'Sin resultados'}
       renderInput={params => (
         <TextField
