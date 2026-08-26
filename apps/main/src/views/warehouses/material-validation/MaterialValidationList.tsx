@@ -27,6 +27,7 @@ import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '
 import styles from '@core/styles/table.module.css';
 
 import type { AlmacenRow, ProyectoRow, TipoMaterialRow, CarrierRow, MotivoRow, EstadoFisicoRow } from '@/app/api/warehouses/material-validation/catalogs/route';
+import ExportDialog from '@/components/export/ExportDialog';
 
 interface Catalogs {
   almacenes: Array<AlmacenRow>;
@@ -80,6 +81,8 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
   // Paginación (0-indexed como TanStack; la API es 1-indexed)
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+
+  const [exportOpen, setExportOpen] = useState(false);
 
   // Datos
   const [catalogs, setCatalogs] = useState<Catalogs>(EMPTY_CATALOGS);
@@ -208,6 +211,22 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
     state: { pagination: { pageIndex, pageSize } },
   });
 
+  const exportParams: Record<string, string> = {
+    es: String(es),
+    ...(proyecto ? { proyecto: String(proyecto) } : {}),
+    ...(tipoMaterial ? { tipoMaterial: String(tipoMaterial) } : {}),
+    ...(almacen ? { almacen: String(almacen) } : {}),
+    ...(carrier ? { carrier: String(carrier) } : {}),
+  };
+
+  const exportChips = [
+    es ? 'Entradas' : 'Salidas',
+    proyecto && `Proyecto: ${catalogs.proyectos.find(p => p.Id === Number(proyecto))?.Proyecto}`,
+    tipoMaterial && `Tipo: ${catalogs.tiposMaterial.find(t => t.Id === Number(tipoMaterial))?.Tipo}`,
+    almacen && `Almacén: ${catalogs.almacenes.find(a => a.Id === Number(almacen))?.Nombre}`,
+    carrier && `Carrier: ${catalogs.carriers.find(c => c.Id === Number(carrier))?.Carrier}`,
+  ].filter(Boolean) as string[];
+
   return (
     <Card>
       <CardHeader
@@ -217,7 +236,6 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
           <div className='flex gap-4'>
             <ToggleButtonGroup
               exclusive
-              fullWidth
               size='small'
               value={es}
               onChange={(_, v) => {
@@ -230,7 +248,10 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
               <ToggleButton value={true}>Entradas</ToggleButton>
               <ToggleButton value={false}>Salidas</ToggleButton>
             </ToggleButtonGroup>
-            <Button fullWidth size='small' variant='outlined' color='secondary' onClick={goCatalogs}>Catálogos</Button>
+            <Button size='small' variant='outlined' color='secondary' onClick={goCatalogs}>Catálogos</Button>
+            <Button size='small' variant='outlined' color='success' startIcon={<i className='ri-file-excel-2-line' />} onClick={() => setExportOpen(true)}>
+              Exportar
+            </Button>
           </div>
         }
       />
@@ -329,6 +350,15 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
           }}
         />
       </CardContent>
+      <ExportDialog
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        exportBaseUrl='/api/warehouses/material-validation/export/xlsx'
+        baseParams={exportParams}
+        filterChips={exportChips}
+        initialFechaInicio={fechaInicio}
+        initialFechaFin={fechaFin}
+      />
     </Card>
   );
 }

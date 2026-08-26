@@ -26,12 +26,14 @@ const S3_BASE = process.env.NEXT_PUBLIC_S3_PUBLIC_BASE_URL ?? '';
 
 interface Pieza { id: number; cl: number | string; clt: string; pzs: string };
 
+interface Tarima { n: number; tarima: string | null; papeleta: string | null }
+
 interface VMDetail {
   Id: number; Folio: string; Fecha: string; ES: boolean; Status: number; Cancelada: boolean;
   Responsable: string; Proyecto: string; TipoMaterial: string; AlmacenDestino: string; Carrier: string;
   OtroCarrier: string | null; NombreSitio: string; IdSitio: string; CuentaCliente: string;
   AspNombre: string; AspFirma: string | null; NombreContacto: string; IdRegion: number;
-  TotalPiezas: number; NumTarimas: number; PlacasTransporte: string; Notas: string | null; Qr: string;
+  TotalPiezas: number; NumTarimas: number; Tarimas: Tarima; PlacasTransporte: string; Notas: string | null; Qr: string;
   MaterialEnTransporteFoto: string; MaterialDescargadoFoto: string | null; TransporteFoto: string; PlacasFoto: string;
   MaterialDocumentos: string | null; UsuarioEditor: string | null; Vinculado: number | null;
   FechaCaptura: string; FechaEdicion: string | null;
@@ -39,11 +41,12 @@ interface VMDetail {
 }
 
 const photoUrl = (key?: string | null): string => {
-  if (!key) return ''
-  if (!S3_BASE) return key
+  if (!key) return '';
+  if (/^https?:\/\//i.test(key)) return key;        // ya es absoluta (algunos docs)
+  if (!S3_BASE) return key;
 
-  return `${S3_BASE.replace(/\/+$/, '')}/${String(key).replace(/^\/+/, '')}`
-}
+  return `${S3_BASE.replace(/\/+$/, '')}/${String(key).replace(/^\/+/, '')}`;
+};
 
 const firmaSrc = (f?: string | null): string =>
   !f ? '' : f.startsWith('data:') ? f : `data:image/png;base64,${f}`
@@ -67,6 +70,29 @@ function parseDocs(json: unknown): Array<{ name: string; file: string }> {
     const arr = JSON.parse(json);
 
     return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+function parseTarimas(json: unknown): Tarima[] {
+  if (typeof json !== 'string' || !json) return [];
+
+  try {
+    const obj = JSON.parse(json) as Record<string, string>;
+    const nums = new Set<number>();
+
+    for (const k of Object.keys(obj)) {
+      const m = k.match(/_(\d+)$/);
+
+      if (m) nums.add(Number(m[1]));
+    }
+
+    return [...nums].sort((a, b) => a - b).map(n => ({
+      n,
+      tarima: obj[`tarima_${n}`] ?? null,
+      papeleta: obj[`papeleta_${n}`] ?? null,
+    }));
   } catch {
     return [];
   }
@@ -154,6 +180,7 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
   const piezasMotivo = useMemo(() => parsePiezas(data?.PiezasMotivo), [data]);
   const piezasEstadoF = useMemo(() => parsePiezas(data?.PiezasEstadoF), [data]);
   const documentos = useMemo(() => parseDocs(data?.MaterialDocumentos), [data]);
+  const tarimas = useMemo(() => parseTarimas(data?.Tarimas), [data]);
 
   if (loading) {
     return (
@@ -257,6 +284,24 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
                 <a key={i} href={photoUrl(d.file)} target='_blank' rel='noreferrer'>{d.name || `Documento ${i + 1}`}</a>
               ))}
             </div>
+          </>
+        )}
+
+        {tarimas.length > 0 && (
+          <>
+            <Divider className='mlb-6' />
+            <Typography variant='h6' className='mbe-4'>Tarimas ({data.NumTarimas})</Typography>
+            <Grid container spacing={4}>
+              {tarimas.map(t => (
+                <Grid key={t.n} size={{ xs: 12, md: 6 }}>
+                  <Typography variant='subtitle2' className='mbe-2'>Tarima {t.n}</Typography>
+                  <Grid container spacing={4}>
+                    <Foto label='Tarima' url={photoUrl(t.tarima)} />
+                    <Foto label='Papeleta' url={photoUrl(t.papeleta)} />
+                  </Grid>
+                </Grid>
+              ))}
+            </Grid>
           </>
         )}
 
