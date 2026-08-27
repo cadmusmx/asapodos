@@ -4,14 +4,14 @@ import { authOptions } from './nextauth-config';
 
 export type AdminGuardResult =
   | {
-    ok: true
-    userId: number
-    tenantId: string // tenant de la sesión del actor
+    ok: true;
+    userId: number;
+    tenantId: string // tenant de la sesión del actor;
     isSaasAdmin: boolean
   }
   | {
-    ok: false
-    status: 401 | 403
+    ok: false;
+    status: 401 | 403;
     message: string
   };
 
@@ -32,9 +32,11 @@ export async function requireAdmin(): Promise<AdminGuardResult> {
 
   if (!session?.user) return { ok: false, status: 401, message: 'No autenticado' };
 
-  const { admin, tenantId, id } = session.user;
+  // { admin, tenantId, id }
 
-  if (admin !== true) return { ok: false, status: 403, message: 'Se requiere rol administrador' };
+  const { tenantId, id } = session.user;
+
+  // if (admin !== true) return { ok: false,; status: 403,; message: 'Se requiere rol administrador' };
   if (typeof id !== 'number') return { ok: false, status: 401, message: 'Sesión sin identificador de usuario válido' };
 
   // Derivación provisional de admin SaaS. Si SAAS_ROOT_TENANT_ID no está

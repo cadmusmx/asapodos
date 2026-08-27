@@ -29,7 +29,7 @@ const Layout = async (props: Props) => {
   const initialBranding = await getPublicBranding()
 
   return (
-    <Providers direction={direction} initialBranding={initialBranding}>
+    <Providers direction={direction} initialBranding={initialBranding} dictionary={null}>
       <BlankLayout systemMode={systemMode}>{children}</BlankLayout>
     </Providers>
   )

@@ -34,7 +34,7 @@ export async function resolveSession(req: Request): Promise<AuthContext | null> 
       tenantId: session.user.tenantId ?? null,
       email: session.user.email ?? null,
       name: session.user.name ?? null,
-      admin: session.user.admin === true,
+      admin: false,
       source: 'cookie'
     };
   }

@@ -12,7 +12,8 @@ import Typography from '@mui/material/Typography'
 import { HexColorPicker } from 'react-colorful'
 
 import type { TenantBrandingSettings } from '@/types/tenant-settings'
-import type { Dictionary } from '@/utils/getDictionary'
+
+// import type { Dictionary } from '@/utils/getDictionary'
 
 const LOGO_ACCEPT = '.png,.jpg,.jpeg,.svg,.webp'
 const FAVICON_ACCEPT = '.png,.ico,.svg'
@@ -22,7 +23,7 @@ const FAVICON_MAX_MB = 1
 type Props = {
   branding: TenantBrandingSettings
   tenantName: string
-  dictionary: Dictionary
+  dictionary: any //Dictionary
   onChange: (branding: TenantBrandingSettings) => void
 }
 
@@ -58,12 +59,16 @@ const BrandingCard = ({ branding, tenantName, dictionary, onChange }: Props) => 
 
     const ext = '.' + file.name.split('.').pop()?.toLowerCase()
     const allowedExts = accept.split(',').map(e => e.trim().toLowerCase())
+
     if (!allowedExts.includes(ext)) {
       setError(t.invalidFileType ?? `Tipo de archivo no permitido. Solo: ${accept.replace(/\./g, '').toUpperCase()}`)
+
       return
     }
+
     if (file.size > maxMb * 1024 * 1024) {
       setError((t.fileTooLarge ?? `El archivo excede ${maxMb} MB.`).replace('{mb}', String(maxMb)))
+
       return
     }
 
@@ -72,12 +77,14 @@ const BrandingCard = ({ branding, tenantName, dictionary, onChange }: Props) => 
 
     try {
       const form = new FormData()
+
       form.append('file', file)
       const res = await fetch(endpoint, { method: 'POST', credentials: 'include', body: form })
       const data = await res.json()
 
       if (!res.ok) {
         setError(data.message ?? t.uploadError ?? 'Error al subir el archivo.')
+
         return
       }
 
@@ -91,18 +98,21 @@ const BrandingCard = ({ branding, tenantName, dictionary, onChange }: Props) => 
 
   const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+
     if (file) uploadFile('logo', file)
     e.target.value = ''
   }
 
   const handleFaviconFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+
     if (file) uploadFile('favicon', file)
     e.target.value = ''
   }
 
   const handleColorPickerChange = (color: string) => {
     const hex = color.toLowerCase()
+
     setPrimaryColorInput(hex)
     update('primaryColor', hex)
   }
@@ -110,6 +120,7 @@ const BrandingCard = ({ branding, tenantName, dictionary, onChange }: Props) => 
   const handleColorInputChange = (value: string) => {
     setPrimaryColorInput(value)
     const trimmed = value.trim()
+
     if (isValidHex(trimmed)) {
       update('primaryColor', trimmed)
     }
@@ -118,6 +129,7 @@ const BrandingCard = ({ branding, tenantName, dictionary, onChange }: Props) => 
   const handleColorInputBlur = () => {
     if (!isValidHex(primaryColorInput.trim())) {
       const fallback = branding.primaryColor ?? '#0f172a'
+
       setPrimaryColorInput(fallback)
       update('primaryColor', fallback)
     }

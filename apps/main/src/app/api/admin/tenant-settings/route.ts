@@ -90,7 +90,9 @@ export const GET = withPermission(
   { bit: PERM.R }
 )
 
-export const PUT = withPermission<TenantSettingsBody>(
+// export const PUT = withPermission<TenantSettingsBody>(
+
+export const PUT = withPermission(
   'tenant_settings',
   async (req, rbac) => {
     const { auth, tenantId } = rbac

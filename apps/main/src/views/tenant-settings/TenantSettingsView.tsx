@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Alert from '@mui/material/Alert'
@@ -18,10 +19,10 @@ import BrandingCard from './BrandingCard'
 
 import type { TenantBrandingSettings, TenantSettings } from '@/types/tenant-settings'
 
-import type { Dictionary } from '@/utils/getDictionary'
+// import type { Dictionary } from '@/utils/getDictionary'
 
 type Props = {
-  dictionary: Dictionary
+  dictionary: any
 }
 
 const TenantSettingsView = ({ dictionary }: Props) => {

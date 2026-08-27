@@ -27,12 +27,14 @@ const BrandingEffects = ({ dictionary }: Props) => {
     const existingShortcut = document.querySelector("link[rel='shortcut icon']")
     const existingIcon = document.querySelector("link[rel='icon']")
 
-    const shortcut = existingShortcut ?? document.createElement('link')
+    const shortcut: any = existingShortcut ?? document.createElement('link')
+
     shortcut.rel = 'shortcut icon'
     shortcut.href = faviconUrl
     if (!existingShortcut) document.head.appendChild(shortcut)
 
-    const icon = existingIcon ?? document.createElement('link')
+    const icon: any = existingIcon ?? document.createElement('link')
+
     icon.rel = 'icon'
     icon.href = faviconUrl
     if (!existingIcon) document.head.appendChild(icon)
@@ -57,6 +59,7 @@ const BrandingEffects = ({ dictionary }: Props) => {
       .find(item => pathWithoutLocale === item.href || pathWithoutLocale.startsWith(item.href + '/'))
 
     let subtitle = name
+
     if (pathWithoutLocale === '/settings') {
       subtitle = getDictionaryValue(dictionary, 'settings.title')
     } else if (navItem?.labelKey) {

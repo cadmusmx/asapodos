@@ -1,12 +1,19 @@
 // Type Imports
 import type { ChildrenType, Direction } from '@core/types'
+
+import { VerticalNavProvider } from '@menu/contexts/verticalNavContext'
+
+import { SettingsProvider } from '@core/contexts/settingsContext'
+
+import ThemeProvider from '@components/theme'
+
+import { getMode, getSettingsFromCookie, getSystemMode } from '@core/utils/serverHelpers'
+
 import type { TenantBrandingSettings } from '@/types/tenant-settings'
 
 // Context Imports
 import { NextAuthProvider } from '@/contexts/nextAuthProvider'
-import { VerticalNavProvider } from '@menu/contexts/verticalNavContext'
-import { SettingsProvider } from '@core/contexts/settingsContext'
-import ThemeProvider from '@components/theme'
+
 import ReduxProvider from '@/redux-store/ReduxProvider'
 import BrandingEffects from '@/components/branding/BrandingEffects'
 import { DictionaryProvider } from '@/contexts/dictionaryContext'
@@ -16,17 +23,16 @@ import { BrandingProvider } from '@/contexts/brandingContext'
 import AppReactToastify from '@/libs/styles/AppReactToastify'
 
 // Util Imports
-import { getMode, getSettingsFromCookie, getSystemMode } from '@core/utils/serverHelpers'
 
 type Props = ChildrenType & {
   direction: Direction
-  dictionary: any
+  dictionary?: any
   initialBranding?: TenantBrandingSettings | null
 }
 
 const Providers = async (props: Props) => {
   // Props
-  const { children, direction, dictionary, initialBranding } = props
+  const { children, direction, dictionary = null, initialBranding } = props
 
   // Vars
   const mode = await getMode()

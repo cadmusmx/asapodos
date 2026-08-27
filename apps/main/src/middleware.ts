@@ -63,9 +63,7 @@ function extractSubdomain(host: string): string {
 
   const parts = cleanHost.split('.')
 
-  if (parts.length >= 3) return parts[0]
-
-  if (parts.length === 2) return parts[0]
+  if (parts[0] === 'develop') return parts[1];
 
   return parts[0] ?? ''
 }

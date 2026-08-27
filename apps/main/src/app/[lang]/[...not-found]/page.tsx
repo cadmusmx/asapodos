@@ -28,7 +28,7 @@ const NotFoundPage = async (props: { params: Promise<{ lang: Locale }> }) => {
   const initialBranding = await getPublicBranding()
 
   return (
-    <Providers direction={direction} initialBranding={initialBranding}>
+    <Providers direction={direction} initialBranding={initialBranding} dictionary={null}>
       <BlankLayout systemMode={systemMode}>
         <NotFound mode={mode} />
       </BlankLayout>
