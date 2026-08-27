@@ -1,7 +1,7 @@
 'use client';
 
 // React Imports
-import { useId, useEffect, useMemo, useState } from 'react';
+import { useId, useEffect, useMemo, useState, useRef } from 'react';
 
 // Next Imports
 import { useParams, useRouter } from 'next/navigation';
@@ -22,6 +22,9 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 
 // Style Imports
+import { IconButton } from '@mui/material';
+import { toast } from 'react-toastify';
+
 import styles from '@core/styles/table.module.css';
 
 // Base pública de S3 para construir URLs de fotos/QR/documentos (llaves en BD).
@@ -142,11 +145,16 @@ const Foto = ({ label, url }: { label: string; url: string }) => (
 const MaterialValidationOut = ({ folio }: { folio: string }) => {
   const router = useRouter();
   const { lang } = useParams();
-  const accordionId = useId();
 
   const [data, setData] = useState<VMDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const accordionId = useId();
+  const inheritedDocs = useMemo(() => parseDocs(data?.MaterialDocumentos), [data]);
+  const [newDocs, setNewDocs] = useState<Array<{ name: string; file: string }>>([]);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const docInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -183,8 +191,42 @@ const MaterialValidationOut = ({ folio }: { folio: string }) => {
 
   const piezasMotivo = useMemo(() => parsePiezas(data?.PiezasMotivo), [data]);
   const piezasEstadoF = useMemo(() => parsePiezas(data?.PiezasEstadoF), [data]);
-  const documentos = useMemo(() => parseDocs(data?.MaterialDocumentos), [data]);
   const tarimas = useMemo(() => parseTarimas(data?.Tarimas), [data]);
+
+  const onDocSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    e.target.value = ''; // permite re-seleccionar el mismo archivo
+    if (!file) return;
+    setUploadingDoc(true);
+
+    try {
+      const fd = new FormData();
+
+      fd.append('file', file);
+      const res = await fetch('/api/warehouses/material-validation/documents', { method: 'POST', body: fd });
+
+      if (!res.ok) {
+        const { message } = await res.json().catch(() => ({ message: 'Error al subir el documento' }));
+
+        throw new Error(message);
+      }
+
+      const { key } = await res.json();
+
+      setNewDocs(prev => [...prev, { name: file.name, file: key }]);
+      toast.success('Documento agregado');
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
+  const removeNewDoc = (i: number) => setNewDocs(prev => prev.filter((_, idx) => idx !== i));
+
+  // al enviar el OUT:
+  //   materialDocumentos: JSON.stringify([...inheritedDocs, ...newDocs])
 
   if (loading) {
     return (
@@ -247,18 +289,34 @@ const MaterialValidationOut = ({ folio }: { folio: string }) => {
           <Foto label='Placas' url={photoUrl(data.PlacasFoto)} /> {/* CAPTURAR */}
         </Grid>
 
-        {/* CAPTURAR OPCIONAL */}
-        {documentos.length > 0 && (
-          <>
-            <Divider className='mlb-6' />
-            <Typography variant='h6' className='mbe-4'>Documentos</Typography>
-            <div className='flex flex-col gap-1'>
-              {documentos.map((d, i) => (
-                <a key={i} href={photoUrl(d.file)} target='_blank' rel='noreferrer'>{d.name || `Documento ${i + 1}`}</a>
-              ))}
-            </div>
-          </>
+        <Typography variant='h6' className='mbe-4'>Documentos</Typography>
+
+        {inheritedDocs.length > 0 && (
+          <div className='flex flex-col gap-1 mbe-3'>
+            {inheritedDocs.map((d, i) => (
+              <a key={`in-${i}`} href={photoUrl(d.file)} target='_blank' rel='noreferrer'>
+                {d.name || `Documento ${i + 1}`}{' '}
+                <Typography component='span' variant='caption' color='text.secondary'>(del IN)</Typography>
+              </a>
+            ))}
+          </div>
         )}
+
+        {newDocs.map((d, i) => (
+          <div key={`new-${i}`} className='flex items-center gap-2 mbe-1'>
+            <a href={photoUrl(d.file)} target='_blank' rel='noreferrer'>{d.name}</a>
+            <IconButton size='small' color='error' onClick={() => removeNewDoc(i)}>
+              <i className='ri-close-line' />
+            </IconButton>
+          </div>
+        ))}
+
+        <input ref={docInputRef} type='file' accept='.jpg,.jpeg,.png,.pdf' hidden onChange={onDocSelected} />
+        <Button variant='outlined' size='small' disabled={uploadingDoc}
+          onClick={() => docInputRef.current?.click()} className='mbs-2'
+          startIcon={<i className='ri-upload-2-line' />}>
+          {uploadingDoc ? 'Subiendo…' : 'Agregar documento'}
+        </Button>
 
         <Divider className='mlb-6' />
 

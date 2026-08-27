@@ -18,6 +18,7 @@ interface OutBody {
   fotoTransporte?: string;
   fotoPlacas?: string;
   notas?: string;
+  materialDocumentos?: string; // JSON final: docs del IN + nuevos (opcional)
 }
 
 // POST · crear OutDerived (salida a partir de un IN). POST → bit W por default.
@@ -57,6 +58,7 @@ export const POST = withPermission('material_validation', async (req, { auth, te
       folioOut: b.folioOut!,
       directQR,
       qr: b.qr ?? null,
+      materialDocumentos: b.materialDocumentos,
       generales: {
         fecha: b.fecha!,
         aspNombre: b.aspNombre!,

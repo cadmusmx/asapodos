@@ -82,6 +82,7 @@ export interface SubmitOutInput {
   directQR: boolean; // true → usa la key de QR de salida del cliente; false → hereda src.Qr del IN
   qr?: string | null; // key S3, requerida solo si directQR
   generales: OutGenerales;
+  materialDocumentos?: string | null; // JSON final (IN + nuevos). Si se omite, hereda src.MaterialDocumentos del IN.
 }
 
 export type SubmitOutResult =
@@ -107,6 +108,13 @@ export async function submitOut(input: SubmitOutInput): Promise<SubmitOutResult>
   // Qr: key del cliente (directQR) o columna heredada del IN.
   const qrExpr = input.directQR ? Prisma.sql`${input.qr}` : Prisma.sql`src.Qr`;
 
+  // MaterialDocumentos: JSON final del cliente (IN + nuevos) o herencia del IN si se omite.
+  // El OUT puede añadir documentos opcionales sobre los que trae el IN.
+  const docsExpr =
+    input.materialDocumentos !== undefined && input.materialDocumentos !== null
+      ? Prisma.sql`${input.materialDocumentos}`
+      : Prisma.sql`src.MaterialDocumentos`;
+
   return withTenantContext(input.tenantId, async tx => {
     const inRows = await tx.$queryRaw<Array<{ Id: number }>>`
       SELECT Id
@@ -131,7 +139,7 @@ export async function submitOut(input: SubmitOutInput): Promise<SubmitOutResult>
          ${fecha}, ${g.aspNombre}, ${g.firmaBase64}, ${g.nombreContacto},
          src.IdCarrier, src.OtroCarrier, src.IdRegion, src.IdAlmacenDestino,
          src.TotalPiezas, ${g.placasTransporte}, ${g.fotoMaterialTransporte}, NULL, ${g.fotoTransporte},
-         ${g.fotoPlacas}, ${g.notas ?? null}, ${qrExpr}, src.NumTarimas, src.Tarimas, src.MaterialDocumentos, 0
+         ${g.fotoPlacas}, ${g.notas ?? null}, ${qrExpr}, src.NumTarimas, src.Tarimas, ${docsExpr}, 0
       FROM dbo.GASOAL_VMES src
       WHERE src.Id = ${idIn}
     `;
