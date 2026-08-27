@@ -63,9 +63,6 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
   const router = useRouter();
   const { lang } = useParams();
 
-  const goToDetail = (folio: string) =>
-    router.push(`/${lang}/warehouses/material-validation/${encodeURIComponent(folio)}`);
-
   const goCatalogs = () => router.push(`/${lang}/warehouses/material-validation/catalogos`);
 
 
@@ -192,9 +189,31 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
         id: 'actions',
         header: '',
         cell: ({ row }) => (
-          <Button size='small' variant='outlined' color='info' onClick={() => goToDetail(row.original.Folio)}>
-            {canEdit ? 'Ver / Editar' : 'Ver'}
-          </Button>
+          <div className='flex gap-2'>
+            <Button
+              size='small'
+              variant='outlined'
+              color='info'
+              component='a'
+              href={`/${lang}/warehouses/material-validation/${row.original.Folio}`}
+              target='_blank'
+              rel='noopener noreferrer'
+            >
+              {canEdit ? 'Ver / Editar' : 'Ver'}
+            </Button>
+            {/* {!row.original.Extended && (.. */}
+            <Button
+              size='small'
+              variant='outlined'
+              color='warning'
+              component='a'
+              href={`/${lang}/warehouses/material-validation/${row.original.Folio}/out`}
+              target='_blank'
+              rel='noopener noreferrer'
+            >
+              Dar salida
+            </Button>
+          </div>
         ),
       }),
     ],

@@ -11,7 +11,7 @@ export const config = {
   ]
 }
 
-const DEFAULT_TENANT_SLUG = process.env.DEFAULT_TENANT_SLUG ?? 'gasohub.com'
+const DEFAULT_TENANT_SLUG = process.env.DEFAULT_TENANT_SLUG ?? 'gasohub' // Sin TLD
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
 const LOCALES = ['en', 'es'] as const
