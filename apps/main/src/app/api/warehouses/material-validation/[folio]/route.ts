@@ -143,15 +143,23 @@ export const PUT = withPermission<RouteCtx>(
       }
 
       const outcome = await withTenantContext(tenantId, async tx => {
-        // 1) Resolver registro por tenant+folio y autorizar (dueño + editable).
-        const found = await tx.$queryRaw<Array<{ Id: number; IdUsuario: number; Status: number }>>`
-          SELECT Id, IdUsuario, Status FROM dbo.GASOAL_VMES
-          WHERE TenantID = ${tenantId} AND Folio = ${folio}`;
+        const found = await tx.$queryRaw<Array<{ Id: number; IdUsuario: number; Status: number; Extended: number; Derived: number }>>`
+          SELECT VMES.Id, VMES.IdUsuario, VMES.Status,
+                (CASE WHEN EXISTS (
+                    SELECT 1 FROM dbo.GASOAL_VMOut WHERE TenantID = ${tenantId} AND FolioIN = ${folio}
+                  ) THEN 1 ELSE 0 END) AS Extended,
+                (CASE WHEN EXISTS (
+                    SELECT 1 FROM dbo.GASOAL_VMOut vo WHERE vo.TenantID = ${tenantId} AND vo.IdOut = VMES.Id
+                  ) THEN 1 ELSE 0 END) AS Derived
+            FROM dbo.GASOAL_VMES VMES
+          WHERE VMES.TenantID = ${tenantId} AND VMES.Folio = ${folio}`;
 
         if (found.length === 0) return { status: 404, message: 'Registro no encontrado' };
         const rec = found[0];
 
         if (rec.Status !== 0) return { status: 409, message: 'El registro no es editable' };
+        if (rec.Extended) return { status: 409, message: 'No se puede editar una entrada que ya tiene salida' };
+        if (rec.Derived) return { status: 409, message: 'No se puede editar una salida generada desde una entrada' };
         const idVM = rec.Id;
         const isOwner = rec.IdUsuario === auth.userId;
 

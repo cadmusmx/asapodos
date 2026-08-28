@@ -201,7 +201,7 @@ const MaterialValidationList = ({ canEdit, canCreate }: { canEdit: boolean, canC
             <div className='flex gap-2'>
               <Button size='small' variant='contained' component='a'
                 href={detail(r.Folio)} target='_blank' rel='noopener noreferrer'>
-                {(canEdit && r.FolioSalida == null) ? 'Ver / Editar' : 'Ver'}
+                {(canEdit && r.FolioSalida == null && r.FolioOrigen == null) ? 'Ver / Editar' : 'Ver'}
               </Button>
 
               {/* Entrada sin salida → dar salida */}
