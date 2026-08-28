@@ -51,6 +51,8 @@ interface VMRow {
   Status: number;
   Vinculado: number | null;
   ES: boolean;
+  FolioSalida: string | null;
+  FolioOrigen: string | null;
 }
 
 const EMPTY_CATALOGS: Catalogs = {
@@ -188,33 +190,43 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
       columnHelper.display({
         id: 'actions',
         header: '',
-        cell: ({ row }) => (
-          <div className='flex gap-2'>
-            <Button
-              size='small'
-              variant='outlined'
-              color='info'
-              component='a'
-              href={`/${lang}/warehouses/material-validation/${row.original.Folio}`}
-              target='_blank'
-              rel='noopener noreferrer'
-            >
-              {canEdit ? 'Ver / Editar' : 'Ver'}
-            </Button>
-            {/* {!row.original.Extended && (.. */}
-            <Button
-              size='small'
-              variant='outlined'
-              color='warning'
-              component='a'
-              href={`/${lang}/warehouses/material-validation/${row.original.Folio}/out`}
-              target='_blank'
-              rel='noopener noreferrer'
-            >
-              Dar salida
-            </Button>
-          </div>
-        ),
+        cell: ({ row }) => {
+          const r = row.original;
+          const detail = (f: string) => `/${lang}/warehouses/material-validation/${encodeURIComponent(f)}`;
+
+          return (
+            <div className='flex gap-2'>
+              <Button size='small' variant='contained' component='a'
+                href={detail(r.Folio)} target='_blank' rel='noopener noreferrer'>
+                {canEdit ? 'Ver / Editar' : 'Ver'}
+              </Button>
+
+              {/* Entrada sin salida → dar salida */}
+              {r.ES && !r.FolioSalida && (
+                <Button size='small' variant='outlined' component='a'
+                  href={`${detail(r.Folio)}/out`} target='_blank' rel='noopener noreferrer'>
+                  Dar salida
+                </Button>
+              )}
+
+              {/* Entrada extendida → ver su salida */}
+              {r.ES && r.FolioSalida && (
+                <Button size='small' variant='outlined' color='secondary' component='a'
+                  href={detail(r.FolioSalida)} target='_blank' rel='noopener noreferrer'>
+                  Ver Salida
+                </Button>
+              )}
+
+              {/* Salida derivada → ver IN de origen */}
+              {!r.ES && r.FolioOrigen && (
+                <Button size='small' variant='outlined' color='info' component='a'
+                  href={detail(r.FolioOrigen)} target='_blank' rel='noopener noreferrer'>
+                  Ver Entrada
+                </Button>
+              )}
+            </div>
+          );
+        },
       }),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps

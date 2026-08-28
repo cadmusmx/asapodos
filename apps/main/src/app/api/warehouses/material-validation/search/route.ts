@@ -85,8 +85,11 @@ export const POST = withPermission(
                    WHERE VM.Folio = VFV.FolioEntrada
                       OR VM.Folio = VFV.FolioSalida
                       OR VM.Folio = VFV.FolioValidacion ) AS Vinculado,
-               COUNT(*) OVER() AS TotalRows
+               COUNT(*) OVER() AS TotalRows,
+               voOut.FolioIN AS FolioOrigen, voIn.FolioOut AS FolioSalida
           FROM dbo.GASOAL_VMES VM
+          LEFT JOIN dbo.GASOAL_VMOut voOut ON voOut.TenantID = VM.TenantID AND voOut.IdOut  = VM.Id
+          LEFT JOIN dbo.GASOAL_VMOut voIn  ON voIn.TenantID  = VM.TenantID AND voIn.FolioIN = VM.Folio
           INNER JOIN dbo.GASOAL_VMAlmacenes al ON VM.IdAlmacenDestino = al.Id
           INNER JOIN dbo.Cat_VMProyecto pro ON VM.IdProyecto = pro.Id
           INNER JOIN dbo.Cat_VMTiposMaterial tm ON VM.IdTipoMaterial = tm.Id

@@ -72,19 +72,23 @@ export const GET = withPermission<RouteCtx>(
                  ( SELECT pm.Id AS id, pm.Clave AS cl, cm.Motivo AS clt, pm.Piezas AS pzs
                      FROM dbo.GASOAL_VMPiezasMotivo pm
                      LEFT JOIN dbo.Cat_VMMotivo cm ON pm.Clave = cm.Id
-                     WHERE pm.IdVM = VM.Id
+                     WHERE pm.IdVM = COALESCE(voOut.IdIN, VM.Id)
                      FOR JSON PATH ) AS PiezasMotivo,
                  ( SELECT pe.Id AS id, pe.Clave AS cl, ce.Estado AS clt, pe.Piezas AS pzs
                      FROM dbo.GASOAL_VMPiezasEstadoF pe
                      LEFT JOIN dbo.Cat_VMEFisico ce ON pe.Clave = ce.Clave
-                     WHERE pe.IdVM = VM.Id
+                     WHERE pe.IdVM = COALESCE(voOut.IdIN, VM.Id)
                      FOR JSON PATH ) AS PiezasEstadoF,
                  ( SELECT TOP 1 VFV.Id
                      FROM dbo.GASOAL_VinculosFolioValidacion VFV
                      WHERE VM.Folio = VFV.FolioEntrada
                         OR VM.Folio = VFV.FolioSalida
-                        OR VM.Folio = VFV.FolioValidacion ) AS Vinculado
+                        OR VM.Folio = VFV.FolioValidacion ) AS Vinculado,
+                  voOut.FolioIN  AS FolioOrigen,    -- este OUT salió de este IN
+                  voIn.FolioOut  AS FolioSalida     -- este IN ya tiene esta salida
             FROM dbo.GASOAL_VMES VM
+            LEFT JOIN dbo.GASOAL_VMOut voOut ON voOut.TenantID = VM.TenantID AND voOut.IdOut  = VM.Id
+            LEFT JOIN dbo.GASOAL_VMOut voIn  ON voIn.TenantID  = VM.TenantID AND voIn.FolioIN = VM.Folio
             INNER JOIN dbo.GASOAL_VMAlmacenes al ON VM.IdAlmacenDestino = al.Id
             INNER JOIN dbo.Cat_VMProyecto pro ON VM.IdProyecto = pro.Id
             INNER JOIN dbo.Cat_VMTiposMaterial tm ON VM.IdTipoMaterial = tm.Id

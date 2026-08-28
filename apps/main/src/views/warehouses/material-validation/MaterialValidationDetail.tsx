@@ -38,6 +38,7 @@ interface VMDetail {
   MaterialDocumentos: string | null; UsuarioEditor: string | null; Vinculado: number | null;
   FechaCaptura: string; FechaEdicion: string | null;
   PiezasMotivo: string; PiezasEstadoF: string;
+  FolioOrigen: string | null; FolioSalida: string | null;
 }
 
 const photoUrl = (key?: string | null): string => {
@@ -217,7 +218,18 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
         }
         action={
           <div className='flex gap-2'>
-            <Button variant='outlined' color='secondary' onClick={() => router.push(`/${lang}/warehouses/material-validation`)}>Volver</Button>
+            {data.FolioOrigen && (
+              <Button size='small' variant='outlined' color='info' component='a'
+                href={`/${lang}/warehouses/material-validation/${encodeURIComponent(data.FolioOrigen)}`}>
+                Entrada: {data.FolioOrigen}
+              </Button>
+            )}
+            {data.FolioSalida && (
+              <Button size='small' variant='outlined' color='secondary' component='a'
+                href={`/${lang}/warehouses/material-validation/${encodeURIComponent(data.FolioSalida)}`}>
+                Salida: {data.FolioSalida}
+              </Button>
+            )}
             {canEdit && data.Status === 0 && (
               <Button variant='contained' startIcon={<i className='ri-edit-line' />}
                 onClick={() => router.push(`/${lang}/warehouses/material-validation/${encodeURIComponent(folio)}/editar`)}>
