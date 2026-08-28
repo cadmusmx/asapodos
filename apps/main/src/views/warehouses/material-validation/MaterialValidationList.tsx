@@ -28,6 +28,8 @@ import styles from '@core/styles/table.module.css';
 
 import type { AlmacenRow, ProyectoRow, TipoMaterialRow, CarrierRow, MotivoRow, EstadoFisicoRow } from '@/app/api/warehouses/material-validation/catalogs/route';
 import ExportDialog from '@/components/export/ExportDialog';
+import OutFolioModal from './components/OutFolioModal';
+
 
 interface Catalogs {
   almacenes: Array<AlmacenRow>;
@@ -61,7 +63,7 @@ const EMPTY_CATALOGS: Catalogs = {
 
 const columnHelper = createColumnHelper<VMRow>();
 
-const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
+const MaterialValidationList = ({ canEdit, canCreate }: { canEdit: boolean, canCreate: boolean }) => {
   const router = useRouter();
   const { lang } = useParams();
 
@@ -82,6 +84,7 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
   const [pageSize, setPageSize] = useState(10);
 
   const [exportOpen, setExportOpen] = useState(false);
+  const [outModalOpen, setOutModalOpen] = useState(false);
 
   // Datos
   const [catalogs, setCatalogs] = useState<Catalogs>(EMPTY_CATALOGS);
@@ -198,7 +201,7 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
             <div className='flex gap-2'>
               <Button size='small' variant='contained' component='a'
                 href={detail(r.Folio)} target='_blank' rel='noopener noreferrer'>
-                {canEdit ? 'Ver / Editar' : 'Ver'}
+                {(canEdit && r.FolioSalida == null) ? 'Ver / Editar' : 'Ver'}
               </Button>
 
               {/* Entrada sin salida → dar salida */}
@@ -265,6 +268,15 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
         subheader='Un Sitio, proyecto, tipo de material, ASP'
         action={
           <div className='flex gap-4'>
+            {canCreate && (
+              <Button size='small' variant='contained' onClick={() => setOutModalOpen(true)} startIcon={<i className='ri-qr-scan-2-line' />}>
+                Salida por folio
+              </Button>
+            )}
+            <Button size='small' variant='outlined' color='secondary' onClick={goCatalogs}>Catálogos</Button>
+            <Button size='small' variant='outlined' color='success' startIcon={<i className='ri-file-excel-2-line' />} onClick={() => setExportOpen(true)}>
+              Exportar
+            </Button>
             <ToggleButtonGroup
               exclusive
               size='small'
@@ -279,10 +291,6 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
               <ToggleButton value={true}>Entradas</ToggleButton>
               <ToggleButton value={false}>Salidas</ToggleButton>
             </ToggleButtonGroup>
-            <Button size='small' variant='outlined' color='secondary' onClick={goCatalogs}>Catálogos</Button>
-            <Button size='small' variant='outlined' color='success' startIcon={<i className='ri-file-excel-2-line' />} onClick={() => setExportOpen(true)}>
-              Exportar
-            </Button>
           </div>
         }
       />
@@ -390,6 +398,7 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
         initialFechaInicio={fechaInicio}
         initialFechaFin={fechaFin}
       />
+      <OutFolioModal open={outModalOpen} onClose={() => setOutModalOpen(false)} lang={lang as string} />
     </Card>
   );
 }

@@ -230,7 +230,7 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
                 Salida: {data.FolioSalida}
               </Button>
             )}
-            {canEdit && data.Status === 0 && (
+            {canEdit && data.Status === 0 && data.FolioSalida == null && (
               <Button variant='contained' startIcon={<i className='ri-edit-line' />}
                 onClick={() => router.push(`/${lang}/warehouses/material-validation/${encodeURIComponent(folio)}/editar`)}>
                 Editar

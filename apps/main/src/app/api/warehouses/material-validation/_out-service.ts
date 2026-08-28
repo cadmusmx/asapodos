@@ -10,11 +10,15 @@ import { withTenantContext } from '@/lib/tenant-context';
  * filtro TenantID explícito + su FK a la cabecera.
  */
 
-// Normaliza el folio IN: acepta con o sin prefijo VME- (colación CI en BD).
+// Normaliza el folio IN. Acepta cualquier origen:
+// deeplink escaneado (gasosaas://mv/VME-…), folio escaneado como texto, o tecleado (con/sin VME-).
+// Toma lo que va tras el último '/' (si no hay '/', es la cadena completa) y asegura el prefijo. Colación CI en BD,
+// así que el case no importa para matchear.
 export function normalizeInFolio(raw: string): string {
-  const f = raw.trim();
+  const str = raw.trim();
+  const ftxt = str.slice(str.lastIndexOf('/') + 1);
 
-  return /^VME-/i.test(f) ? f : `VME-${f}`;
+  return /^VME-/i.test(ftxt) ? ftxt : `VME-${ftxt}`;
 }
 
 // Port TS de getFolio (app Flutter): prefix + hexId(5, userId) + hexTS(ms).
@@ -37,6 +41,7 @@ export interface VerifyResult {
   reason: VerifyReason;
   folio: string; // folio IN normalizado
   idIn?: number; // presente solo cuando VALID
+  folioSalida?: string; // presente solo cuando ALREADY_EXTENDED (para "Ver salida")
 }
 
 /**
@@ -44,20 +49,20 @@ export interface VerifyResult {
  * 1) Normaliza.
  * 2) ¿EXTENDED? consulta la tabla de enlace (chica) con TenantID EXPLÍCITO. La FK
  *    GASOAL_VMOut.FolioIN→VMES garantiza que un extendido ya es IN válido del
- *    tenant → se rechaza y se cierra sin tocar la cabecera.
+ *    tenant → se rechaza y se cierra sin tocar la cabecera. Devuelve su FolioOut.
  * 3) Si no, verifica en la cabecera (RLS): existe, es IN (ES=1), del tenant.
  */
 export async function verifyFolioIn(tenantId: string, rawFolio: string): Promise<VerifyResult> {
   const folio = normalizeInFolio(rawFolio);
 
   return withTenantContext(tenantId, async tx => {
-    const extended = await tx.$queryRaw<Array<{ n: number }>>`
-      SELECT TOP 1 1 AS n
+    const extended = await tx.$queryRaw<Array<{ FolioOut: string }>>`
+      SELECT TOP 1 FolioOut
       FROM dbo.GASOAL_VMOut
       WHERE TenantID = ${tenantId} AND FolioIN = ${folio}
     `;
 
-    if (extended.length > 0) return { reason: 'ALREADY_EXTENDED', folio };
+    if (extended.length > 0) return { reason: 'ALREADY_EXTENDED', folio, folioSalida: extended[0].FolioOut };
 
     const rows = await tx.$queryRaw<Array<{ Id: number; ES: boolean | number }>>`
       SELECT Id, ES
