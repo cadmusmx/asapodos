@@ -32,10 +32,11 @@ export const POST = withPermission('material_validation', async (req, { auth, te
 
     if (!b) return NextResponse.json({ message: 'Cuerpo inválido' }, { status: 400 });
 
-    // Requeridos: folios + datos generales capturados. El material NO se envía
+    // Requeridos: folio IN + datos generales capturados. folioOut es opcional
+    // (si no viene, el server lo genera con QR heredado). El material NO se envía
     // (se hereda del IN en el servicio). Piezas tampoco (se heredan).
     const required = [
-      b.folioIn, b.folioOut, b.fecha, b.aspNombre, b.firmaBase64, b.nombreContacto,
+      b.folioIn, b.fecha, b.aspNombre, b.firmaBase64, b.nombreContacto,
       b.placasTransporte, b.fotoMaterialTransporte, b.fotoTransporte, b.fotoPlacas,
     ];
 
@@ -55,7 +56,7 @@ export const POST = withPermission('material_validation', async (req, { auth, te
       tenantId,
       userId: auth.userId,
       folioIn: b.folioIn!,
-      folioOut: b.folioOut!,
+      folioOut: b.folioOut, // opcional: el server lo genera si no viene
       directQR,
       qr: b.qr ?? null,
       materialDocumentos: b.materialDocumentos,

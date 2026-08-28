@@ -17,6 +17,20 @@ export function normalizeInFolio(raw: string): string {
   return /^VME-/i.test(f) ? f : `VME-${f}`;
 }
 
+// Port TS de getFolio (app Flutter): prefix + hexId(5, userId) + hexTS(ms).
+// Genera el folioOut en el server cuando el cliente no lo manda (web, QR heredado).
+// La app sigue mandando el suyo (lo necesita para renderizar su QR directo).
+function getFolio(idUsuario: number, prefix: string): string {
+  if (!Number.isInteger(idUsuario) || idUsuario < 1 || idUsuario > 1048575) {
+    throw new Error('idUsuario no válido para el folio');
+  }
+
+  const hexId = idUsuario.toString(16).toUpperCase().padStart(5, '0');
+  const hexTS = Date.now().toString(16).toUpperCase();
+
+  return `${prefix}${hexId}${hexTS}`;
+}
+
 export type VerifyReason = 'VALID' | 'ALREADY_EXTENDED' | 'NOT_FOUND' | 'NOT_IN';
 
 export interface VerifyResult {
@@ -78,7 +92,7 @@ export interface SubmitOutInput {
   tenantId: string;
   userId: number;
   folioIn: string; // IN de origen (se normaliza)
-  folioOut: string; // VMS- generado por el cliente
+  folioOut?: string; // VMS-; si se omite (web, QR heredado) lo genera el server
   directQR: boolean; // true → usa la key de QR de salida del cliente; false → hereda src.Qr del IN
   qr?: string | null; // key S3, requerida solo si directQR
   generales: OutGenerales;
@@ -116,8 +130,8 @@ export async function submitOut(input: SubmitOutInput): Promise<SubmitOutResult>
       : Prisma.sql`src.MaterialDocumentos`;
 
   return withTenantContext(input.tenantId, async tx => {
-    const inRows = await tx.$queryRaw<Array<{ Id: number }>>`
-      SELECT Id
+    const inRows = await tx.$queryRaw<Array<{ Id: number; IdProyecto: number; IdTipoMaterial: number }>>`
+      SELECT Id, IdProyecto, IdTipoMaterial
       FROM dbo.GASOAL_VMES
       WHERE TenantID = ${input.tenantId} AND Folio = ${folioIn} AND ES = 1
     `;
@@ -125,6 +139,10 @@ export async function submitOut(input: SubmitOutInput): Promise<SubmitOutResult>
     if (inRows.length === 0) return { ok: false as const, reason: 'IN_NOT_FOUND' as const };
 
     const idIn = inRows[0].Id;
+
+    // folioOut: el del cliente (app, para su QR directo) o generado en server (web).
+    const folioOut =
+      input.folioOut ?? getFolio(input.userId, `VMS-${inRows[0].IdProyecto}${inRows[0].IdTipoMaterial}`);
 
     const inserted = await tx.$queryRaw<Array<{ Id: number }>>`
       INSERT INTO dbo.GASOAL_VMES
@@ -134,7 +152,7 @@ export async function submitOut(input: SubmitOutInput): Promise<SubmitOutResult>
          PlacasFoto, Notas, Qr, NumTarimas, Tarimas, MaterialDocumentos, ES)
       OUTPUT INSERTED.Id
       SELECT
-         ${input.tenantId}, ${input.userId}, ${input.folioOut},
+         ${input.tenantId}, ${input.userId}, ${folioOut},
          src.IdProyecto, src.IdTipoMaterial, src.NombreSitio, src.IdSitio, src.CuentaCliente,
          ${fecha}, ${g.aspNombre}, ${g.firmaBase64}, ${g.nombreContacto},
          src.IdCarrier, src.OtroCarrier, src.IdRegion, src.IdAlmacenDestino,
@@ -148,9 +166,9 @@ export async function submitOut(input: SubmitOutInput): Promise<SubmitOutResult>
 
     await tx.$executeRaw`
       INSERT INTO dbo.GASOAL_VMOut (TenantID, IdIN, FolioIN, IdOut, FolioOut)
-      VALUES (${input.tenantId}, ${idIn}, ${folioIn}, ${idOut}, ${input.folioOut})
+      VALUES (${input.tenantId}, ${idIn}, ${folioIn}, ${idOut}, ${folioOut})
     `;
 
-    return { ok: true as const, idIn, idOut, folioOut: input.folioOut };
+    return { ok: true as const, idIn, idOut, folioOut };
   });
 }
