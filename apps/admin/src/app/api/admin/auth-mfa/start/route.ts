@@ -15,7 +15,7 @@ type TenantRow = {
   TenantID: string
 }
 
-const ADMIN_TENANT = process.env.ADMIN_TENANT ?? 'gasohub.com'
+const ADMIN_TENANT = process.env.ADMIN_TENANT ?? ''
 
 async function safeWriteAudit(params: Parameters<typeof writeAuthAudit>[0]) {
   try {

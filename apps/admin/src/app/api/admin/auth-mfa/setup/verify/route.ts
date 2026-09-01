@@ -8,7 +8,7 @@ import {
   setTenantContext
 } from '@gaso/shared'
 
-const ADMIN_TENANT = process.env.ADMIN_TENANT ?? 'gasohub.com'
+const ADMIN_TENANT = process.env.ADMIN_TENANT ?? ''
 
 async function safeWriteAudit(params: Parameters<typeof writeAuthAudit>[0]) {
   try {
@@ -79,8 +79,8 @@ export async function POST(req: Request) {
 
     const factors = await prisma.$queryRaw<
       {
-        MfaFactorID: string
-        SecretEncrypted: string | null
+        MfaFactorID: string;
+        SecretEncrypted: string | null;
         FailedAttempts: number
       }[]
     >`

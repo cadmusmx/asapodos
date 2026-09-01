@@ -20,7 +20,7 @@ function maskEmail(email: string | null | undefined) {
   return `${safeName}@${domain}`
 }
 
-const ADMIN_TENANT = process.env.ADMIN_TENANT ?? 'gasohub.com'
+const ADMIN_TENANT = process.env.ADMIN_TENANT ?? ''
 
 async function safeWriteAudit(params: Parameters<typeof writeAuthAudit>[0]) {
   try {

@@ -18,7 +18,7 @@ import {
   getProfilePhoto
 } from '@gaso/shared'
 
-const ADMIN_TENANT = process.env.ADMIN_TENANT ?? 'gasohub.com'
+const ADMIN_TENANT = process.env.ADMIN_TENANT ?? ''
 
 export async function POST(req: Request) {
   try {

@@ -14,13 +14,13 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
-import type { PlatformUserEditRow } from '@/types/apps/platformUserTypes'
+import type { PlatformUserEditRow, PlatformUserRow } from '@/types/apps/platformUserTypes'
 import { toast } from 'react-toastify'
 
 interface EditUserModalProps {
-  open: boolean
-  onClose: () => void
-  user: PlatformUserEditRow | null
+  open: boolean;
+  onClose: () => void;
+  user: PlatformUserEditRow | PlatformUserRow | null;
   onSuccess?: () => void
 }
 
