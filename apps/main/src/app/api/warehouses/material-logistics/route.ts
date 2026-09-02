@@ -23,6 +23,8 @@ interface CreateBody {
   otroCarrier?: string;
   sitios?: Sitio[];
   documentos?: Documento[];
+  folio?: string;
+  qr?: string;
 }
 
 // POST / — crear (bit W). IdUsuario y TenantID salen del token/contexto, NO del body.
@@ -95,6 +97,8 @@ export const POST = withPermission('material_logistics', async (req, { auth, ten
         p('@OtroCarrier', esOtro ? b.otroCarrier : null),
         p('@Sitios', JSON.stringify(sitios)),
         p('@Documentos', documentos.length ? JSON.stringify(documentos) : null),
+        p('@Folio', b.folio ? b.folio : null), // Client App
+        p('@Qr', b.qr ? b.qr : null), // Client App
       ];
 
       const result = await withTenantContext(tenantId, tx =>
