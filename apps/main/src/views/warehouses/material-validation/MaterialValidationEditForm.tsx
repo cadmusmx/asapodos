@@ -31,6 +31,7 @@ const S3_BASE = process.env.NEXT_PUBLIC_S3_PUBLIC_BASE_URL ?? '';
 
 const fileUrl = (key?: string | null): string => {
   if (!key) return '';
+  if (/^https?:\/\//i.test(key)) return key;
   if (!S3_BASE) return key;
 
   return `${S3_BASE.replace(/\/+$/, '')}/${String(key).replace(/^\/+/, '')}`;

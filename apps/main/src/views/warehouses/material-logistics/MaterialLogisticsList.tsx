@@ -28,6 +28,8 @@ import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '
 import styles from '@core/styles/table.module.css';
 
 import type { XdockRow, CarrierRow } from '@/app/api/warehouses/material-logistics/catalogs/route';
+import OutFolioModal from './components/OutFolioModal';
+
 
 // Resumen por sitio que devuelve /search (D10-B).
 interface SitioResumen {
@@ -58,7 +60,13 @@ interface LMRow {
   FechaCreacion: string;
   RE: boolean;
   Vinculado: number | null;
+  Extended: boolean;      // [S1] recepción con ≥1 entrega
+  Closed: boolean;        // [S1] recepción sin sitios pendientes
+  EsDerivada: boolean;    // [S1] la fila es una entrega
+  IdIN: number | null;    // [S1] recepción de origen (cuando EsDerivada)
+  FolioIN: string | null;
   nDocumentos: number;
+  nEntregas: number;
   sitios: SitioResumen[];
 }
 
@@ -84,12 +92,13 @@ const fmtFecha = (iso?: string): string => {
 
 const columnHelper = createColumnHelper<LMRow>();
 
-const MaterialLogisticsList = () => {
+const MaterialLogisticsList = ({ canCreate }: { canCreate: boolean }) => {
   const router = useRouter();
   const { lang } = useParams();
 
-  const goToDetail = (folio: string) =>
-    router.push(`/${lang}/warehouses/material-logistics/${encodeURIComponent(folio)}`);
+  // Todas las vistas se abren en pestaña nueva (regla transversal).
+  const detailHref = (folio: string) =>
+    `/${lang}/warehouses/material-logistics/${encodeURIComponent(folio)}`;
 
   const goCatalogs = () => router.push(`/${lang}/warehouses/material-logistics/catalogos`);
 
@@ -104,11 +113,14 @@ const MaterialLogisticsList = () => {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
 
+
   const [catalogs, setCatalogs] = useState<Catalogs>(EMPTY_CATALOGS);
   const [rows, setRows] = useState<LMRow[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [outModalOpen, setOutModalOpen] = useState(false);
 
   const resetToFirst = () => setPageIndex(0);
 
@@ -250,15 +262,71 @@ const MaterialLogisticsList = () => {
       }),
       columnHelper.accessor('FechaCreacion', { header: 'Captura', cell: i => fmtFecha(i.getValue()) }),
       columnHelper.display({
+        id: 'estadoEntrega',
+        header: 'Entregas',
+        cell: ({ row }) => {
+          const r = row.original;
+
+          if (!r.RE || !r.Extended) return <>—</>;
+
+          return r.Closed ? (
+            <Chip size='small' color='success' variant='tonal' label='Entregada' />
+          ) : (
+            <Chip size='small' color='warning' variant='tonal' label='Entrega parcial' />
+          );
+        },
+      }),
+      columnHelper.display({
         id: 'acciones',
         header: 'Acciones',
-        cell: ({ row }) => (
-          <div className='flex items-center gap-2'>
-            <Button size='small' variant='outlined' color='info' onClick={() => goToDetail(row.original.Folio)}>
-              Detalle
-            </Button>
-          </div>
-        ),
+        cell: ({ row }) => {
+          const r = row.original;
+
+          return (
+            <div className='flex items-center gap-2'>
+              <Button
+                size='small'
+                variant='outlined'
+                color='info'
+                component='a'
+                href={detailHref(r.Folio)}
+                target='_blank'
+                rel='noopener noreferrer'
+              >
+                Detalle
+              </Button>
+
+              {/* Recepción con sitios pendientes → entregar (bit W) */}
+              {canCreate && r.RE && !r.Closed && (
+                <Button
+                  size='small'
+                  variant='outlined'
+                  component='a'
+                  href={`${detailHref(r.Folio)}/out`}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                >
+                  Entregar
+                </Button>
+              )}
+
+              {/* Entrega derivada → ver recepción de origen */}
+              {r.EsDerivada && r.FolioIN && (
+                <Button
+                  size='small'
+                  variant='outlined'
+                  color='secondary'
+                  component='a'
+                  href={detailHref(r.FolioIN)}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                >
+                  Ver recepción
+                </Button>
+              )}
+            </div>
+          );
+        },
       }),
     ],
 
@@ -276,156 +344,164 @@ const MaterialLogisticsList = () => {
   });
 
   return (
-    <Card>
-      <CardHeader
-        title='Logística de Material'
-        subheader='Varios Sitios, XDOCK, Control de arribo'
-        action={
-          <div className='flex gap-4'>
-            <ToggleButtonGroup
-              exclusive
-              fullWidth
-              size='small'
-              value={re}
-              onChange={(_, v) => {
-                if (v !== null) {
-                  setRe(v);
+    <>
+      <Card>
+        <CardHeader
+          title='Logística de Material'
+          subheader='Varios Sitios, XDOCK, Control de arribo'
+          action={
+            <div className='flex gap-4'>
+              {canCreate && (
+                <Button fullWidth size='small' variant='contained' onClick={() => setOutModalOpen(true)}>
+                  Entrega por folio
+                </Button>
+              )}
+              <Button fullWidth size='small' variant='outlined' color='secondary' onClick={goCatalogs}>Catálogos</Button>
+              <ToggleButtonGroup
+                exclusive
+                fullWidth
+                size='small'
+                value={re}
+                onChange={(_, v) => {
+                  if (v !== null) {
+                    setRe(v);
+                    resetToFirst();
+                  }
+                }}
+              >
+                <ToggleButton value={true}>Recepción</ToggleButton>
+                <ToggleButton value={false}>Entrega</ToggleButton>
+              </ToggleButtonGroup>
+            </div>
+          }
+        />
+        <CardContent>
+          <Grid container spacing={4} className='mbe-4'>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <TextField
+                fullWidth
+                size='small'
+                type='date'
+                label='Desde'
+                slotProps={{ inputLabel: { shrink: true } }}
+                value={fechaInicio}
+                onChange={e => {
+                  setFechaInicio(e.target.value);
                   resetToFirst();
-                }
-              }}
-            >
-              <ToggleButton value={true}>Recepción</ToggleButton>
-              <ToggleButton value={false}>Entrega</ToggleButton>
-            </ToggleButtonGroup>
-            <Button fullWidth size='small' variant='outlined' color='secondary' onClick={goCatalogs}>Catálogos</Button>
-          </div>
-        }
-      />
-      <CardContent>
-        <Grid container spacing={4} className='mbe-4'>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <TextField
-              fullWidth
-              size='small'
-              type='date'
-              label='Desde'
-              slotProps={{ inputLabel: { shrink: true } }}
-              value={fechaInicio}
-              onChange={e => {
-                setFechaInicio(e.target.value);
-                resetToFirst();
-              }}
-            />
+                }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <TextField
+                fullWidth
+                size='small'
+                type='date'
+                label='Hasta'
+                slotProps={{ inputLabel: { shrink: true } }}
+                value={fechaFin}
+                onChange={e => {
+                  setFechaFin(e.target.value);
+                  resetToFirst();
+                }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <TextField
+                select
+                fullWidth
+                size='small'
+                label='XDOCK'
+                value={xdock}
+                onChange={e => {
+                  setXdock(e.target.value);
+                  resetToFirst();
+                }}
+              >
+                <MenuItem value=''>Todos</MenuItem>
+                {catalogs.xdocks.map(x => (
+                  <MenuItem key={x.Id} value={String(x.Id)}>
+                    {x.Nombre}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <TextField
+                select
+                fullWidth
+                size='small'
+                label='Carrier'
+                value={carrier}
+                onChange={e => {
+                  setCarrier(e.target.value);
+                  resetToFirst();
+                }}
+              >
+                <MenuItem value=''>Todos</MenuItem>
+                {catalogs.carriers.map(c => (
+                  <MenuItem key={c.Id} value={String(c.Id)}>
+                    {c.Carrier}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <TextField
-              fullWidth
-              size='small'
-              type='date'
-              label='Hasta'
-              slotProps={{ inputLabel: { shrink: true } }}
-              value={fechaFin}
-              onChange={e => {
-                setFechaFin(e.target.value);
-                resetToFirst();
-              }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <TextField
-              select
-              fullWidth
-              size='small'
-              label='XDOCK'
-              value={xdock}
-              onChange={e => {
-                setXdock(e.target.value);
-                resetToFirst();
-              }}
-            >
-              <MenuItem value=''>Todos</MenuItem>
-              {catalogs.xdocks.map(x => (
-                <MenuItem key={x.Id} value={String(x.Id)}>
-                  {x.Nombre}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <TextField
-              select
-              fullWidth
-              size='small'
-              label='Carrier'
-              value={carrier}
-              onChange={e => {
-                setCarrier(e.target.value);
-                resetToFirst();
-              }}
-            >
-              <MenuItem value=''>Todos</MenuItem>
-              {catalogs.carriers.map(c => (
-                <MenuItem key={c.Id} value={String(c.Id)}>
-                  {c.Carrier}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-        </Grid>
 
-        {error && (
-          <Alert severity='error' className='mbe-4'>
-            {error}
-          </Alert>
-        )}
+          {error && (
+            <Alert severity='error' className='mbe-4'>
+              {error}
+            </Alert>
+          )}
 
-        <div className='overflow-x-auto'>
-          <table className={styles.table}>
-            <thead>
-              {table.getHeaderGroups().map(hg => (
-                <tr key={hg.id}>
-                  {hg.headers.map(header => (
-                    <th key={header.id}>
-                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {rows.length === 0 ? (
-                <tr>
-                  <td colSpan={columns.length} className='text-center'>
-                    {loading ? 'Cargando…' : 'No hay registros para los filtros actuales'}
-                  </td>
-                </tr>
-              ) : (
-                table.getRowModel().rows.map(row => (
-                  <tr key={row.id}>
-                    {row.getVisibleCells().map(cell => (
-                      <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+          <div className='overflow-x-auto'>
+            <table className={styles.table}>
+              <thead>
+                {table.getHeaderGroups().map(hg => (
+                  <tr key={hg.id}>
+                    {hg.headers.map(header => (
+                      <th key={header.id}>
+                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                      </th>
                     ))}
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </thead>
+              <tbody>
+                {rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={columns.length} className='text-center'>
+                      {loading ? 'Cargando…' : 'No hay registros para los filtros actuales'}
+                    </td>
+                  </tr>
+                ) : (
+                  table.getRowModel().rows.map(row => (
+                    <tr key={row.id}>
+                      {row.getVisibleCells().map(cell => (
+                        <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
-        <TablePagination
-          component='div'
-          rowsPerPageOptions={[10, 25, 50, 100]}
-          count={total}
-          rowsPerPage={pageSize}
-          page={pageIndex}
-          onPageChange={(_, page) => setPageIndex(page)}
-          onRowsPerPageChange={e => {
-            setPageSize(Number(e.target.value));
-            setPageIndex(0);
-          }}
-        />
-      </CardContent>
-    </Card>
+          <TablePagination
+            component='div'
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            count={total}
+            rowsPerPage={pageSize}
+            page={pageIndex}
+            onPageChange={(_, page) => setPageIndex(page)}
+            onRowsPerPageChange={e => {
+              setPageSize(Number(e.target.value));
+              setPageIndex(0);
+            }}
+          />
+        </CardContent>
+      </Card>
+      <OutFolioModal open={outModalOpen} onClose={() => setOutModalOpen(false)} lang={String(lang)} />
+    </>
   );
 };
 

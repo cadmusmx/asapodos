@@ -20,7 +20,9 @@ const MaterialLogisticsPage = async (props: { params: Promise<{ lang: Locale }> 
     redirect(getLocalizedUrl(getTargetByReason(access.reason), lang));
   }
 
-  return <MaterialLogisticsList />;
+  const canCreate = (access.mask & PERM.W) === PERM.W; // [S2] gate de "Entregar" / "Entrega por folio"
+
+  return <MaterialLogisticsList canCreate={canCreate} />;
 };
 
 export default MaterialLogisticsPage;
