@@ -269,10 +269,15 @@ const MaterialLogisticsList = ({ canCreate }: { canCreate: boolean }) => {
 
           if (!r.RE || !r.Extended) return <>—</>;
 
-          return r.Closed ? (
-            <Chip size='small' color='success' variant='tonal' label='Entregada' />
-          ) : (
-            <Chip size='small' color='warning' variant='tonal' label='Entrega parcial' />
+          const n = `${r.nEntregas} ${r.nEntregas === 1 ? 'entrega' : 'entregas'}`;
+
+          return (
+            <Chip
+              size='small'
+              variant='tonal'
+              color={r.Closed ? 'success' : 'warning'}
+              label={r.Closed ? `${n} · Completa` : `${n} · Parcial`}
+            />
           );
         },
       }),
@@ -352,14 +357,13 @@ const MaterialLogisticsList = ({ canCreate }: { canCreate: boolean }) => {
           action={
             <div className='flex gap-4'>
               {canCreate && (
-                <Button fullWidth size='small' variant='contained' onClick={() => setOutModalOpen(true)}>
+                <Button size='small' variant='contained' onClick={() => setOutModalOpen(true)}>
                   Entrega por folio
                 </Button>
               )}
-              <Button fullWidth size='small' variant='outlined' color='secondary' onClick={goCatalogs}>Catálogos</Button>
+              <Button size='small' variant='outlined' color='secondary' onClick={goCatalogs}>Catálogos</Button>
               <ToggleButtonGroup
                 exclusive
-                fullWidth
                 size='small'
                 value={re}
                 onChange={(_, v) => {
