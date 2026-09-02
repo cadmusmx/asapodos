@@ -24,6 +24,7 @@ const S3_BASE = process.env.NEXT_PUBLIC_S3_PUBLIC_BASE_URL ?? '';
 
 const photoUrl = (key?: string | null): string => {
   if (!key) return '';
+  if (/^https?:\/\//i.test(key)) return key; // [backlog] migrados: URL absoluta tal cual
   if (!S3_BASE) return key;
 
   return `${S3_BASE.replace(/\/+$/, '')}/${String(key).replace(/^\/+/, '')}`;
@@ -46,6 +47,8 @@ interface Sitio {
   materialFaltante: boolean;
   descripcionFaltantes: string | null;
   descripcionIncidencias: string | null;
+  entregado: boolean;          // [S1]
+  folioEntrega: string | null; // [S1]
   tiposMaterial: TipoRef[];
   incidencias: TipoRef[];
   evidencias: Evidencia[];
@@ -77,7 +80,15 @@ interface LMDetail {
   Correo: string;
   documentos: Documento[];
   sitios: Sitio[];
+  Extended: boolean;      // [S1]
+  Closed: boolean;        // [S1]
+  EsDerivada: boolean;    // [S1]
+  IdIN: number | null;    // [S1]
+  FolioIN: string | null; // [S1]
+  entregas: EntregaRef[]; // [S1]
 }
+
+interface EntregaRef { id: number; folio: string; fecha: string }
 
 // Componentes de presentación
 
@@ -151,6 +162,14 @@ const SitioCard = ({ sitio, indice }: { sitio: Sitio; indice: number }) => (
         </Typography>
         <Chip size='small' variant='tonal' label={sitio.idSitio} />
         {sitio.materialFaltante && <Chip size='small' color='warning' variant='tonal' label='Material faltante' />}
+        {sitio.entregado && (
+          <Chip
+            size='small'
+            color='success'
+            variant='tonal'
+            label={sitio.folioEntrega ? `Entregado · ${sitio.folioEntrega}` : 'Entregado'}
+          />
+        )}
       </div>
 
       <Grid container spacing={4} className='mbe-4'>
@@ -303,9 +322,22 @@ const MaterialLogisticsDetail = ({ folio }: { folio: string }) => {
         title={`${data.RE ? 'Recepción' : 'Entrega'} · ${data.Folio}`}
         subheader={`XDOCK ${data.Xdock} · ${data.Fecha}`}
         action={
-          <Button variant='outlined' color='secondary' onClick={() => router.push(`/${lang}/warehouses/material-logistics`)}>
-            Volver
-          </Button>
+          <div className='flex gap-2'>
+            <Button variant='outlined' color='secondary' onClick={() => router.push(`/${lang}/warehouses/material-logistics`)}>
+              Volver
+            </Button>
+            {data.EsDerivada && data.FolioIN && (
+              <Button
+                variant='outlined'
+                component='a'
+                href={`/${lang}/warehouses/material-logistics/${encodeURIComponent(data.FolioIN)}`}
+                target='_blank'
+                rel='noopener noreferrer'
+              >
+                Ver recepción de origen
+              </Button>
+            )}
+          </div>
         }
       />
       <CardContent>
@@ -354,7 +386,6 @@ const MaterialLogisticsDetail = ({ folio }: { folio: string }) => {
             ))}
           </Grid>
         )}
-
         {/* Sitios */}
         <Divider className='mlb-6' />
         <Typography variant='h6' className='mbe-4'>
@@ -366,6 +397,35 @@ const MaterialLogisticsDetail = ({ folio }: { folio: string }) => {
           </Typography>
         ) : (
           data.sitios.map((s, i) => <SitioCard key={s.id} sitio={s} indice={i + 1} />)
+        )}
+
+        {/* Entregas */}
+        {data.RE && data.entregas.length > 0 && (
+          <>
+            <Divider className='mlb-6' />
+            <Typography variant='h6' className='mbe-4'>
+              Entregas ({data.entregas.length})
+              {data.Closed && (
+                <Chip size='small' color='success' variant='tonal' label='Completa' className='mis-2' />
+              )}
+            </Typography>
+            <div className='flex flex-col gap-2'>
+              {data.entregas.map(en => (
+                <div key={en.id} className='flex items-center gap-3'>
+                  <Button
+                    variant='text'
+                    component='a'
+                    href={`/${lang}/warehouses/material-logistics/${encodeURIComponent(en.folio)}`}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                  >
+                    {en.folio}
+                  </Button>
+                  <Typography variant='body2' color='text.secondary'>{en.fecha}</Typography>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
