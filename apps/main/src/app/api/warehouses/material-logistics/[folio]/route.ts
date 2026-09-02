@@ -32,12 +32,13 @@ export const GET = withPermission<RouteCtx>(
         return NextResponse.json({ message: 'Registro no encontrado' }, { status: 404 });
       }
 
-      const { Sitios, Documentos, ...cabecera } = rows[0];
+      const { Sitios, Documentos, Entregas, ...cabecera } = rows[0];
 
       return NextResponse.json({
         ...cabecera,
         sitios: parseSitios(Sitios),
         documentos: parseSitios(Documentos), // mismo parser: string JSON -> array
+        entregas: parseSitios(Entregas), // [S1] entregas de la recepción (1..N)
       });
     } catch (e) {
       console.error('[material-logistics/[folio] GET]', e);

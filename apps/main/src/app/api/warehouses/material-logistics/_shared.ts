@@ -155,7 +155,11 @@ export function parseSitios<T = unknown>(raw: unknown): T[] {
 
 // materialFaltante llega como bit (0/1) desde SQL Server -> boolean.
 export function normalizeResumenSitio(s: Record<string, unknown>): Record<string, unknown> {
-  return { ...s, materialFaltante: s.materialFaltante === true || s.materialFaltante === 1 };
+  return {
+    ...s,
+    materialFaltante: s.materialFaltante === true || s.materialFaltante === 1,
+    entregado: s.entregado === true || s.entregado === 1, // [S1] estado por sitio
+  };
 }
 
 // SQL Server acepta `EXEC sp @Param = value`. Cada valor va como parámetro real de Prisma (${...}), nunca interpolado.
