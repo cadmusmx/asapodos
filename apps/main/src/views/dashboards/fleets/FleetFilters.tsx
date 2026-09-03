@@ -53,7 +53,7 @@ const FleetFilters = ({
           label={t('dashboard.fleets.economicoNo')}
           optionType={{ source: 'catalog', items: vehicleNoEconomico }}
           value={values.noEconomico}
-          onChange={(v) => onChange('noEconomico', v)}
+          onChange={v => onChange('noEconomico', v)}
         />
       </Grid>
 
@@ -65,7 +65,7 @@ const FleetFilters = ({
           fullWidth
           InputLabelProps={{ shrink: true }}
           value={values.fechaInicio}
-          onChange={(e) => onChange('fechaInicio', e.target.value)}
+          onChange={e => onChange('fechaInicio', e.target.value)}
           sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
         />
       </Grid>
@@ -78,7 +78,7 @@ const FleetFilters = ({
           fullWidth
           InputLabelProps={{ shrink: true }}
           value={values.fechaFin}
-          onChange={(e) => onChange('fechaFin', e.target.value)}
+          onChange={e => onChange('fechaFin', e.target.value)}
           sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
         />
       </Grid>
@@ -88,7 +88,7 @@ const FleetFilters = ({
           label={t('dashboard.fleets.expenseType')}
           optionType={{ source: 'catalog', items: vehicleExpenseTypes }}
           value={values.tipoGasto}
-          onChange={(v) => onChange('tipoGasto', v)}
+          onChange={v => onChange('tipoGasto', v)}
         />
       </Grid>
 
@@ -97,7 +97,7 @@ const FleetFilters = ({
           label={t('dashboard.fleets.responsible')}
           optionType={{ source: 'catalog', items: vehicleResponsibles }}
           value={values.responsable}
-          onChange={(v) => onChange('responsable', v)}
+          onChange={v => onChange('responsable', v)}
         />
       </Grid>
 
@@ -106,7 +106,7 @@ const FleetFilters = ({
           label={t('filters.status')}
           optionType={{ source: 'static', items: STATUS_OPTIONS }}
           value={values.estatus}
-          onChange={(v) => onChange('estatus', v)}
+          onChange={v => onChange('estatus', v)}
         />
       </Grid>
     </FilterShell>

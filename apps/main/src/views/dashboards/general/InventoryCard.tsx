@@ -35,7 +35,9 @@ const InventoryCard = ({ t, data }: Props) => {
               </CustomAvatar>
               <div>
                 <Typography variant='h5'>{data.total.toLocaleString()}</Typography>
-                <Typography variant='body2' color='text.secondary'>{t('dashboard.general.totalSites')}</Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  {t('dashboard.general.totalSites')}
+                </Typography>
               </div>
             </div>
           </Grid>
@@ -46,7 +48,9 @@ const InventoryCard = ({ t, data }: Props) => {
               </CustomAvatar>
               <div>
                 <Typography variant='h5'>{data.palets.toLocaleString()}</Typography>
-                <Typography variant='body2' color='text.secondary'>{t('dashboard.general.totalPallets')}</Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  {t('dashboard.general.totalPallets')}
+                </Typography>
               </div>
             </div>
           </Grid>
@@ -57,7 +61,9 @@ const InventoryCard = ({ t, data }: Props) => {
               </CustomAvatar>
               <div>
                 <Typography variant='h5'>{data.arribos}</Typography>
-                <Typography variant='body2' color='text.secondary'>{t('dashboard.general.arrivals')}</Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  {t('dashboard.general.arrivals')}
+                </Typography>
               </div>
             </div>
           </Grid>
@@ -68,7 +74,9 @@ const InventoryCard = ({ t, data }: Props) => {
               </CustomAvatar>
               <div>
                 <Typography variant='h5'>{data.salidas}</Typography>
-                <Typography variant='body2' color='text.secondary'>{t('dashboard.general.departures')}</Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  {t('dashboard.general.departures')}
+                </Typography>
               </div>
             </div>
           </Grid>

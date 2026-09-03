@@ -46,7 +46,9 @@ const ProfitabilityChart = ({ t, data }: Props) => {
       borderColor: 'var(--mui-palette-divider)'
     },
     dataLabels: { enabled: false },
-    colors: filteredData.map(p => (p.margen !== null && p.margen >= 40 ? 'var(--mui-palette-success-main)' : 'var(--mui-palette-warning-main)')),
+    colors: filteredData.map(p =>
+      p.margen !== null && p.margen >= 40 ? 'var(--mui-palette-success-main)' : 'var(--mui-palette-warning-main)'
+    ),
     xaxis: {
       categories: filteredData.map(d => d.nombre.substring(0, 15) + (d.nombre.length > 15 ? '...' : '')),
       tickPlacement: 'on',

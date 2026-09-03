@@ -4,6 +4,7 @@ import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Grid from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
+
 import FontAwesomeIconComponent from '@views/dashboards/components/FontAwesomeIcon'
 
 type CountersData = {
@@ -21,11 +22,41 @@ type Props = {
 
 const EmployeeCounterCards = ({ t, counters }: Props) => {
   const items = [
-    { label: t('dashboard.humanCapital.totalEmployees'), value: counters.totalEmpleados, color: 'primary', icon: 'fa-solid fa-users', id: 'cntTotalEmp' },
-    { label: t('dashboard.humanCapital.active'), value: counters.totalActivos, color: 'success', icon: 'fa-solid fa-user-check', id: 'cntActivos' },
-    { label: t('dashboard.humanCapital.inactive'), value: counters.totalInactivos, color: 'error', icon: 'fa-solid fa-user-slash', id: 'cntInactivos' },
-    { label: t('dashboard.humanCapital.hiresYear'), value: counters.totalAltas, color: 'info', icon: 'fa-solid fa-user-plus', id: 'cntAltas' },
-    { label: t('dashboard.humanCapital.terminationsYear'), value: counters.totalBajas, color: 'warning', icon: 'fa-solid fa-user-minus', id: 'cntBajas' }
+    {
+      label: t('dashboard.humanCapital.totalEmployees'),
+      value: counters.totalEmpleados,
+      color: 'primary',
+      icon: 'fa-solid fa-users',
+      id: 'cntTotalEmp'
+    },
+    {
+      label: t('dashboard.humanCapital.active'),
+      value: counters.totalActivos,
+      color: 'success',
+      icon: 'fa-solid fa-user-check',
+      id: 'cntActivos'
+    },
+    {
+      label: t('dashboard.humanCapital.inactive'),
+      value: counters.totalInactivos,
+      color: 'error',
+      icon: 'fa-solid fa-user-slash',
+      id: 'cntInactivos'
+    },
+    {
+      label: t('dashboard.humanCapital.hiresYear'),
+      value: counters.totalAltas,
+      color: 'info',
+      icon: 'fa-solid fa-user-plus',
+      id: 'cntAltas'
+    },
+    {
+      label: t('dashboard.humanCapital.terminationsYear'),
+      value: counters.totalBajas,
+      color: 'warning',
+      icon: 'fa-solid fa-user-minus',
+      id: 'cntBajas'
+    }
   ]
 
   const colorMap: Record<string, string> = {
@@ -85,7 +116,14 @@ const EmployeeCounterCards = ({ t, counters }: Props) => {
               </Typography>
               <Typography
                 variant='h4'
-                sx={{ fontWeight: 900, color: 'var(--mui-palette-text-primary)', lineHeight: 1.05, display: 'block', mb: 0.25, fontSize: '2rem' }}
+                sx={{
+                  fontWeight: 900,
+                  color: 'var(--mui-palette-text-primary)',
+                  lineHeight: 1.05,
+                  display: 'block',
+                  mb: 0.25,
+                  fontSize: '2rem'
+                }}
               >
                 {item.value.toLocaleString()}
               </Typography>

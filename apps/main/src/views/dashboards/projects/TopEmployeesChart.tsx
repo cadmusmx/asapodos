@@ -37,6 +37,7 @@ const TopEmployeesChart = ({ t, data, height = 220 }: Props) => {
         const value = series[seriesIndex] as number
         const total = (series as number[]).reduce((a, b) => a + b, 0)
         const pct = ((value / total) * 100).toFixed(1)
+
         return `<div style="padding:8px 12px;background:var(--mui-palette-background-paper);color:var(--mui-palette-text-primary);border-radius:8px;font-size:13px;border:1px solid var(--mui-palette-divider);">
           <strong>${label}</strong><br/>
           ${value.toLocaleString()} (${pct}%)
@@ -92,13 +93,7 @@ const TopEmployeesChart = ({ t, data, height = 220 }: Props) => {
   }
 
   return (
-    <AppReactApexCharts
-      type='donut'
-      height={height}
-      width='100%'
-      series={data.map(d => d.count)}
-      options={options}
-    />
+    <AppReactApexCharts type='donut' height={height} width='100%' series={data.map(d => d.count)} options={options} />
   )
 }
 

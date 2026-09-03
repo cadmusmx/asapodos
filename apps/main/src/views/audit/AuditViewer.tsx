@@ -1,72 +1,76 @@
 'use client'
 
 // React Imports
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react'
 
 // eslint-disable-next-line import/named
-import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 
 // MUI Imports
-import Card from '@mui/material/Card';
-import CardHeader from '@mui/material/CardHeader';
-import CardContent from '@mui/material/CardContent';
-import Grid from '@mui/material/Grid2';
-import TextField from '@mui/material/TextField';
-import MenuItem from '@mui/material/MenuItem';
-import Alert from '@mui/material/Alert';
-import TablePagination from '@mui/material/TablePagination';
-import CircularProgress from '@mui/material/CircularProgress';
-import Chip from '@mui/material/Chip';
+import Card from '@mui/material/Card'
+import CardHeader from '@mui/material/CardHeader'
+import CardContent from '@mui/material/CardContent'
+import Grid from '@mui/material/Grid2'
+import TextField from '@mui/material/TextField'
+import MenuItem from '@mui/material/MenuItem'
+import Alert from '@mui/material/Alert'
+import TablePagination from '@mui/material/TablePagination'
+import CircularProgress from '@mui/material/CircularProgress'
+import Chip from '@mui/material/Chip'
 
-import { Button } from '@mui/material';
+import { Button } from '@mui/material'
 
-import tableStyles from '@core/styles/table.module.css';
+import tableStyles from '@core/styles/table.module.css'
 
-import { AUDIT_ACTION_LABELS, ACTION_OTHER, AUDIT_ORIGINS, ORIGIN_NONE, type AuditActionCode } from '@/lib/audit/catalog';
-import AuditDetailDialog from './AuditDetailDialog';
+import {
+  AUDIT_ACTION_LABELS,
+  ACTION_OTHER,
+  AUDIT_ORIGINS,
+  ORIGIN_NONE,
+  type AuditActionCode
+} from '@/lib/audit/catalog'
+import AuditDetailDialog from './AuditDetailDialog'
 
 export type AuditRow = {
-  AuditID: number;
-  TenantID: string;
-  UserID: number | null;
-  TableName: string;
-  Action: string;
-  OldData: string | null;
-  NewData: string | null;
-  ChangedAt: string;
-  AppUser: string | null;
-  IdOrigin: number | null;
-  Origin: string | null;
+  AuditID: number
+  TenantID: string
+  UserID: number | null
+  TableName: string
+  Action: string
+  OldData: string | null
+  NewData: string | null
+  ChangedAt: string
+  AppUser: string | null
+  IdOrigin: number | null
+  Origin: string | null
 }
 
 type AuditApiResponse = {
-  draw: number;
-  recordsTotal: number;
-  recordsFiltered: number;
-  data: AuditRow[];
+  draw: number
+  recordsTotal: number
+  recordsFiltered: number
+  data: AuditRow[]
 }
 
-const columnHelper = createColumnHelper<AuditRow>();
+const columnHelper = createColumnHelper<AuditRow>()
 
 const columns = [
   columnHelper.accessor('ChangedAt', {
     header: 'Fecha (UTC)',
     cell: info => {
-      const v = info.getValue();
-
+      const v = info.getValue()
 
       // ChangedAt llega como ISO string. Lo formateamos legible.
-      return v ? new Date(v).toLocaleString('es-MX', { timeZone: 'UTC' }) : '—';
+      return v ? new Date(v).toLocaleString('es-MX', { timeZone: 'UTC' }) : '—'
     }
   }),
   columnHelper.accessor('Action', {
     header: 'Acción',
     cell: info => {
-      const code = info.getValue();
+      const code = info.getValue()
 
       // Etiqueta legible si la conocemos; si no, el código crudo (caso "OTHER").
-      const label = AUDIT_ACTION_LABELS[code as keyof typeof AUDIT_ACTION_LABELS] ?? code;
-
+      const label = AUDIT_ACTION_LABELS[code as keyof typeof AUDIT_ACTION_LABELS] ?? code
 
       return <Chip size='small' variant='tonal' label={label} />
     }
@@ -111,28 +115,28 @@ const columns = [
       )
     }
   })
-];
+]
 
 const AuditViewer = () => {
   // Estado de filtros - Cada uno restablece pageIndex a 0
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [action, setAction] = useState(''); // '' = todas | código | ACTION_OTHER
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [action, setAction] = useState('') // '' = todas | código | ACTION_OTHER
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
   const [origin, setOrigin] = useState('') // '' = todos | id como string
-  const [tenantOverride] = useState(''); // solo SaaS admin
+  const [tenantOverride] = useState('') // solo SaaS admin
 
   // Estado de paginación (0-indexed, como TanStack)
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(25);
+  const [pageIndex, setPageIndex] = useState(0)
+  const [pageSize, setPageSize] = useState(25)
 
   // Estado de datos
-  const [rows, setRows] = useState<AuditRow[]>([]);
-  const [total, setTotal] = useState(0);
-  const [detailRow, setDetailRow] = useState<AuditRow | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [rows, setRows] = useState<AuditRow[]>([])
+  const [total, setTotal] = useState(0)
+  const [detailRow, setDetailRow] = useState<AuditRow | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const table = useReactTable({
     data: rows,
@@ -142,73 +146,70 @@ const AuditViewer = () => {
     rowCount: total,
     state: { pagination: { pageIndex, pageSize } },
     meta: {
-      openDetail: (row: AuditRow) => setDetailRow(row),
+      openDetail: (row: AuditRow) => setDetailRow(row)
     }
   })
 
   // Debounce del search box - espera sin teclear antes de consultar.
   useEffect(() => {
     const t = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPageIndex(0); // al cambiar la búsqueda, volver a la primera página
-    }, 700);
+      setDebouncedSearch(search)
+      setPageIndex(0) // al cambiar la búsqueda, volver a la primera página
+    }, 700)
 
-    return () => clearTimeout(t);
-  }, [search]);
+    return () => clearTimeout(t)
+  }, [search])
 
   // Opciones del dropdown de acción, derivadas del catálogo compartido.
-  const actionOptions = useMemo(
-    () => Object.entries(AUDIT_ACTION_LABELS) as [AuditActionCode, string][],
-    []
-  );
+  const actionOptions = useMemo(() => Object.entries(AUDIT_ACTION_LABELS) as [AuditActionCode, string][], [])
 
   // Fetch a /api/audit ante cualquier cambio de filtro/página
   useEffect(() => {
     // AbortController - para cancelar fetch
-    const controller = new AbortController();
+    const controller = new AbortController()
 
     const fetchAudit = async () => {
-      setLoading(true);
-      setError(null);
+      setLoading(true)
+      setError(null)
 
       try {
-        const params = new URLSearchParams();
+        const params = new URLSearchParams()
 
-        params.set('start', String(pageIndex * pageSize));
-        params.set('length', String(pageSize));
+        params.set('start', String(pageIndex * pageSize))
+        params.set('length', String(pageSize))
 
-        if (debouncedSearch) params.set('search', debouncedSearch);
-        if (action) params.set('action', action);
-        if (dateFrom) params.set('dateFrom', dateFrom);
-        if (dateTo) params.set('dateTo', dateTo);
-        if (origin) params.set('origin', origin);
+        if (debouncedSearch) params.set('search', debouncedSearch)
+        if (action) params.set('action', action)
+        if (dateFrom) params.set('dateFrom', dateFrom)
+        if (dateTo) params.set('dateTo', dateTo)
+        if (origin) params.set('origin', origin)
 
-        const res = await fetch(`/api/audit?${params.toString()}`, { signal: controller.signal });
+        const res = await fetch(`/api/audit?${params.toString()}`, { signal: controller.signal })
 
         if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
+          const body = await res.json().catch(() => ({}))
 
-          throw new Error(body?.message ?? `Error ${res.status}`);
+          throw new Error(body?.message ?? `Error ${res.status}`)
         }
 
-        const json: AuditApiResponse = await res.json();
+        const json: AuditApiResponse = await res.json()
 
-        setRows(json.data);
-        setTotal(json.recordsTotal);
+        setRows(json.data)
+        setTotal(json.recordsTotal)
       } catch (e) {
-        if (e instanceof DOMException && e.name === 'AbortError') return; // cancelado, normal
-        setError(e instanceof Error ? e.message : 'Error al cargar la auditoría');
-        setRows([]);
-        setTotal(0);
+        if (e instanceof DOMException && e.name === 'AbortError') return // cancelado, normal
+        setError(e instanceof Error ? e.message : 'Error al cargar la auditoría')
+        setRows([])
+        setTotal(0)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
 
-    fetchAudit();
+    fetchAudit()
 
-    return () => controller.abort();
-  }, [pageIndex, pageSize, debouncedSearch, action, origin, dateFrom, dateTo, tenantOverride]);
+    return () => controller.abort()
+  }, [pageIndex, pageSize, debouncedSearch, action, origin, dateFrom, dateTo, tenantOverride])
 
   return (
     <Card>
@@ -254,8 +255,8 @@ const AuditViewer = () => {
               label='Origen'
               value={origin}
               onChange={e => {
-                setOrigin(e.target.value);
-                setPageIndex(0);
+                setOrigin(e.target.value)
+                setPageIndex(0)
               }}
             >
               <MenuItem value=''>TODOS</MenuItem>
@@ -321,9 +322,7 @@ const AuditViewer = () => {
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map(header => (
                     <th key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                     </th>
                   ))}
                 </tr>
@@ -372,4 +371,4 @@ const AuditViewer = () => {
   )
 }
 
-export default AuditViewer;
+export default AuditViewer

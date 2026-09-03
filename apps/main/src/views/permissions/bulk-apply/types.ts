@@ -2,7 +2,7 @@
 // Aplicación PUNTUAL: el body carga alcance + grants inline, SIN presetId.
 // La persistencia de plantillas re-aplicables es fase posterior (§13 del contrato).
 
-import type { AssignableView } from '../types';
+import type { AssignableView } from '../types'
 
 // ---------------------------------------------------------------------------
 // Lectura: vistas asignables (nivel TENANT — del plan del tenant)
@@ -21,10 +21,10 @@ import type { AssignableView } from '../types';
  * NOTA: el nombre `DepartmentView` es legado de la etapa "por depto";
  * ya es tenant-level. `ceilingMask` es constante 15 — no tratarlo como límite variable.
  */
-export type DepartmentView = Omit<AssignableView, 'currentMask'>;
+export type DepartmentView = Omit<AssignableView, 'currentMask'>
 
 export interface AssignableViewsResponse {
-  views: DepartmentView[];
+  views: DepartmentView[]
 }
 
 // ---------------------------------------------------------------------------
@@ -35,33 +35,33 @@ export interface AssignableViewsResponse {
 // ---------------------------------------------------------------------------
 
 export interface PuestoFacet {
-  idPuesto: number;
-  nombre: string;
+  idPuesto: number
+  nombre: string
 }
 
 export interface DepartmentFacetsResponse {
-  idDepartamento: number;
-  puestos: PuestoFacet[];
+  idDepartamento: number
+  puestos: PuestoFacet[]
 }
 
 // ---------------------------------------------------------------------------
 // Escritura: POST /api/permissions/presets/apply  (contrato congelado, no tocar)
 // ---------------------------------------------------------------------------
 
-export type ApplyMode = 'OR' | 'SET';
+export type ApplyMode = 'OR' | 'SET'
 
 /** Un grant = una vista con su máscara canónica NO-CERO (R=1,W=2,U=4,D=8; W/U/D⇒R). */
 export interface PresetGrant {
-  viewCode: string;
-  permMask: number;
+  viewCode: string
+  permMask: number
 }
 
 export interface PresetApplyRequest {
-  idDepartamento: number;
-  idPuesto: number | null;
-  grants: PresetGrant[];
-  mode: ApplyMode;
-  dryRun: boolean;
+  idDepartamento: number
+  idPuesto: number | null
+  grants: PresetGrant[]
+  mode: ApplyMode
+  dryRun: boolean
 }
 
 /**
@@ -69,7 +69,7 @@ export interface PresetApplyRequest {
  * El commit (`dryRun:false`) solo se habilita si este snapshot casa con el del body ya previsualizado (`dryRun:true`).
  * Cualquier edición de alcance/grants/modo lo invalida y obliga a re-previsualizar. (Paso 4.)
  */
-export type PresetApplySnapshot = Omit<PresetApplyRequest, 'dryRun'>;
+export type PresetApplySnapshot = Omit<PresetApplyRequest, 'dryRun'>
 
 // ---------------------------------------------------------------------------
 // Respuesta del apply  (RECONCILIADO contra el output real del endpoint)
@@ -83,14 +83,14 @@ export type PresetApplySnapshot = Omit<PresetApplyRequest, 'dryRun'>;
 
 /** Eco del alcance resuelto del actor. */
 export interface ApplyScope {
-  actorDept: number;
-  hasFullScope: boolean;
+  actorDept: number
+  hasFullScope: boolean
 }
 
 /** Eco del alcance objetivo (trío) — en la RESPUESTA va anidado bajo `target`. */
 export interface ApplyTarget {
-  idDepartamento: number;
-  idPuesto: number | null;
+  idDepartamento: number
+  idPuesto: number | null
 }
 
 /**
@@ -98,89 +98,89 @@ export interface ApplyTarget {
  * `ceiling`/`ceilingMask`/`exceedsCeiling` quedaron deprecados tras la migración a plan (sin techo por vista).
  */
 export interface EnrichedGrant {
-  viewCode: string;
-  permMask: number;
-  mask: string;         // describeMask(permMask), p.ej. "R|W"
+  viewCode: string
+  permMask: number
+  mask: string // describeMask(permMask), p.ej. "R|W"
   /** @deprecated Constante 15 tras migración a plan; sin techo por vista. */
-  ceiling: number;
+  ceiling: number
 
   /** @deprecated Constante "R|W|U|D" tras migración a plan. */
-  ceilingMask: string;
+  ceilingMask: string
 
   /** @deprecated Constante false tras migración a plan. */
-  exceedsCeiling: boolean;
+  exceedsCeiling: boolean
 }
 
 export interface PreviewTotals {
-  usersInScope: number;     // radio de impacto: SIEMPRE al frente en la UI
-  usersWithWrites: number;
-  writes: number;
-  removals: number;
+  usersInScope: number // radio de impacto: SIEMPRE al frente en la UI
+  usersWithWrites: number
+  writes: number
+  removals: number
 }
 
 /** Agregado por vista. `writes`/`removals`/`unchanged` cuentan USUARIOS. */
 export interface PreviewPerViewRow {
-  viewCode: string;
-  granted: number;          // permMask del grant (numérico)
-  grantedMask: string;      // "R|W"
+  viewCode: string
+  granted: number // permMask del grant (numérico)
+  grantedMask: string // "R|W"
   /** @deprecated Constante "R|W|U|D" tras migración a plan. */
-  ceilingMask: string;
+  ceilingMask: string
 
   /** @deprecated Constante false tras migración a plan. */
-  exceedsCeiling: boolean;
-  writes: number;
-  removals: number;
-  unchanged: number;        // usuarios ya en el objetivo (no aparecen en perUser)
+  exceedsCeiling: boolean
+  writes: number
+  removals: number
+  unchanged: number // usuarios ya en el objetivo (no aparecen en perUser)
 }
 
 /** Cambio por vista de UN usuario. Máscaras como strings ya formateados. */
 export interface PreviewUserChange {
-  viewCode: string;
-  current: string;              // "-" o "R|W|U|D" ...
-  nuevo: string;                // máscara resultante
-  removedMask: string | null;   // "U|D" en SET; null si no remueve nada
+  viewCode: string
+  current: string // "-" o "R|W|U|D" ...
+  nuevo: string // máscara resultante
+  removedMask: string | null // "U|D" en SET; null si no remueve nada
 }
 
 /** perUser lista SOLO usuarios con cambio neto; los `unchanged` no aparecen aquí. */
 export interface PreviewPerUserRow {
-  idUsuario: number; // se muestra SIEMPRE en la UI: hay homónimos (484 y 584 = mismo nombre)
-  nombre: string;
-  changes: PreviewUserChange[];
+  idUsuario: number // se muestra SIEMPRE en la UI: hay homónimos (484 y 584 = mismo nombre)
+  nombre: string
+  changes: PreviewUserChange[]
 }
 
 export interface ApplyPreview {
-  perView: PreviewPerViewRow[];
-  perUser: PreviewPerUserRow[];
-  totals: PreviewTotals;
+  perView: PreviewPerViewRow[]
+  perUser: PreviewPerUserRow[]
+  totals: PreviewTotals
 }
 
 export interface ApplyApplied {
-  inserts: number;
-  updates: number;
-  deletes: number;
+  inserts: number
+  updates: number
+  deletes: number
 }
 
 export interface PresetApplyResponse {
-  scope: ApplyScope;
-  target: ApplyTarget;
-  mode: ApplyMode;
-  dryRun: boolean;
-  grants: EnrichedGrant[];
-  preview: ApplyPreview;
+  scope: ApplyScope
+  target: ApplyTarget
+  mode: ApplyMode
+  dryRun: boolean
+  grants: EnrichedGrant[]
+  preview: ApplyPreview
 
   /** Presente solo cuando `dryRun:false` y el paso 6 (escritura) está abierto. */
-  applied?: ApplyApplied;
+  applied?: ApplyApplied
 }
 
 // Errores
 
 /** 400 de validación: `{ message, errors[] }`. `field` apunta a la ruta ofensora. */
 export interface ApplyFieldError {
-  field: string;   // p.ej. "grants[0].viewCode", "grants[1].permMask", "mode", "grants"
-  message: string;
+  field: string // p.ej. "grants[0].viewCode", "grants[1].permMask", "mode", "grants"
+  message: string
 }
 
 export interface ApplyErrorResponse {
-  message: string;
-  errors: ApplyFieldError[];
+  message: string
+  errors: ApplyFieldError[]
 }

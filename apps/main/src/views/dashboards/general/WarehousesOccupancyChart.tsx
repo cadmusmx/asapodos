@@ -41,7 +41,7 @@ const WarehousesOccupancyChart = ({ t, data, height = 180 }: Props) => {
     dataLabels: { enabled: false },
     colors: ['var(--mui-palette-info-main)', 'var(--mui-palette-warning-main)'],
     xaxis: {
-      categories: data.map(d => d.almacen.length > 15 ? d.almacen.substring(0, 15) + '...' : d.almacen),
+      categories: data.map(d => (d.almacen.length > 15 ? d.almacen.substring(0, 15) + '...' : d.almacen)),
       tickPlacement: 'on',
       labels: {
         show: true,

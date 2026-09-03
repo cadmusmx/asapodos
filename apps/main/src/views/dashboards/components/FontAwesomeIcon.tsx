@@ -1,7 +1,21 @@
 'use client'
 
-import { FontAwesomeIcon, FontAwesomeIconProps } from '@fortawesome/react-fontawesome'
-import { faUsers, faUserCheck, faUserSlash, faUserPlus, faUserMinus, faBuilding, faChartLine, faMapLocationDot, faBriefcase, faClockRotateLeft, faVenusMars, faPeopleRoof } from '@fortawesome/free-solid-svg-icons'
+import type { FontAwesomeIconProps } from '@fortawesome/react-fontawesome'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+  faUsers,
+  faUserCheck,
+  faUserSlash,
+  faUserPlus,
+  faUserMinus,
+  faBuilding,
+  faChartLine,
+  faMapLocationDot,
+  faBriefcase,
+  faClockRotateLeft,
+  faVenusMars,
+  faPeopleRoof
+} from '@fortawesome/free-solid-svg-icons'
 
 const iconMap: Record<string, typeof faUsers> = {
   'fa-solid fa-users': faUsers,

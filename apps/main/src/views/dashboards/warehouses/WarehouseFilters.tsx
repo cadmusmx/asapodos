@@ -38,14 +38,12 @@ const WarehouseFilters = ({ t, values, onChange, onSearch, onClear, onReload, re
       <Grid size={{ xs: 12, md: 3 }}>
         <FormControl fullWidth size='small' sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}>
           <InputLabel>{t('filters.region')}</InputLabel>
-          <Select
-            value={values.region}
-            label={t('filters.region')}
-            onChange={(e) => onChange('region', e.target.value)}
-          >
+          <Select value={values.region} label={t('filters.region')} onChange={e => onChange('region', e.target.value)}>
             <MenuItem value=''>{t('filters.all')}</MenuItem>
-            {regions.map((reg) => (
-              <MenuItem key={reg} value={reg}>{reg}</MenuItem>
+            {regions.map(reg => (
+              <MenuItem key={reg} value={reg}>
+                {reg}
+              </MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -57,11 +55,13 @@ const WarehouseFilters = ({ t, values, onChange, onSearch, onClear, onReload, re
           <Select
             value={values.ciudad}
             label={t('dashboard.warehouses.city')}
-            onChange={(e) => onChange('ciudad', e.target.value)}
+            onChange={e => onChange('ciudad', e.target.value)}
           >
             <MenuItem value=''>{t('filters.all')}</MenuItem>
-            {cities.map((city) => (
-              <MenuItem key={city} value={city}>{city}</MenuItem>
+            {cities.map(city => (
+              <MenuItem key={city} value={city}>
+                {city}
+              </MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -73,7 +73,7 @@ const WarehouseFilters = ({ t, values, onChange, onSearch, onClear, onReload, re
           <Select
             value={values.estado}
             label={t('dashboard.warehouses.status')}
-            onChange={(e) => onChange('estado', e.target.value)}
+            onChange={e => onChange('estado', e.target.value)}
           >
             <MenuItem value=''>{t('filters.all')}</MenuItem>
             <MenuItem value='Operativo'>{t('dashboard.warehouses.operational')}</MenuItem>
@@ -88,7 +88,7 @@ const WarehouseFilters = ({ t, values, onChange, onSearch, onClear, onReload, re
           <Select
             value={values.nivelOcupacion}
             label={t('filters.occupancyLevel')}
-            onChange={(e) => onChange('nivelOcupacion', e.target.value)}
+            onChange={e => onChange('nivelOcupacion', e.target.value)}
           >
             <MenuItem value=''>{t('filters.all')}</MenuItem>
             <MenuItem value='NORMAL'>{t('dashboard.warehouses.normal')}</MenuItem>

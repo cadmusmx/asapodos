@@ -1,85 +1,85 @@
-'use client';
+'use client'
 
 // React Imports
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react'
 
 // MUI Imports
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import TextField from '@mui/material/TextField';
-import MenuItem from '@mui/material/MenuItem';
-import Checkbox from '@mui/material/Checkbox';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
-import Divider from '@mui/material/Divider';
-import Typography from '@mui/material/Typography';
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
+import TextField from '@mui/material/TextField'
+import MenuItem from '@mui/material/MenuItem'
+import Checkbox from '@mui/material/Checkbox'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import Button from '@mui/material/Button'
+import CircularProgress from '@mui/material/CircularProgress'
+import Alert from '@mui/material/Alert'
+import Divider from '@mui/material/Divider'
+import Typography from '@mui/material/Typography'
 
 // Local Imports
-import { usePresetApply } from './usePresetApply';
-import PresetViewsGrid from './PresetViewsGrid';
-import PresetFooter from './PresetFooter';
-import PresetPreviewPanel from './PresetPreviewPanel';
+import { usePresetApply } from './usePresetApply'
+import PresetViewsGrid from './PresetViewsGrid'
+import PresetFooter from './PresetFooter'
+import PresetPreviewPanel from './PresetPreviewPanel'
 
 // Type Imports
-import type { DepartmentsResponse, FilterableDepartment } from '../types';
+import type { DepartmentsResponse, FilterableDepartment } from '../types'
 
 type Props = {
-  open: boolean;
-  onClose: () => void;
-};
+  open: boolean
+  onClose: () => void
+}
 
 const PresetApplyContent = ({ onClose }: { onClose: () => void }) => {
-  const m = usePresetApply();
-  const { setDepartamento } = m;
+  const m = usePresetApply()
+  const { setDepartamento } = m
 
-  const [departments, setDepartments] = useState<FilterableDepartment[]>([]);
-  const [deptLoading, setDeptLoading] = useState(false);
+  const [departments, setDepartments] = useState<FilterableDepartment[]>([])
+  const [deptLoading, setDeptLoading] = useState(false)
 
   // Departamentos del alcance del actor. Preselecciona el primero (patrón UsersMaster).
   useEffect(() => {
-    const controller = new AbortController();
+    const controller = new AbortController()
 
     const load = async () => {
-      setDeptLoading(true);
+      setDeptLoading(true)
 
       try {
-        const res = await fetch('/api/permissions/departments', { signal: controller.signal });
+        const res = await fetch('/api/permissions/departments', { signal: controller.signal })
 
-        if (!res.ok) return;
+        if (!res.ok) return
 
-        const json: DepartmentsResponse = await res.json();
+        const json: DepartmentsResponse = await res.json()
 
-        setDepartments(json.departments);
+        setDepartments(json.departments)
 
-        if (json.departments[0]) setDepartamento(json.departments[0].idDepartamento);
+        if (json.departments[0]) setDepartamento(json.departments[0].idDepartamento)
       } catch {
         /* silencioso: sin departamentos el grid queda vacío */
       } finally {
-        setDeptLoading(false);
+        setDeptLoading(false)
       }
-    };
+    }
 
-    load();
+    load()
 
-    return () => controller.abort();
-  }, [setDepartamento]);
+    return () => controller.abort()
+  }, [setDepartamento])
 
   const deptName =
     departments.find(d => d.idDepartamento === m.idDepartamento)?.nombre ??
-    (m.idDepartamento !== null ? String(m.idDepartamento) : '—');
+    (m.idDepartamento !== null ? String(m.idDepartamento) : '—')
 
   // viewCode -> label, mismo origen que el grid; el preview solo trae viewCode.
-  const viewLabels = useMemo(() => Object.fromEntries(m.views.map(v => [v.viewCode, v.label])), [m.views]);
+  const viewLabels = useMemo(() => Object.fromEntries(m.views.map(v => [v.viewCode, v.label])), [m.views])
 
   const puestoName =
-    m.idPuesto !== null ? m.puestos.find(p => p.idPuesto === m.idPuesto)?.nombre ?? String(m.idPuesto) : null;
+    m.idPuesto !== null ? (m.puestos.find(p => p.idPuesto === m.idPuesto)?.nombre ?? String(m.idPuesto)) : null
 
-  const busy = m.previewLoading || m.committing;
-  const done = m.applied !== null;
+  const busy = m.previewLoading || m.committing
+  const done = m.applied !== null
 
   return (
     <>
@@ -154,9 +154,7 @@ const PresetApplyContent = ({ onClose }: { onClose: () => void }) => {
           />
 
           {/* Footer dinámico según modo + alcance resuelto */}
-          {m.idDepartamento !== null && (
-            <PresetFooter mode={m.mode} departamento={deptName} puesto={puestoName} />
-          )}
+          {m.idDepartamento !== null && <PresetFooter mode={m.mode} departamento={deptName} puesto={puestoName} />}
 
           {/* Errores */}
           {m.error && <Alert severity='error'>{m.error}</Alert>}
@@ -225,8 +223,8 @@ const PresetApplyContent = ({ onClose }: { onClose: () => void }) => {
         )}
       </DialogActions>
     </>
-  );
-};
+  )
+}
 
 /**
  * El contenido se monta solo con `open` => cada apertura reinicia el hook (alcance, grants, preview, resultado).
@@ -236,6 +234,6 @@ const PresetApplyDialog = ({ open, onClose }: Props) => (
   <Dialog open={open} onClose={onClose} fullWidth maxWidth='md'>
     {open && <PresetApplyContent onClose={onClose} />}
   </Dialog>
-);
+)
 
-export default PresetApplyDialog;
+export default PresetApplyDialog

@@ -49,7 +49,7 @@ const ExpenseFilters = ({ t, filters, values, onChange, onSearch, onClear, onRel
           label={t('filters.status')}
           optionType={{ source: 'static', items: STATUS_OPTIONS }}
           value={values.estatus}
-          onChange={(v) => onChange('estatus', v)}
+          onChange={v => onChange('estatus', v)}
         />
       </Grid>
 
@@ -58,7 +58,7 @@ const ExpenseFilters = ({ t, filters, values, onChange, onSearch, onClear, onRel
           label={t('filters.project')}
           optionType={{ source: 'catalog', items: filters.projects }}
           value={values.proyecto}
-          onChange={(v) => onChange('proyecto', v)}
+          onChange={v => onChange('proyecto', v)}
         />
       </Grid>
 
@@ -67,7 +67,7 @@ const ExpenseFilters = ({ t, filters, values, onChange, onSearch, onClear, onRel
           label={t('filters.region')}
           optionType={{ source: 'catalog', items: filters.regions }}
           value={values.region}
-          onChange={(v) => onChange('region', v)}
+          onChange={v => onChange('region', v)}
         />
       </Grid>
 
@@ -79,7 +79,7 @@ const ExpenseFilters = ({ t, filters, values, onChange, onSearch, onClear, onRel
           fullWidth
           InputLabelProps={{ shrink: true }}
           value={values.fechaInicio}
-          onChange={(e) => onChange('fechaInicio', e.target.value)}
+          onChange={e => onChange('fechaInicio', e.target.value)}
           sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
         />
       </Grid>
@@ -92,7 +92,7 @@ const ExpenseFilters = ({ t, filters, values, onChange, onSearch, onClear, onRel
           fullWidth
           InputLabelProps={{ shrink: true }}
           value={values.fechaFin}
-          onChange={(e) => onChange('fechaFin', e.target.value)}
+          onChange={e => onChange('fechaFin', e.target.value)}
           sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
         />
       </Grid>
@@ -102,7 +102,7 @@ const ExpenseFilters = ({ t, filters, values, onChange, onSearch, onClear, onRel
           label={t('filters.expenseType')}
           optionType={{ source: 'catalog', items: filters.expenseTypes }}
           value={values.tipoGasto}
-          onChange={(v) => onChange('tipoGasto', v)}
+          onChange={v => onChange('tipoGasto', v)}
         />
       </Grid>
 
@@ -111,7 +111,7 @@ const ExpenseFilters = ({ t, filters, values, onChange, onSearch, onClear, onRel
           label={t('filters.department')}
           optionType={{ source: 'catalog', items: filters.departments }}
           value={values.departamento}
-          onChange={(v) => onChange('departamento', v)}
+          onChange={v => onChange('departamento', v)}
         />
       </Grid>
 
@@ -120,7 +120,7 @@ const ExpenseFilters = ({ t, filters, values, onChange, onSearch, onClear, onRel
           label={t('filters.applicant')}
           optionType={{ source: 'catalog', items: filters.employees }}
           value={values.solicitante}
-          onChange={(v) => onChange('solicitante', v)}
+          onChange={v => onChange('solicitante', v)}
         />
       </Grid>
     </FilterShell>

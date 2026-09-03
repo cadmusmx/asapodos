@@ -34,21 +34,46 @@ const GeneralCounterCards = ({ t, data }: Props) => {
     {
       label: t('dashboard.general.humanCapital'),
       items: [
-        { label: t('dashboard.general.active'), value: data.humanCapital.activos, color: 'primary', icon: 'ri-user-follow-line' },
-        { label: t('dashboard.general.inactive'), value: data.humanCapital.inactivos, color: 'error', icon: 'ri-user-forbidden-line' }
+        {
+          label: t('dashboard.general.active'),
+          value: data.humanCapital.activos,
+          color: 'primary',
+          icon: 'ri-user-follow-line'
+        },
+        {
+          label: t('dashboard.general.inactive'),
+          value: data.humanCapital.inactivos,
+          color: 'error',
+          icon: 'ri-user-forbidden-line'
+        }
       ]
     },
     {
       label: t('dashboard.general.inventory'),
       items: [
-        { label: t('dashboard.general.totalSites'), value: data.inventario.total, color: 'primary', icon: 'ri-server-line' },
-        { label: t('dashboard.general.totalPallets'), value: data.inventario.palets, color: 'warning', icon: 'ri-file-list-3-line' }
+        {
+          label: t('dashboard.general.totalSites'),
+          value: data.inventario.total,
+          color: 'primary',
+          icon: 'ri-server-line'
+        },
+        {
+          label: t('dashboard.general.totalPallets'),
+          value: data.inventario.palets,
+          color: 'warning',
+          icon: 'ri-file-list-3-line'
+        }
       ]
     },
     {
       label: t('dashboard.general.operatingExpenses'),
       items: [
-        { label: t('dashboard.general.total'), value: data.gastos.total, color: 'primary', icon: 'ri-file-list-2-line' },
+        {
+          label: t('dashboard.general.total'),
+          value: data.gastos.total,
+          color: 'primary',
+          icon: 'ri-file-list-2-line'
+        },
         { label: t('dashboard.general.pending'), value: data.gastos.pendientes, color: 'warning', icon: 'ri-time-line' }
       ]
     },
@@ -62,15 +87,35 @@ const GeneralCounterCards = ({ t, data }: Props) => {
     {
       label: t('dashboard.general.quotes'),
       items: [
-        { label: t('dashboard.general.total'), value: data.cotizaciones.total, color: 'primary', icon: 'ri-file-text-line' },
-        { label: t('dashboard.general.approved'), value: data.cotizaciones.aceptadas, color: 'success', icon: 'ri-checkbox-circle-line' }
+        {
+          label: t('dashboard.general.total'),
+          value: data.cotizaciones.total,
+          color: 'primary',
+          icon: 'ri-file-text-line'
+        },
+        {
+          label: t('dashboard.general.approved'),
+          value: data.cotizaciones.aceptadas,
+          color: 'success',
+          icon: 'ri-checkbox-circle-line'
+        }
       ]
     },
     {
       label: t('dashboard.general.projects'),
       items: [
-        { label: t('dashboard.general.active'), value: data.proyectos.activos, color: 'success', icon: 'ri-briefcase-line' },
-        { label: t('dashboard.general.inactive'), value: data.proyectos.inactivos, color: 'error', icon: 'ri-time-line' }
+        {
+          label: t('dashboard.general.active'),
+          value: data.proyectos.activos,
+          color: 'success',
+          icon: 'ri-briefcase-line'
+        },
+        {
+          label: t('dashboard.general.inactive'),
+          value: data.proyectos.inactivos,
+          color: 'error',
+          icon: 'ri-time-line'
+        }
       ]
     }
   ]
@@ -146,7 +191,12 @@ const GeneralCounterCards = ({ t, data }: Props) => {
                     </div>
                     <div>
                       <Typography
-                        sx={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--mui-palette-text-primary)', lineHeight: 1 }}
+                        sx={{
+                          fontSize: '1.6rem',
+                          fontWeight: 800,
+                          color: 'var(--mui-palette-text-primary)',
+                          lineHeight: 1
+                        }}
                       >
                         {item.value.toLocaleString()}
                       </Typography>

@@ -89,7 +89,9 @@ const OperatingExpensesCard = ({ t, data, chartData }: Props) => {
               </CustomAvatar>
               <div>
                 <Typography variant='h5'>{data.total}</Typography>
-                <Typography variant='body2' color='text.secondary'>{t('dashboard.general.total')}</Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  {t('dashboard.general.total')}
+                </Typography>
               </div>
             </div>
           </Grid>
@@ -100,7 +102,9 @@ const OperatingExpensesCard = ({ t, data, chartData }: Props) => {
               </CustomAvatar>
               <div>
                 <Typography variant='h5'>{data.aceptadas}</Typography>
-                <Typography variant='body2' color='text.secondary'>{t('dashboard.general.approved')}</Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  {t('dashboard.general.approved')}
+                </Typography>
               </div>
             </div>
           </Grid>
@@ -111,7 +115,9 @@ const OperatingExpensesCard = ({ t, data, chartData }: Props) => {
               </CustomAvatar>
               <div>
                 <Typography variant='h5'>{data.pendientes}</Typography>
-                <Typography variant='body2' color='text.secondary'>{t('dashboard.general.pending')}</Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  {t('dashboard.general.pending')}
+                </Typography>
               </div>
             </div>
           </Grid>
@@ -122,7 +128,9 @@ const OperatingExpensesCard = ({ t, data, chartData }: Props) => {
               </CustomAvatar>
               <div>
                 <Typography variant='h5'>{data.rechazadas}</Typography>
-                <Typography variant='body2' color='text.secondary'>{t('dashboard.general.rejected')}</Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  {t('dashboard.general.rejected')}
+                </Typography>
               </div>
             </div>
           </Grid>

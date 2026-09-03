@@ -33,18 +33,24 @@ export function useWarehouseMap(): UseWarehouseMapReturn {
   const fetchMapData = async () => {
     setIsLoadingMap(true)
     setErrorMap(null)
+
     try {
       const res = await fetch('/api/warehouses/map')
+
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: 'Failed to fetch map data' }))
+
         throw new Error(err.message || `HTTP ${res.status}`)
       }
+
       const json: MapApiResponse = await res.json()
+
       if (!json.ok) throw new Error('API returned not ok')
       setWarehouses(json.data.warehouses)
       setStatistics(json.data.statistics)
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error'
+
       setErrorMap(msg)
     } finally {
       setIsLoadingMap(false)
@@ -54,17 +60,23 @@ export function useWarehouseMap(): UseWarehouseMapReturn {
   const fetchCapacities = async () => {
     setIsLoadingCapacities(true)
     setErrorCapacities(null)
+
     try {
       const res = await fetch('/api/warehouses/map/capacity')
+
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: 'Failed to fetch capacities' }))
+
         throw new Error(err.message || `HTTP ${res.status}`)
       }
+
       const json: CapacityApiResponse = await res.json()
+
       if (!json.ok) throw new Error('API returned not ok')
       setCapacities(json.data)
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error'
+
       setErrorCapacities(msg)
     } finally {
       setIsLoadingCapacities(false)

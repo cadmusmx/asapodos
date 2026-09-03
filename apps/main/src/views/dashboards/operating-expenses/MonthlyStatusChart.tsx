@@ -15,27 +15,42 @@ type Props = {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  'Aceptada': 'var(--mui-palette-success-main)',
-  'Rechazada': 'var(--mui-palette-error-main)',
-  'Pagada': 'var(--mui-palette-info-main)',
-  'Facturada': 'var(--mui-palette-success-light)',
-  'Pendiente': 'var(--mui-palette-warning-main)'
+  Aceptada: 'var(--mui-palette-success-main)',
+  Rechazada: 'var(--mui-palette-error-main)',
+  Pagada: 'var(--mui-palette-info-main)',
+  Facturada: 'var(--mui-palette-success-light)',
+  Pendiente: 'var(--mui-palette-warning-main)'
 }
 
 const MonthlyStatusChart = ({ data, height = 310 }: Props) => {
   const theme = useTheme()
 
   const months = [...new Set(data.map(d => d.month))].sort((a, b) => {
-    const order = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+    const order = [
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre'
+    ]
+
     return order.indexOf(a) - order.indexOf(b)
   })
 
   const statuses = [...new Set(data.map(d => d.status))]
 
-  const series = statuses.map((status) => ({
+  const series = statuses.map(status => ({
     name: status,
-    data: months.map((month) => {
+    data: months.map(month => {
       const item = data.find(d => d.month === month && d.status === status)
+
       return item ? Number(item.monto) : 0
     })
   }))
@@ -65,15 +80,21 @@ const MonthlyStatusChart = ({ data, height = 310 }: Props) => {
       tickAmount: 5,
       labels: {
         offsetY: 2,
-        formatter: (val) => {
+        formatter: val => {
           if (val >= 1000000) return `$${(val / 1000000).toFixed(1)}M`
           if (val >= 1000) return `$${(val / 1000).toFixed(0)}K`
+
           return `$${val}`
         },
         style: { colors: 'var(--mui-palette-text-disabled)', fontSize: theme.typography.body2.fontSize as string }
       }
     },
-    legend: { show: true, position: 'bottom', fontSize: '11px', labels: { colors: 'var(--mui-palette-text-secondary)' } },
+    legend: {
+      show: true,
+      position: 'bottom',
+      fontSize: '11px',
+      labels: { colors: 'var(--mui-palette-text-secondary)' }
+    },
     grid: {
       xaxis: { lines: { show: false } },
       strokeDashArray: 7,
@@ -84,7 +105,10 @@ const MonthlyStatusChart = ({ data, height = 310 }: Props) => {
       shared: true,
       intersect: false,
       theme: 'light',
-      y: { formatter: (val) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(val) }
+      y: {
+        formatter: val =>
+          new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(val)
+      }
     },
     dataLabels: { enabled: false }
   }

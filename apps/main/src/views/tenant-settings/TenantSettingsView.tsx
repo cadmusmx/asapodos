@@ -17,7 +17,7 @@ import Typography from '@mui/material/Typography'
 import { useTenantSettings } from '@/hooks/useTenantSettings'
 import BrandingCard from './BrandingCard'
 
-import type { TenantBrandingSettings, TenantSettings } from '@/types/tenant-settings'
+import type { TenantSettings } from '@/types/tenant-settings'
 
 // import type { Dictionary } from '@/utils/getDictionary'
 

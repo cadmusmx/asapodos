@@ -24,10 +24,30 @@ type Props = {
 
 const ExpenseCounters = ({ t, counters }: Props) => {
   const items = [
-    { label: t('dashboard.expenses.totalRequests'), value: counters.total, color: 'primary' as const, icon: 'ri-file-list-2-line' },
-    { label: t('dashboard.expenses.accepted'), value: counters.aceptadas, color: 'success' as const, icon: 'ri-check-line' },
-    { label: t('dashboard.expenses.pending'), value: counters.pendientes, color: 'warning' as const, icon: 'ri-time-line' },
-    { label: t('dashboard.expenses.rejected'), value: counters.rechazadas, color: 'error' as const, icon: 'ri-close-line' },
+    {
+      label: t('dashboard.expenses.totalRequests'),
+      value: counters.total,
+      color: 'primary' as const,
+      icon: 'ri-file-list-2-line'
+    },
+    {
+      label: t('dashboard.expenses.accepted'),
+      value: counters.aceptadas,
+      color: 'success' as const,
+      icon: 'ri-check-line'
+    },
+    {
+      label: t('dashboard.expenses.pending'),
+      value: counters.pendientes,
+      color: 'warning' as const,
+      icon: 'ri-time-line'
+    },
+    {
+      label: t('dashboard.expenses.rejected'),
+      value: counters.rechazadas,
+      color: 'error' as const,
+      icon: 'ri-close-line'
+    },
     { label: t('dashboard.expenses.paid'), value: counters.pagadas, color: 'info' as const, icon: 'ri-wallet-line' }
   ]
 
@@ -56,7 +76,9 @@ const ExpenseCounters = ({ t, counters }: Props) => {
               </CustomAvatar>
               <div>
                 <Typography variant='body2'>{t('dashboard.expenses.paidAmount')}</Typography>
-                <Typography variant='h4'>${counters.montoPagadas.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</Typography>
+                <Typography variant='h4'>
+                  ${counters.montoPagadas.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                </Typography>
               </div>
             </div>
           </Grid>

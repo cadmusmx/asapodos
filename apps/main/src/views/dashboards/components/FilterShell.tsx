@@ -52,7 +52,8 @@ const FilterShell = ({ t, onClear, onSearch, onReload, children }: FilterShellPr
                 background: 'linear-gradient(135deg, var(--mui-palette-primary-main), var(--mui-palette-primary-dark))',
                 boxShadow: '0 2px 8px rgba(var(--mui-palette-primary-mainChannel) / 0.3)',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, var(--mui-palette-primary-dark), var(--mui-palette-primary-dark))',
+                  background:
+                    'linear-gradient(135deg, var(--mui-palette-primary-dark), var(--mui-palette-primary-dark))',
                   boxShadow: '0 4px 12px rgba(var(--mui-palette-primary-mainChannel) / 0.4)'
                 }
               }}
@@ -81,10 +82,31 @@ const FilterShell = ({ t, onClear, onSearch, onReload, children }: FilterShellPr
                 <i className='ri-refresh-line' style={{ fontSize: '1.1rem' }} />
               </Button>
             )}
-            <Box sx={{ width: 32, height: 32, borderRadius: '8px', background: 'linear-gradient(135deg, rgba(var(--mui-palette-primary-mainChannel) / 0.13), rgba(var(--mui-palette-primary-mainChannel) / 0.07))', display: 'flex', alignItems: 'center', justifyContent: 'center', ml: 1 }}>
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: '8px',
+                background:
+                  'linear-gradient(135deg, rgba(var(--mui-palette-primary-mainChannel) / 0.13), rgba(var(--mui-palette-primary-mainChannel) / 0.07))',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                ml: 1
+              }}
+            >
               <i className='ri-filter-3-line' style={{ fontSize: '1rem', color: 'var(--mui-palette-primary-main)' }} />
             </Box>
-            <Box component='span' sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            <Box
+              component='span'
+              sx={{
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                color: 'text.secondary',
+                textTransform: 'uppercase',
+                letterSpacing: 0.8
+              }}
+            >
               {t('filters.filters')}
             </Box>
           </Grid>

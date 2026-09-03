@@ -10,11 +10,7 @@ const registeredTests = [
 ]
 
 const TestingPage = () => {
-  return (
-    <div className='flex flex-col gap-6'>
-      {registeredTests.map(test => test.component)}
-    </div>
-  )
+  return <div className='flex flex-col gap-6'>{registeredTests.map(test => test.component)}</div>
 }
 
 export default TestingPage

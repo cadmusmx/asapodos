@@ -30,7 +30,7 @@ const GeneralFilters = ({ t, values, onChange, onSearch, onClear, onReload, regi
           <Select
             value={values.year}
             label={t('dashboard.general.year')}
-            onChange={(e) => onChange('year', e.target.value)}
+            onChange={e => onChange('year', e.target.value)}
           >
             <MenuItem value=''>{t('filters.all')}</MenuItem>
             <MenuItem value='2024'>2024</MenuItem>
@@ -43,14 +43,12 @@ const GeneralFilters = ({ t, values, onChange, onSearch, onClear, onReload, regi
       <Grid size={{ xs: 12, md: 4 }}>
         <FormControl fullWidth size='small' sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}>
           <InputLabel>{t('filters.region')}</InputLabel>
-          <Select
-            value={values.region}
-            label={t('filters.region')}
-            onChange={(e) => onChange('region', e.target.value)}
-          >
+          <Select value={values.region} label={t('filters.region')} onChange={e => onChange('region', e.target.value)}>
             <MenuItem value=''>{t('filters.all')}</MenuItem>
-            {regions.map((reg) => (
-              <MenuItem key={reg.id} value={reg.id}>{reg.nombre}</MenuItem>
+            {regions.map(reg => (
+              <MenuItem key={reg.id} value={reg.id}>
+                {reg.nombre}
+              </MenuItem>
             ))}
           </Select>
         </FormControl>

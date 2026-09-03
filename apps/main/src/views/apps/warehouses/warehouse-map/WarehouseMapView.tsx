@@ -11,8 +11,7 @@ import GlobalStyles from '@mui/material/GlobalStyles'
 import type { SxProps } from '@mui/material/styles'
 
 import { Map, Source, Layer, Popup } from 'react-map-gl'
-import type { MapRef } from 'react-map-gl'
-import type { MapLayerMouseEvent, GeoJSONSource } from 'react-map-gl'
+import type { MapRef , MapLayerMouseEvent, GeoJSONSource } from 'react-map-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 import type { WarehouseMapItem, MapFilterType } from '@/types/warehouse-map'
@@ -44,7 +43,8 @@ const WarehouseMapView = ({ warehouses, filterType, onFilterChange, mapboxToken,
   const filteredWarehouses = useMemo(() => {
     if (filterType === 'all') return warehouses
     if (filterType === 'gaso') return warehouses.filter(w => !esEricsson(w.Almacen))
-    return warehouses.filter(w => esEricsson(w.Almacen))
+    
+return warehouses.filter(w => esEricsson(w.Almacen))
   }, [warehouses, filterType])
 
   const geojsonData = useMemo(() => ({
@@ -70,24 +70,28 @@ const WarehouseMapView = ({ warehouses, filterType, onFilterChange, mapboxToken,
   const ericssonCount = useMemo(() => warehouses.filter(w => esEricsson(w.Almacen)).length, [warehouses])
   const totalCount = warehouses.length
 
-  const clusterCountColor = (count: number): string => {
+  const _clusterCountColor = (count: number): string => {
     if (count >= 20) return '#dc3545'
     if (count >= 10) return '#e55300'
     if (count >= 5) return '#ffc107'
-    return '#28a745'
+    
+return '#28a745'
   }
 
   const onClick = useCallback((e: MapLayerMouseEvent) => {
     const features = e.features
+
     if (!features || features.length === 0) return
     const feature = features[0]
 
     if (feature.properties?.cluster) {
       const source = mapRef.current?.getSource('warehouses-source') as GeoJSONSource
+
       if (source) {
         source.getClusterExpansionZoom(feature.properties.cluster_id, (err, zoom) => {
           if (!err && zoom != null) {
             const geom = feature.geometry as { type: string; coordinates: [number, number] }
+
             mapRef.current?.flyTo({
               center: geom.coordinates,
               zoom: zoom
@@ -98,6 +102,7 @@ const WarehouseMapView = ({ warehouses, filterType, onFilterChange, mapboxToken,
     } else {
       const warehouseId = feature.properties?.id
       const warehouse = filteredWarehouses.find(w => w.Id === warehouseId)
+
       if (warehouse && warehouse.Latitud != null && warehouse.Longitud != null) {
         setPopup({
           warehouse,
@@ -110,20 +115,27 @@ const WarehouseMapView = ({ warehouses, filterType, onFilterChange, mapboxToken,
 
   const fitBounds = useCallback(() => {
     if (!mapRef.current || filteredWarehouses.length === 0) return
+
     const validCoords = filteredWarehouses
       .filter(w => w.Latitud != null && w.Longitud != null)
       .map(w => [Number(w.Longitud), Number(w.Latitud)] as [number, number])
+
     if (validCoords.length === 0) return
+
     if (validCoords.length === 1) {
       mapRef.current.flyTo({ center: validCoords[0], zoom: 10 })
-      return
+      
+return
     }
+
     const lngs = validCoords.map(c => c[0])
     const lats = validCoords.map(c => c[1])
+
     const bounds: [[number, number], [number, number]] = [
       [Math.min(...lngs), Math.min(...lats)],
       [Math.max(...lngs), Math.max(...lats)]
     ]
+
     mapRef.current.fitBounds(bounds, { padding: 60, maxZoom: 14 })
   }, [filteredWarehouses])
 
@@ -180,12 +192,16 @@ const WarehouseMapView = ({ warehouses, filterType, onFilterChange, mapboxToken,
         onLoad={fitBounds}
         onClick={onClick}
         onMouseMove={e => {
-          if (mapRef.current) {
-            const features = mapRef.current.queryRenderedFeatures(e.point, {
-              layers: ['warehouse-clusters', 'warehouse-unclustered-point']
-            })
-            setIsHovering(features.length > 0)
-          }
+          if (!mapRef.current) return
+          if (!mapRef.current.isStyleLoaded()) return
+          if (!mapRef.current.getLayer('warehouse-clusters')) return
+          if (!mapRef.current.getLayer('warehouse-unclustered-point')) return
+
+          const features = mapRef.current.queryRenderedFeatures(e.point, {
+            layers: ['warehouse-clusters', 'warehouse-unclustered-point']
+          })
+
+          setIsHovering(features.length > 0)
         }}
         onMouseLeave={() => setIsHovering(false)}
         interactiveLayerIds={['warehouse-clusters', 'warehouse-unclustered-point']}

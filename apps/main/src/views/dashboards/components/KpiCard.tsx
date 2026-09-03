@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography'
 import Grid from '@mui/material/Grid2'
 import Box from '@mui/material/Box'
 import Skeleton from '@mui/material/Skeleton'
+
 import FontAwesomeIconComponent from './FontAwesomeIcon'
 
 type Props = {
@@ -20,7 +21,17 @@ type Props = {
   loading?: boolean
 }
 
-const KpiCard = ({ title, subtitle, borderColor, iconBackground, iconColor, iconClass, children, action, loading = false }: Props) => {
+const KpiCard = ({
+  title,
+  subtitle,
+  borderColor,
+  iconBackground,
+  iconColor,
+  iconClass,
+  children,
+  action,
+  loading = false
+}: Props) => {
   return (
     <Card
       sx={{
@@ -50,7 +61,9 @@ const KpiCard = ({ title, subtitle, borderColor, iconBackground, iconColor, icon
                 color: iconColor || 'var(--mui-palette-primary-main)'
               }}
             >
-              {iconClass && <FontAwesomeIconComponent icon={iconClass} className={iconClass} style={{ width: 24, height: 24 }} />}
+              {iconClass && (
+                <FontAwesomeIconComponent icon={iconClass} className={iconClass} style={{ width: 24, height: 24 }} />
+              )}
             </div>
           </Grid>
           <Grid size='grow' sx={{ ml: 2 }}>
@@ -66,7 +79,10 @@ const KpiCard = ({ title, subtitle, borderColor, iconBackground, iconColor, icon
               {title}
             </Typography>
             {subtitle && (
-              <Typography variant='body2' sx={{ color: 'var(--mui-palette-text-secondary)', fontSize: '0.75rem', mt: 0.5 }}>
+              <Typography
+                variant='body2'
+                sx={{ color: 'var(--mui-palette-text-secondary)', fontSize: '0.75rem', mt: 0.5 }}
+              >
                 {subtitle}
               </Typography>
             )}

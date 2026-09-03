@@ -60,7 +60,10 @@ const WarehouseCounterCards = ({ t, counters }: Props) => {
       label: t('dashboard.warehouses.occupancyRate'),
       value: `${counters.ocupacionPorcentaje}%`,
       color: counters.ocupacionPorcentaje >= 80 ? 'var(--mui-palette-error-main)' : 'var(--mui-palette-secondary-main)',
-      iconBg: counters.ocupacionPorcentaje >= 80 ? 'rgba(var(--mui-palette-error-mainChannel) / 0.12)' : 'rgba(var(--mui-palette-secondary-mainChannel) / 0.12)',
+      iconBg:
+        counters.ocupacionPorcentaje >= 80
+          ? 'rgba(var(--mui-palette-error-mainChannel) / 0.12)'
+          : 'rgba(var(--mui-palette-secondary-mainChannel) / 0.12)',
       icon: 'ri-pie-chart-2-line'
     }
   ]

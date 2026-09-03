@@ -21,4 +21,3 @@ export * from './lib/rbac';
 export * from './lib/plans';
 export { getProfilePhoto, setProfilePhoto } from './lib/profile-photo';
 export * from './constants/employee-catalogs';
-export * from './lib/export';

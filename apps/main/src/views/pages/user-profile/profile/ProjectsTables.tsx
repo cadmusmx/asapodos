@@ -248,4 +248,3 @@ const ProjectTables = ({ projectTable }: { projectTable?: ProjectTableRowType[] 
 }
 
 export default ProjectTables
-

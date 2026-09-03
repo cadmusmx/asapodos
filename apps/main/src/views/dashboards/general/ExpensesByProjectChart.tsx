@@ -41,12 +41,13 @@ const ExpensesByProjectChart = ({ t, data, height = 180 }: Props) => {
     dataLabels: { enabled: false },
     colors: ['var(--mui-palette-teal-main)'],
     xaxis: {
-      categories: data.map(d => d.key.length > 20 ? d.key.substring(0, 20) + '...' : d.key),
+      categories: data.map(d => (d.key.length > 20 ? d.key.substring(0, 20) + '...' : d.key)),
       tickPlacement: 'on',
       labels: {
         show: true,
         style: { colors: 'var(--mui-palette-text-disabled)', fontSize: theme.typography.body2.fontSize as string },
-        formatter: (value: string | number) => `$${Number(value) > 999 ? `${(Number(value) / 1000).toFixed(0)}k` : value}`
+        formatter: (value: string | number) =>
+          `$${Number(value) > 999 ? `${(Number(value) / 1000).toFixed(0)}k` : value}`
       },
       axisTicks: { show: false },
       axisBorder: { show: false }

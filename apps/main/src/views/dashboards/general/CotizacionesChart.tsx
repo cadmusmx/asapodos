@@ -20,11 +20,7 @@ const CotizacionesChart = ({ t, data }: Props) => {
     chart: {
       sparkline: { enabled: true }
     },
-    colors: [
-      'var(--mui-palette-success-main)',
-      'var(--mui-palette-warning-main)',
-      'var(--mui-palette-error-main)'
-    ],
+    colors: ['var(--mui-palette-success-main)', 'var(--mui-palette-warning-main)', 'var(--mui-palette-error-main)'],
     stroke: { width: 3, colors: ['var(--mui-palette-background-paper)'] },
     legend: { show: false },
     tooltip: {
@@ -33,6 +29,7 @@ const CotizacionesChart = ({ t, data }: Props) => {
         const value = series[seriesIndex] as number
         const total = (series as number[]).reduce((a, b) => a + b, 0)
         const pct = ((value / total) * 100).toFixed(1)
+
         return `<div style="padding:8px 12px;background:var(--mui-palette-background-paper);color:var(--mui-palette-text-primary);border-radius:8px;font-size:13px;border:1px solid var(--mui-palette-divider);">
           <strong>${label}</strong><br/>
           ${value.toLocaleString()} (${pct}%)

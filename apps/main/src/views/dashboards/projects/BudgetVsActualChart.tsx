@@ -55,7 +55,8 @@ const BudgetVsActualChart = ({ t, data, height = 220 }: Props) => {
       labels: {
         show: true,
         style: { colors: 'var(--mui-palette-text-disabled)', fontSize: theme.typography.body2.fontSize as string },
-        formatter: (value: string | number) => `$${Number(value) > 999 ? `${(Number(value) / 1000).toFixed(0)}k` : value}`
+        formatter: (value: string | number) =>
+          `$${Number(value) > 999 ? `${(Number(value) / 1000).toFixed(0)}k` : value}`
       },
       axisTicks: { show: false },
       axisBorder: { show: false }

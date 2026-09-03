@@ -1,7 +1,7 @@
 // Seam de datos del modal de aplicación masiva. Hoy:
 // fetch real a G1 (endpoint ya levantado) + fixtures mock para desarrollar el grid aislado (Paso 2) antes de depender de la red.
 
-import type { AssignableViewsResponse, DepartmentFacetsResponse } from './types';
+import type { AssignableViewsResponse, DepartmentFacetsResponse } from './types'
 
 /**
  * Lee las vistas asignables del PLAN del tenant (nivel tenant, sin departamento).
@@ -12,11 +12,11 @@ import type { AssignableViewsResponse, DepartmentFacetsResponse } from './types'
  * El seam NO filtra — espejo 1:1 con el back.
  */
 export async function fetchAssignableViews(signal?: AbortSignal): Promise<AssignableViewsResponse> {
-  const res = await fetch('/api/permissions/assignable-views', { signal });
+  const res = await fetch('/api/permissions/assignable-views', { signal })
 
-  if (!res.ok) throw new Error('No se pudieron cargar las vistas asignables.');
+  if (!res.ok) throw new Error('No se pudieron cargar las vistas asignables.')
 
-  return (await res.json()) as AssignableViewsResponse;
+  return (await res.json()) as AssignableViewsResponse
 }
 
 /**
@@ -28,12 +28,12 @@ export async function fetchDepartmentFacets(
   idDepartamento: number,
   signal?: AbortSignal
 ): Promise<DepartmentFacetsResponse> {
-  const res = await fetch(`/api/permissions/department/${idDepartamento}/facets`, { signal });
+  const res = await fetch(`/api/permissions/department/${idDepartamento}/facets`, { signal })
 
-  if (res.status === 403) throw new Error('No tienes alcance sobre este departamento.');
-  if (!res.ok) throw new Error('No se pudieron cargar los filtros del departamento.');
+  if (res.status === 403) throw new Error('No tienes alcance sobre este departamento.')
+  if (!res.ok) throw new Error('No se pudieron cargar los filtros del departamento.')
 
-  return (await res.json()) as DepartmentFacetsResponse;
+  return (await res.json()) as DepartmentFacetsResponse
 }
 
 // ---------------------------------------------------------------------------
@@ -52,16 +52,28 @@ export const MOCK_ASSIGNABLE_VIEWS: AssignableViewsResponse = {
 
     // Sin público: los 4 chips arrancan en blanco.
     { viewCode: 'inventario_articulos', label: 'Artículos', menuGroup: 'inventario', ceilingMask: 15, publicMask: 0 },
-    { viewCode: 'inventario_movimientos', label: 'Movimientos', menuGroup: 'inventario', ceilingMask: 15, publicMask: 0 },
+    {
+      viewCode: 'inventario_movimientos',
+      label: 'Movimientos',
+      menuGroup: 'inventario',
+      ceilingMask: 15,
+      publicMask: 0
+    },
     { viewCode: 'facturas', label: 'Facturas', menuGroup: 'facturacion', ceilingMask: 15, publicMask: 0 },
     { viewCode: 'notas', label: 'Notas de crédito', menuGroup: 'facturacion', ceilingMask: 15, publicMask: 0 },
 
     // Protegida: el endpoint la devuelve; el modal la OMITE (verificación del filtro).
-    { viewCode: 'permissions_access', label: 'Administración de permisos', menuGroup: 'seguridad', ceilingMask: 15, publicMask: 0 },
-  ],
-};
+    {
+      viewCode: 'permissions_access',
+      label: 'Administración de permisos',
+      menuGroup: 'seguridad',
+      ceilingMask: 15,
+      publicMask: 0
+    }
+  ]
+}
 
 /** Plan sin vistas asignables: dispara el aviso, no un grid vacío silencioso. */
 export const MOCK_ASSIGNABLE_VIEWS_EMPTY: AssignableViewsResponse = {
-  views: [],
-};
+  views: []
+}

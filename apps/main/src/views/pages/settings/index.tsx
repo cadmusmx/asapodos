@@ -29,7 +29,12 @@ const Settings = ({ tabContentList }: SettingsProps) => {
       <Grid container spacing={6}>
         <Grid size={{ xs: 12 }}>
           <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
-            <Tab label='Tenant Settings' icon={<i className='ri-building-4-line' />} iconPosition='start' value='tenant-settings' />
+            <Tab
+              label='Tenant Settings'
+              icon={<i className='ri-building-4-line' />}
+              iconPosition='start'
+              value='tenant-settings'
+            />
             <Tab label='Testing' icon={<i className='ri-test-tube-line' />} iconPosition='start' value='testing' />
           </CustomTabList>
         </Grid>

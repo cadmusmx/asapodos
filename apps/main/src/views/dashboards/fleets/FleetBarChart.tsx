@@ -44,9 +44,10 @@ const FleetBarChart = ({ data, title, height = 220 }: Props) => {
       labels: {
         offsetY: 2,
         offsetX: -10,
-        formatter: (val) => {
+        formatter: val => {
           if (val >= 1000000) return `$${(val / 1000000).toFixed(1)}M`
           if (val >= 1000) return `$${(val / 1000).toFixed(0)}K`
+
           return `$${val}`
         },
         style: { colors: 'var(--mui-palette-text-disabled)', fontSize: theme.typography.body2.fontSize as string }
@@ -54,11 +55,22 @@ const FleetBarChart = ({ data, title, height = 220 }: Props) => {
     },
     tooltip: {
       theme: 'light',
-      y: { formatter: (val) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(val) }
+      y: {
+        formatter: val =>
+          new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(val)
+      }
     }
   }
 
-  return <AppReactApexCharts type='bar' height={height} width='100%' series={[{ name: title || '', data: data.map(d => d.monto) }]} options={options} />
+  return (
+    <AppReactApexCharts
+      type='bar'
+      height={height}
+      width='100%'
+      series={[{ name: title || '', data: data.map(d => d.monto) }]}
+      options={options}
+    />
+  )
 }
 
 export default FleetBarChart

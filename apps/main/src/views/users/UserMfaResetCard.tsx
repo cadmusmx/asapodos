@@ -104,8 +104,8 @@ const UserMfaResetCard = () => {
                 Restablecer MFA de usuario
               </Typography>
               <Typography variant='body2' color='text.secondary'>
-                Usa esta acción cuando un usuario perdió acceso a Google Authenticator. El MFA anterior se desactivará
-                y el usuario deberá enrolar un nuevo código QR en su próximo inicio de sesión.
+                Usa esta acción cuando un usuario perdió acceso a Google Authenticator. El MFA anterior se desactivará y
+                el usuario deberá enrolar un nuevo código QR en su próximo inicio de sesión.
               </Typography>
             </Box>
 

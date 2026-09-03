@@ -31,7 +31,11 @@ const ChartModal = ({ open, onClose, title, children, t }: Props) => {
       }}
     >
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 2 }}>
-        <Typography component='span' variant='subtitle1' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)' }}>
+        <Typography
+          component='span'
+          variant='subtitle1'
+          sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)' }}
+        >
           {title}
         </Typography>
         <IconButton onClick={onClose} size='small' sx={{ color: 'var(--mui-palette-text-secondary)' }}>
@@ -39,9 +43,7 @@ const ChartModal = ({ open, onClose, title, children, t }: Props) => {
         </IconButton>
       </DialogTitle>
       <DialogContent sx={{ p: '16px !important' }}>
-        <div style={{ width: '100%', minHeight: 400 }}>
-          {children}
-        </div>
+        <div style={{ width: '100%', minHeight: 400 }}>{children}</div>
       </DialogContent>
       <DialogActions sx={{ p: '16px 24px !important' }}>
         <Button

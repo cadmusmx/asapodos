@@ -30,13 +30,7 @@ type Props<T> = {
 }
 
 export default function ApiTestCard<T>({ config, children }: Props<T>) {
-  const {
-    title,
-    subheader,
-    endpoint,
-    method = 'GET',
-    autoFetch = true
-  } = config
+  const { title, subheader, endpoint, method = 'GET', autoFetch = true } = config
 
   const [apiState, setApiState] = useState<ApiState>('idle')
   const [data, setData] = useState<T | null>(null)
@@ -79,20 +73,11 @@ export default function ApiTestCard<T>({ config, children }: Props<T>) {
         subheader={subheader}
         action={
           <Box className='flex items-center gap-2'>
-            <Button
-              variant='outlined'
-              size='small'
-              onClick={fetch_}
-              disabled={apiState === 'loading'}
-            >
+            <Button variant='outlined' size='small' onClick={fetch_} disabled={apiState === 'loading'}>
               <i className='ri-refresh-line' />
               Refresh
             </Button>
-            <Button
-              variant='text'
-              size='small'
-              onClick={() => setShowRaw(v => !v)}
-            >
+            <Button variant='text' size='small' onClick={() => setShowRaw(v => !v)}>
               <i className={`${showRaw ? 'ri-eye-close-line' : 'ri-code-view'} ri-sm`} />
               {showRaw ? 'Hide' : 'JSON'}
             </Button>
@@ -104,9 +89,12 @@ export default function ApiTestCard<T>({ config, children }: Props<T>) {
           <Chip
             label={apiState.toUpperCase()}
             color={
-              apiState === 'success' ? 'success'
-                : apiState === 'error' ? 'error'
-                  : apiState === 'loading' ? 'warning'
+              apiState === 'success'
+                ? 'success'
+                : apiState === 'error'
+                  ? 'error'
+                  : apiState === 'loading'
+                    ? 'warning'
                     : 'default'
             }
             size='small'
@@ -132,7 +120,9 @@ export default function ApiTestCard<T>({ config, children }: Props<T>) {
         {apiState === 'error' && (
           <Box className='flex items-center gap-2'>
             <i className='ri-error-warning-line text-lg text-red-500' />
-            <Typography color='error' variant='body2'>{error}</Typography>
+            <Typography color='error' variant='body2'>
+              {error}
+            </Typography>
           </Box>
         )}
 

@@ -28,11 +28,7 @@ const CotizacionesCard = ({ t, data }: Props) => {
     chart: {
       sparkline: { enabled: true }
     },
-    colors: [
-      'var(--mui-palette-success-main)',
-      'var(--mui-palette-warning-main)',
-      'var(--mui-palette-error-main)'
-    ],
+    colors: ['var(--mui-palette-success-main)', 'var(--mui-palette-warning-main)', 'var(--mui-palette-error-main)'],
     stroke: { width: 3, colors: ['var(--mui-palette-background-paper)'] },
     legend: { show: false },
     tooltip: {
@@ -79,21 +75,35 @@ const CotizacionesCard = ({ t, data }: Props) => {
               </CustomAvatar>
               <div>
                 <Typography variant='h4'>{data.total}</Typography>
-                <Typography variant='body2' color='text.secondary'>{t('dashboard.general.total')}</Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  {t('dashboard.general.total')}
+                </Typography>
               </div>
             </div>
             <Grid container spacing={1}>
               <Grid size={{ xs: 4 }}>
-                <Typography variant='h6' color='success.main'>{data.aceptadas}</Typography>
-                <Typography variant='caption' color='text.secondary'>{t('dashboard.general.approved')}</Typography>
+                <Typography variant='h6' color='success.main'>
+                  {data.aceptadas}
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  {t('dashboard.general.approved')}
+                </Typography>
               </Grid>
               <Grid size={{ xs: 4 }}>
-                <Typography variant='h6' color='warning.main'>{data.pendientes}</Typography>
-                <Typography variant='caption' color='text.secondary'>{t('dashboard.general.pending')}</Typography>
+                <Typography variant='h6' color='warning.main'>
+                  {data.pendientes}
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  {t('dashboard.general.pending')}
+                </Typography>
               </Grid>
               <Grid size={{ xs: 4 }}>
-                <Typography variant='h6' color='error.main'>{data.rechazadas}</Typography>
-                <Typography variant='caption' color='text.secondary'>{t('dashboard.general.rejected')}</Typography>
+                <Typography variant='h6' color='error.main'>
+                  {data.rechazadas}
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  {t('dashboard.general.rejected')}
+                </Typography>
               </Grid>
             </Grid>
           </Grid>

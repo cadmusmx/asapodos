@@ -1,26 +1,26 @@
-'use client';
+'use client'
 
 // MUI Imports
-import Alert from '@mui/material/Alert';
-import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert'
+import Typography from '@mui/material/Typography'
 
 // Type Imports
-import type { ApplyMode } from './types';
+import type { ApplyMode } from './types'
 
 type Props = {
-  mode: ApplyMode;
-  departamento: string;
-  puesto: string | null;
-};
+  mode: ApplyMode
+  departamento: string
+  puesto: string | null
+}
 
-const wildcard = (v: string | null) => (v && v.trim() !== '' ? v : 'cualquiera');
+const wildcard = (v: string | null) => (v && v.trim() !== '' ? v : 'cualquiera')
 
 /**
  * Este footer es ESTÁTICO por modo — nombra el riesgo, no lo cuantifica.
  * El conteo real de removals/usersInScope vive en el preview del dryRun.
  */
 const PresetFooter = ({ mode, departamento, puesto }: Props) => {
-  const scope = `departamento ${departamento} · puesto ${wildcard(puesto)}`;
+  const scope = `departamento ${departamento} · puesto ${wildcard(puesto)}`
 
   if (mode === 'OR') {
     return (
@@ -30,7 +30,7 @@ const PresetFooter = ({ mode, departamento, puesto }: Props) => {
           <strong>No se remueve ningún permiso existente.</strong>
         </Typography>
       </Alert>
-    );
+    )
   }
 
   return (
@@ -40,7 +40,7 @@ const PresetFooter = ({ mode, departamento, puesto }: Props) => {
         <strong>Quienes tengan permisos mayores en esas vistas los perderán.</strong>
       </Typography>
     </Alert>
-  );
-};
+  )
+}
 
-export default PresetFooter;
+export default PresetFooter

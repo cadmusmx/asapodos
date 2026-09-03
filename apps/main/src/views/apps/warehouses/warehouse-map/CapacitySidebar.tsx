@@ -10,7 +10,7 @@ import Typography from '@mui/material/Typography'
 import LinearProgress from '@mui/material/LinearProgress'
 import Link from '@mui/material/Link'
 import Skeleton from '@mui/material/Skeleton'
-import Grid from '@mui/material/Grid2'
+import _Grid from '@mui/material/Grid2'
 
 import type { WarehouseCapacity } from '@/types/warehouse-map'
 import { esEricsson, getCapacityColor } from './warehouse-map-utils'
@@ -26,6 +26,7 @@ const CapacitySidebar = ({ capacities, isLoading, onWarehouseClick, t }: Props) 
   const { gasoCapacities, ericssonCapacities } = useMemo(() => {
     const gaso: WarehouseCapacity[] = []
     const ericsson: WarehouseCapacity[] = []
+
     capacities.forEach(c => {
       if (esEricsson(c.Almacen)) {
         ericsson.push(c)
@@ -33,13 +34,18 @@ const CapacitySidebar = ({ capacities, isLoading, onWarehouseClick, t }: Props) 
         gaso.push(c)
       }
     })
+
     const sortByOccupancy = (arr: WarehouseCapacity[]) =>
       [...arr].sort((a, b) => {
         const pctA = a.Capacidad && a.Capacidad > 0 ? (a.Capacidad_Ocupada ?? 0) / a.Capacidad : 0
         const pctB = b.Capacidad && b.Capacidad > 0 ? (b.Capacidad_Ocupada ?? 0) / b.Capacidad : 0
-        return pctB - pctA
+
+        
+return pctB - pctA
       })
-    return {
+
+    
+return {
       gasoCapacities: sortByOccupancy(gaso),
       ericssonCapacities: sortByOccupancy(ericsson)
     }
@@ -49,6 +55,7 @@ const CapacitySidebar = ({ capacities, isLoading, onWarehouseClick, t }: Props) 
     const pct = item.Capacidad && item.Capacidad > 0
       ? Math.round(((item.Capacidad_Ocupada ?? 0) / item.Capacidad) * 100)
       : 0
+
     const color = getCapacityColor(pct)
     const isAlert = pct >= 100
 

@@ -1,63 +1,63 @@
-'use client';
+'use client'
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react'
 
-import type { MouseEvent } from 'react';
+import type { MouseEvent } from 'react'
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation'
 
-import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
-import CircularProgress from '@mui/material/CircularProgress';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import Divider from '@mui/material/Divider';
-import Grid from '@mui/material/Grid2';
-import IconButton from '@mui/material/IconButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import Paper from '@mui/material/Paper';
-import Stack from '@mui/material/Stack';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
-import TableRow from '@mui/material/TableRow';
-import TextField from '@mui/material/TextField';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert'
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import Card from '@mui/material/Card'
+import CardContent from '@mui/material/CardContent'
+import Chip from '@mui/material/Chip'
+import CircularProgress from '@mui/material/CircularProgress'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogTitle from '@mui/material/DialogTitle'
+import Divider from '@mui/material/Divider'
+import Grid from '@mui/material/Grid2'
+import IconButton from '@mui/material/IconButton'
+import ListItemIcon from '@mui/material/ListItemIcon'
+import ListItemText from '@mui/material/ListItemText'
+import Menu from '@mui/material/Menu'
+import MenuItem from '@mui/material/MenuItem'
+import Paper from '@mui/material/Paper'
+import Stack from '@mui/material/Stack'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableContainer from '@mui/material/TableContainer'
+import TableHead from '@mui/material/TableHead'
+import TablePagination from '@mui/material/TablePagination'
+import TableRow from '@mui/material/TableRow'
+import TextField from '@mui/material/TextField'
+import Tooltip from '@mui/material/Tooltip'
+import Typography from '@mui/material/Typography'
 
-import type { UserAccountListItem, UsersResponse } from '@/types/users';
+import type { UserAccountListItem, UsersResponse } from '@/types/users'
 
 type FeedbackState = {
-  type: 'success' | 'error' | 'info';
-  message: string;
-} | null;
+  type: 'success' | 'error' | 'info'
+  message: string
+} | null
 
-type StatusAction = 'suspend' | 'reactivate';
+type StatusAction = 'suspend' | 'reactivate'
 
 type UsersManagerProps = {
 
   // "Asignar usuario" → bit W.
-  canCreate?: boolean;
+  canCreate?: boolean
 
   // Suspender/reactivar y restablecer MFA → bit U.
-  canEdit?: boolean;
+  canEdit?: boolean
 
   // Enlace "Gestionar permisos" → gateado por el viewCode permissions_access.
-  canManagePermissions?: boolean;
-  permissionsHref?: string;
-};
+  canManagePermissions?: boolean
+  permissionsHref?: string
+}
 
 // Empleo (dominio RH) — solo lectura aquí.
 const employmentLabels: Record<string, string> = {
@@ -65,14 +65,14 @@ const employmentLabels: Record<string, string> = {
   inactive: 'Inactivo',
   on_leave: 'Permiso',
   terminated: 'Terminado'
-};
+}
 
 const employmentColors: Record<string, 'success' | 'default' | 'warning' | 'error'> = {
   active: 'success',
   inactive: 'default',
   on_leave: 'warning',
   terminated: 'error'
-};
+}
 
 // Cuenta (dominio de este módulo). Señal independiente del empleo (D12).
 const accountChip = (
@@ -80,15 +80,15 @@ const accountChip = (
 ): { label: string; color: 'success' | 'default' | 'warning' | 'error'; variant: 'filled' | 'outlined' } => {
   switch (status) {
     case 'A':
-      return { label: 'Activa', color: 'success', variant: 'filled' };
+      return { label: 'Activa', color: 'success', variant: 'filled' }
     case 'I':
-      return { label: 'Suspendida', color: 'warning', variant: 'outlined' };
+      return { label: 'Suspendida', color: 'warning', variant: 'outlined' }
     case 'B':
-      return { label: 'Baja', color: 'error', variant: 'outlined' };
+      return { label: 'Baja', color: 'error', variant: 'outlined' }
     default:
-      return { label: 'Sin cuenta', color: 'default', variant: 'outlined' };
+      return { label: 'Sin cuenta', color: 'default', variant: 'outlined' }
   }
-};
+}
 
 // Sugerencia editable: nombre.apellido, sin acentos ni espacios.
 const suggestUsername = (fullName: string): string => {
@@ -96,134 +96,134 @@ const suggestUsername = (fullName: string): string => {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .trim();
+    .trim()
 
-  const parts = normalized.split(/\s+/).filter(Boolean);
+  const parts = normalized.split(/\s+/).filter(Boolean)
 
-  if (parts.length === 0) return '';
-  if (parts.length === 1) return parts[0];
+  if (parts.length === 0) return ''
+  if (parts.length === 1) return parts[0]
 
-  return `${parts[0]}.${parts[parts.length - 1]}`;
-};
+  return `${parts[0]}.${parts[parts.length - 1]}`
+}
 
 const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps) => {
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams()
 
-  const [rows, setRows] = useState<UserAccountListItem[]>([]);
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [feedback, setFeedback] = useState<FeedbackState>(null);
-  const [searchInput, setSearchInput] = useState(() => searchParams.get('search') ?? '');
-  const [search, setSearch] = useState(() => (searchParams.get('search') ?? '').trim());
+  const [rows, setRows] = useState<UserAccountListItem[]>([])
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const [feedback, setFeedback] = useState<FeedbackState>(null)
+  const [searchInput, setSearchInput] = useState(() => searchParams.get('search') ?? '')
+  const [search, setSearch] = useState(() => (searchParams.get('search') ?? '').trim())
 
   // Modal "Asignar usuario"
-  const [assignOpen, setAssignOpen] = useState(false);
-  const [assignTarget, setAssignTarget] = useState<UserAccountListItem | null>(null);
-  const [assignUsername, setAssignUsername] = useState('');
-  const [assignPassword, setAssignPassword] = useState('');
-  const [assignSaving, setAssignSaving] = useState(false);
-  const [assignError, setAssignError] = useState<string | null>(null);
+  const [assignOpen, setAssignOpen] = useState(false)
+  const [assignTarget, setAssignTarget] = useState<UserAccountListItem | null>(null)
+  const [assignUsername, setAssignUsername] = useState('')
+  const [assignPassword, setAssignPassword] = useState('')
+  const [assignSaving, setAssignSaving] = useState(false)
+  const [assignError, setAssignError] = useState<string | null>(null)
 
   // Confirmación suspender/reactivar
-  const [statusOpen, setStatusOpen] = useState(false);
-  const [statusTarget, setStatusTarget] = useState<UserAccountListItem | null>(null);
-  const [statusAction, setStatusAction] = useState<StatusAction | null>(null);
-  const [statusSaving, setStatusSaving] = useState(false);
-  const [statusError, setStatusError] = useState<string | null>(null);
+  const [statusOpen, setStatusOpen] = useState(false)
+  const [statusTarget, setStatusTarget] = useState<UserAccountListItem | null>(null)
+  const [statusAction, setStatusAction] = useState<StatusAction | null>(null)
+  const [statusSaving, setStatusSaving] = useState(false)
+  const [statusError, setStatusError] = useState<string | null>(null)
 
   // Menú kebab de acciones de cuenta
-  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
-  const [menuRow, setMenuRow] = useState<UserAccountListItem | null>(null);
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
+  const [menuRow, setMenuRow] = useState<UserAccountListItem | null>(null)
 
   // Diálogo restablecer MFA
-  const [mfaOpen, setMfaOpen] = useState(false);
-  const [mfaTarget, setMfaTarget] = useState<UserAccountListItem | null>(null);
-  const [mfaReason, setMfaReason] = useState('');
-  const [mfaSaving, setMfaSaving] = useState(false);
-  const [mfaError, setMfaError] = useState<string | null>(null);
+  const [mfaOpen, setMfaOpen] = useState(false)
+  const [mfaTarget, setMfaTarget] = useState<UserAccountListItem | null>(null)
+  const [mfaReason, setMfaReason] = useState('')
+  const [mfaSaving, setMfaSaving] = useState(false)
+  const [mfaError, setMfaError] = useState<string | null>(null)
 
   const loadUsers = useCallback(async () => {
-    setLoading(true);
-    setFeedback(null);
+    setLoading(true)
+    setFeedback(null)
 
     try {
-      const params = new URLSearchParams();
+      const params = new URLSearchParams()
 
-      params.set('page', String(page + 1));
-      params.set('pageSize', String(pageSize));
+      params.set('page', String(page + 1))
+      params.set('pageSize', String(pageSize))
 
-      if (search.trim()) params.set('search', search.trim());
+      if (search.trim()) params.set('search', search.trim())
 
-      const response = await fetch(`/api/users?${params.toString()}`);
+      const response = await fetch(`/api/users?${params.toString()}`)
 
-      const data = (await response.json().catch(() => null)) as (UsersResponse & { message?: string }) | null;
+      const data = (await response.json().catch(() => null)) as (UsersResponse & { message?: string }) | null
 
       if (!response.ok || !data) {
-        throw new Error(data && data.message ? data.message : 'No se pudo cargar el listado.');
+        throw new Error(data && data.message ? data.message : 'No se pudo cargar el listado.')
       }
 
-      setRows(data.data);
-      setTotal(data.total);
+      setRows(data.data)
+      setTotal(data.total)
     } catch (error) {
       setFeedback({
         type: 'error',
         message: error instanceof Error ? error.message : 'Error al cargar usuarios.'
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [page, pageSize, search]);
+  }, [page, pageSize, search])
 
   useEffect(() => {
     const handle = setTimeout(() => {
-      setSearch(searchInput.trim());
-      setPage(0);
-    }, 1000);
+      setSearch(searchInput.trim())
+      setPage(0)
+    }, 1000)
 
-    return () => clearTimeout(handle);
-  }, [searchInput]);
+    return () => clearTimeout(handle)
+  }, [searchInput])
 
   useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
+    loadUsers()
+  }, [loadUsers])
 
   // Menú kebab
   const openMenu = (event: MouseEvent<HTMLElement>, row: UserAccountListItem) => {
-    setMenuAnchor(event.currentTarget);
-    setMenuRow(row);
-  };
+    setMenuAnchor(event.currentTarget)
+    setMenuRow(row)
+  }
 
   const closeMenu = () => {
-    setMenuAnchor(null);
-    setMenuRow(null);
-  };
+    setMenuAnchor(null)
+    setMenuRow(null)
+  }
 
   // Asignar usuario
   const openAssign = (row: UserAccountListItem) => {
-    setAssignTarget(row);
-    setAssignUsername(suggestUsername(row.fullName));
-    setAssignPassword('');
-    setAssignError(null);
-    setAssignOpen(true);
-  };
+    setAssignTarget(row)
+    setAssignUsername(suggestUsername(row.fullName))
+    setAssignPassword('')
+    setAssignError(null)
+    setAssignOpen(true)
+  }
 
   const closeAssign = () => {
-    if (assignSaving) return;
+    if (assignSaving) return
 
-    setAssignOpen(false);
-    setAssignTarget(null);
-    setAssignUsername('');
-    setAssignPassword('');
-    setAssignError(null);
-  };
+    setAssignOpen(false)
+    setAssignTarget(null)
+    setAssignUsername('')
+    setAssignPassword('')
+    setAssignError(null)
+  }
 
   const submitAssign = async () => {
-    if (!assignTarget) return;
+    if (!assignTarget) return
 
-    setAssignSaving(true);
-    setAssignError(null);
+    setAssignSaving(true)
+    setAssignError(null)
 
     try {
       const response = await fetch('/api/users', {
@@ -234,148 +234,146 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
           username: assignUsername.trim(),
           password: assignPassword
         })
-      });
+      })
 
-      const data = (await response.json().catch(() => null)) as { message?: string } | null;
+      const data = (await response.json().catch(() => null)) as { message?: string } | null
 
       if (!response.ok) {
-        throw new Error(data && data.message ? data.message : 'No se pudo asignar el usuario.');
+        throw new Error(data && data.message ? data.message : 'No se pudo asignar el usuario.')
       }
 
-      const label = assignUsername.trim();
-      const name = assignTarget.fullName;
+      const label = assignUsername.trim()
+      const name = assignTarget.fullName
 
-      setAssignOpen(false);
-      setAssignTarget(null);
-      setAssignUsername('');
-      setAssignPassword('');
-      setFeedback({ type: 'success', message: `Usuario "${label}" asignado a ${name}.` });
+      setAssignOpen(false)
+      setAssignTarget(null)
+      setAssignUsername('')
+      setAssignPassword('')
+      setFeedback({ type: 'success', message: `Usuario "${label}" asignado a ${name}.` })
 
-      await loadUsers();
+      await loadUsers()
     } catch (error) {
-      setAssignError(error instanceof Error ? error.message : 'Error al asignar usuario.');
+      setAssignError(error instanceof Error ? error.message : 'Error al asignar usuario.')
     } finally {
-      setAssignSaving(false);
+      setAssignSaving(false)
     }
-  };
+  }
 
   // Suspender / reactivar cuenta
   const openStatus = (row: UserAccountListItem) => {
-    setStatusTarget(row);
-    setStatusAction(row.accountStatus === 'A' ? 'suspend' : 'reactivate');
-    setStatusError(null);
-    setStatusOpen(true);
-  };
+    setStatusTarget(row)
+    setStatusAction(row.accountStatus === 'A' ? 'suspend' : 'reactivate')
+    setStatusError(null)
+    setStatusOpen(true)
+  }
 
   const closeStatus = () => {
-    if (statusSaving) return;
+    if (statusSaving) return
 
-    setStatusOpen(false);
-    setStatusTarget(null);
-    setStatusAction(null);
-    setStatusError(null);
-  };
+    setStatusOpen(false)
+    setStatusTarget(null)
+    setStatusAction(null)
+    setStatusError(null)
+  }
 
   const submitStatus = async () => {
-    if (!statusTarget || statusTarget.userId === null || !statusAction) return;
+    if (!statusTarget || statusTarget.userId === null || !statusAction) return
 
-    const target = statusTarget;
-    const action = statusAction;
-    const nextEstatus = action === 'suspend' ? 'I' : 'A';
+    const target = statusTarget
+    const action = statusAction
+    const nextEstatus = action === 'suspend' ? 'I' : 'A'
 
-    setStatusSaving(true);
-    setStatusError(null);
+    setStatusSaving(true)
+    setStatusError(null)
 
     try {
       const response = await fetch(`/api/users/${target.userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estatus: nextEstatus })
-      });
+      })
 
-      const data = (await response.json().catch(() => null)) as { message?: string } | null;
+      const data = (await response.json().catch(() => null)) as { message?: string } | null
 
       if (!response.ok) {
-        throw new Error(data && data.message ? data.message : 'No se pudo cambiar el estado.');
+        throw new Error(data && data.message ? data.message : 'No se pudo cambiar el estado.')
       }
 
-      setStatusOpen(false);
-      setStatusTarget(null);
-      setStatusAction(null);
+      setStatusOpen(false)
+      setStatusTarget(null)
+      setStatusAction(null)
       setFeedback({
         type: 'success',
         message:
-          action === 'suspend'
-            ? `Cuenta de ${target.fullName} suspendida.`
-            : `Cuenta de ${target.fullName} reactivada.`
-      });
+          action === 'suspend' ? `Cuenta de ${target.fullName} suspendida.` : `Cuenta de ${target.fullName} reactivada.`
+      })
 
-      await loadUsers();
+      await loadUsers()
     } catch (error) {
-      setStatusError(error instanceof Error ? error.message : 'Error al cambiar el estado.');
+      setStatusError(error instanceof Error ? error.message : 'Error al cambiar el estado.')
     } finally {
-      setStatusSaving(false);
+      setStatusSaving(false)
     }
-  };
+  }
 
   // Restablecer MFA (endpoint de dominio Security, reusado)
   const openMfa = (row: UserAccountListItem) => {
-    setMfaTarget(row);
-    setMfaReason('Usuario perdió acceso a Google Authenticator');
-    setMfaError(null);
-    setMfaOpen(true);
-  };
+    setMfaTarget(row)
+    setMfaReason('Usuario perdió acceso a Google Authenticator')
+    setMfaError(null)
+    setMfaOpen(true)
+  }
 
   const closeMfa = () => {
-    if (mfaSaving) return;
+    if (mfaSaving) return
 
-    setMfaOpen(false);
-    setMfaTarget(null);
-    setMfaReason('');
-    setMfaError(null);
-  };
+    setMfaOpen(false)
+    setMfaTarget(null)
+    setMfaReason('')
+    setMfaError(null)
+  }
 
   const submitMfa = async () => {
-    if (!mfaTarget || mfaTarget.userId === null) return;
+    if (!mfaTarget || mfaTarget.userId === null) return
 
-    const target = mfaTarget;
+    const target = mfaTarget
 
-    setMfaSaving(true);
-    setMfaError(null);
+    setMfaSaving(true)
+    setMfaError(null)
 
     try {
       const response = await fetch(`/api/users/${target.userId}/mfa/reset`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: mfaReason.trim() || 'Admin MFA reset' })
-      });
+      })
 
       const data = (await response.json().catch(() => null)) as {
-        ok?: boolean;
-        message?: string[];
-        updatedRows?: number;
-      } | null;
+        ok?: boolean
+        message?: string[]
+        updatedRows?: number
+      } | null
 
       if (!response.ok || !data?.ok) {
-        throw new Error(data?.message?.[0] ?? 'No se pudo restablecer el MFA.');
+        throw new Error(data?.message?.[0] ?? 'No se pudo restablecer el MFA.')
       }
 
-      setMfaOpen(false);
-      setMfaTarget(null);
-      setMfaReason('');
+      setMfaOpen(false)
+      setMfaTarget(null)
+      setMfaReason('')
       setFeedback({
         type: 'success',
         message:
           (data.updatedRows ?? 0) > 0
             ? `MFA de ${target.fullName} restablecido. Deberá enrolar Google Authenticator de nuevo.`
             : `${target.fullName} no tenía un factor MFA activo.`
-      });
+      })
     } catch (error) {
-      setMfaError(error instanceof Error ? error.message : 'Error al restablecer MFA.');
+      setMfaError(error instanceof Error ? error.message : 'Error al restablecer MFA.')
     } finally {
-      setMfaSaving(false);
+      setMfaSaving(false)
     }
-  };
+  }
 
   return (
     <Box>
@@ -437,8 +435,8 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
                     </TableRow>
                   ) : (
                     rows.map(row => {
-                      const account = accountChip(row.accountStatus);
-                      const hasRowMenu = row.hasAccount && canEdit;
+                      const account = accountChip(row.accountStatus)
+                      const hasRowMenu = row.hasAccount && canEdit
 
                       return (
                         <TableRow key={row.employeeId} hover>
@@ -473,11 +471,11 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
                             <Chip
                               label={
                                 row.employmentStatus
-                                  ? employmentLabels[row.employmentStatus] ?? row.employmentStatus
+                                  ? (employmentLabels[row.employmentStatus] ?? row.employmentStatus)
                                   : '—'
                               }
                               color={
-                                row.employmentStatus ? employmentColors[row.employmentStatus] ?? 'default' : 'default'
+                                row.employmentStatus ? (employmentColors[row.employmentStatus] ?? 'default') : 'default'
                               }
                               size='small'
                               variant={row.isActive ? 'filled' : 'outlined'}
@@ -512,7 +510,7 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
                             ) : null}
                           </TableCell>
                         </TableRow>
-                      );
+                      )
                     })
                   )}
                 </TableBody>
@@ -527,8 +525,8 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
               rowsPerPageOptions={[10, 25, 50, 100]}
               onPageChange={(_event, value) => setPage(value)}
               onRowsPerPageChange={event => {
-                setPageSize(Number(event.target.value));
-                setPage(0);
+                setPageSize(Number(event.target.value))
+                setPage(0)
               }}
             />
           </Stack>
@@ -540,10 +538,10 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
         {menuRow && canEdit ? (
           <MenuItem
             onClick={() => {
-              const row = menuRow;
+              const row = menuRow
 
-              closeMenu();
-              if (row) openStatus(row);
+              closeMenu()
+              if (row) openStatus(row)
             }}
           >
             <ListItemIcon>
@@ -556,10 +554,10 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
         {menuRow && canEdit && menuRow.accountStatus === 'A' ? (
           <MenuItem
             onClick={() => {
-              const row = menuRow;
+              const row = menuRow
 
-              closeMenu();
-              if (row) openMfa(row);
+              closeMenu()
+              if (row) openMfa(row)
             }}
           >
             <ListItemIcon>
@@ -569,9 +567,9 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
           </MenuItem>
         ) : null}
 
-        <MenuItem disabled onClick={() => { }}>
+        <MenuItem disabled onClick={() => {}}>
           <ListItemIcon>
-            <i className="ri-key-2-line"></i>
+            <i className='ri-key-2-line'></i>
           </ListItemIcon>
           <ListItemText> Restablecer contraseña</ListItemText>
         </MenuItem>
@@ -674,7 +672,11 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
 
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
-            {mfaError ? <Alert severity='error'>{mfaError.length > 5 ? mfaError : 'Ocurrio un error, intente de nuevo mas tarde'}</Alert> : null}
+            {mfaError ? (
+              <Alert severity='error'>
+                {mfaError.length > 5 ? mfaError : 'Ocurrio un error, intente de nuevo mas tarde'}
+              </Alert>
+            ) : null}
 
             {mfaTarget ? (
               <Typography variant='body2'>
@@ -684,8 +686,8 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
             ) : null}
 
             <Typography variant='body2' color='text.secondary'>
-              Se desactivará su MFA actual; el usuario deberá enrolar Google Authenticator de nuevo en su próximo inicio de
-              sesión.
+              Se desactivará su MFA actual; el usuario deberá enrolar Google Authenticator de nuevo en su próximo inicio
+              de sesión.
             </Typography>
 
             <TextField
@@ -716,7 +718,7 @@ const UsersManager = ({ canCreate = false, canEdit = false }: UsersManagerProps)
         </DialogActions>
       </Dialog>
     </Box>
-  );
-};
+  )
+}
 
-export default UsersManager;
+export default UsersManager

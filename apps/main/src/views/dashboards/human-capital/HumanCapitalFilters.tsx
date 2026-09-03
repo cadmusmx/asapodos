@@ -38,7 +38,7 @@ const HumanCapitalFilters = ({ t, filters, values, onChange, onSearch, onClear, 
           <Select
             value={values.activo}
             label={t('dashboard.humanCapital.active')}
-            onChange={(e) => onChange('activo', e.target.value)}
+            onChange={e => onChange('activo', e.target.value)}
           >
             <MenuItem value=''>{t('filters.all')}</MenuItem>
             <MenuItem value='A'>{t('dashboard.humanCapital.active')}</MenuItem>
@@ -53,11 +53,13 @@ const HumanCapitalFilters = ({ t, filters, values, onChange, onSearch, onClear, 
           <Select
             value={values.area}
             label={t('dashboard.humanCapital.area')}
-            onChange={(e) => onChange('area', e.target.value)}
+            onChange={e => onChange('area', e.target.value)}
           >
             <MenuItem value=''>{t('filters.all')}</MenuItem>
-            {filters.areas.map((area) => (
-              <MenuItem key={area.id} value={area.id}>{area.nombre}</MenuItem>
+            {filters.areas.map(area => (
+              <MenuItem key={area.id} value={area.id}>
+                {area.nombre}
+              </MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -69,11 +71,13 @@ const HumanCapitalFilters = ({ t, filters, values, onChange, onSearch, onClear, 
           <Select
             value={values.departamento}
             label={t('dashboard.humanCapital.department')}
-            onChange={(e) => onChange('departamento', e.target.value)}
+            onChange={e => onChange('departamento', e.target.value)}
           >
             <MenuItem value=''>{t('filters.all')}</MenuItem>
-            {filters.departments.map((dept) => (
-              <MenuItem key={dept.id} value={dept.id}>{dept.nombre}</MenuItem>
+            {filters.departments.map(dept => (
+              <MenuItem key={dept.id} value={dept.id}>
+                {dept.nombre}
+              </MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -85,11 +89,13 @@ const HumanCapitalFilters = ({ t, filters, values, onChange, onSearch, onClear, 
           <Select
             value={values.puesto}
             label={t('dashboard.humanCapital.position')}
-            onChange={(e) => onChange('puesto', e.target.value)}
+            onChange={e => onChange('puesto', e.target.value)}
           >
             <MenuItem value=''>{t('filters.all')}</MenuItem>
-            {filters.positions.map((pos) => (
-              <MenuItem key={pos.id} value={pos.id}>{pos.nombre}</MenuItem>
+            {filters.positions.map(pos => (
+              <MenuItem key={pos.id} value={pos.id}>
+                {pos.nombre}
+              </MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -101,11 +107,13 @@ const HumanCapitalFilters = ({ t, filters, values, onChange, onSearch, onClear, 
           <Select
             value={values.region}
             label={t('dashboard.humanCapital.region')}
-            onChange={(e) => onChange('region', e.target.value)}
+            onChange={e => onChange('region', e.target.value)}
           >
             <MenuItem value=''>{t('filters.all')}</MenuItem>
-            {filters.regions.map((reg) => (
-              <MenuItem key={reg.id} value={reg.id}>{reg.nombre}</MenuItem>
+            {filters.regions.map(reg => (
+              <MenuItem key={reg.id} value={reg.id}>
+                {reg.nombre}
+              </MenuItem>
             ))}
           </Select>
         </FormControl>

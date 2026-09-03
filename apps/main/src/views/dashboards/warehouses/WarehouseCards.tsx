@@ -43,9 +43,8 @@ const WarehouseCards = ({ t, data }: Props) => {
   return (
     <Grid container spacing={3}>
       {data.map(warehouse => {
-        const porcentaje = warehouse.capacidad > 0
-          ? Math.round((warehouse.capacidadOcupada / warehouse.capacidad) * 100)
-          : 0
+        const porcentaje =
+          warehouse.capacidad > 0 ? Math.round((warehouse.capacidadOcupada / warehouse.capacidad) * 100) : 0
         const nivel = getNivel(porcentaje)
         const nivelColor = getNivelColor(porcentaje)
 
@@ -55,7 +54,11 @@ const WarehouseCards = ({ t, data }: Props) => {
               <div className='flex items-center justify-between mb-2'>
                 <Typography variant='h6'>{warehouse.almacen}</Typography>
                 <Chip
-                  label={warehouse.estadoAlmacen === 'Operativo' ? t('dashboard.warehouses.operational') : warehouse.estadoAlmacen}
+                  label={
+                    warehouse.estadoAlmacen === 'Operativo'
+                      ? t('dashboard.warehouses.operational')
+                      : warehouse.estadoAlmacen
+                  }
                   color={warehouse.estadoAlmacen === 'Operativo' ? 'success' : 'default'}
                   size='small'
                 />
@@ -68,12 +71,7 @@ const WarehouseCards = ({ t, data }: Props) => {
                   <Typography variant='body2'>
                     {t('dashboard.warehouses.occupancy')}: {porcentaje}%
                   </Typography>
-                  <Chip
-                    label={nivel}
-                    color={nivelColor}
-                    size='small'
-                    sx={{ height: 20 }}
-                  />
+                  <Chip label={nivel} color={nivelColor} size='small' sx={{ height: 20 }} />
                 </div>
                 <LinearProgress
                   variant='determinate'

@@ -1,22 +1,22 @@
 'use client'
 
 // MUI Imports
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import Typography from '@mui/material/Typography';
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
+import Button from '@mui/material/Button'
+import Chip from '@mui/material/Chip'
+import Typography from '@mui/material/Typography'
 
 // Diff logic
-import { diffJson, formatValue, type DiffStatus } from '@/lib/audit/diff';
+import { diffJson, formatValue, type DiffStatus } from '@/lib/audit/diff'
 
 type Props = {
-  open: boolean;
-  onClose: () => void;
-  oldData: string | null;
-  newData: string | null;
+  open: boolean
+  onClose: () => void
+  oldData: string | null
+  newData: string | null
 }
 
 // Color de fondo por estado de cambio (usa variables del tema MUI).
@@ -35,22 +35,20 @@ const statusLabel: Record<DiffStatus, string> = {
 }
 
 const AuditDetailDialog = ({ open, onClose, oldData, newData }: Props) => {
-  const hasOld = oldData != null && oldData !== '';
-  const hasNew = newData != null && newData !== '';
+  const hasOld = oldData != null && oldData !== ''
+  const hasNew = newData != null && newData !== ''
 
   // Modo diff solo cuando AMBOS tienen datos. Si no, mostramos el único presente.
-  const isDiff = hasOld && hasNew;
-  const rows = isDiff ? diffJson(oldData, newData) : [];
+  const isDiff = hasOld && hasNew
+  const rows = isDiff ? diffJson(oldData, newData) : []
 
   // Para los casos de un solo lado: el objeto a mostrar tal cual.
-  const singleData = hasNew ? newData : hasOld ? oldData : null;
-  const singleTitle = hasNew ? 'Datos del evento' : 'Datos eliminados';
+  const singleData = hasNew ? newData : hasOld ? oldData : null
+  const singleTitle = hasNew ? 'Datos del evento' : 'Datos eliminados'
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth='md' fullWidth>
-      <DialogTitle>
-        {isDiff ? 'Cambios registrados' : singleTitle}
-      </DialogTitle>
+      <DialogTitle>{isDiff ? 'Cambios registrados' : singleTitle}</DialogTitle>
       <DialogContent dividers>
         {isDiff ? (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -78,9 +76,7 @@ const AuditDetailDialog = ({ open, onClose, oldData, newData }: Props) => {
                         size='small'
                         variant='tonal'
                         label={statusLabel[r.status]}
-                        color={
-                          r.status === 'added' ? 'success' : r.status === 'removed' ? 'error' : 'warning'
-                        }
+                        color={r.status === 'added' ? 'success' : r.status === 'removed' ? 'error' : 'warning'}
                       />
                     )}
                   </td>
@@ -106,10 +102,10 @@ const AuditDetailDialog = ({ open, onClose, oldData, newData }: Props) => {
 // Formatea un string JSON de forma legible; si no es JSON válido, lo deja tal cual.
 function prettyPrint(s: string): string {
   try {
-    return JSON.stringify(JSON.parse(s), null, 2);
+    return JSON.stringify(JSON.parse(s), null, 2)
   } catch {
-    return s;
+    return s
   }
 }
 
-export default AuditDetailDialog;
+export default AuditDetailDialog

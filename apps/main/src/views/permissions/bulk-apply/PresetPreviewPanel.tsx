@@ -1,22 +1,22 @@
-'use client';
+'use client'
 
 // MUI Imports
-import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
-import Divider from '@mui/material/Divider';
-import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert'
+import Box from '@mui/material/Box'
+import Chip from '@mui/material/Chip'
+import Divider from '@mui/material/Divider'
+import Typography from '@mui/material/Typography'
 
 // Type Imports
-import type { ApplyMode, ApplyPreview, PreviewPerUserRow } from './types';
+import type { ApplyMode, ApplyPreview, PreviewPerUserRow } from './types'
 
 type Props = {
-  preview: ApplyPreview;
-  mode: ApplyMode;
+  preview: ApplyPreview
+  mode: ApplyMode
 
   /** viewCode -> label (de m.views, mismo origen que el grid). Fallback: el propio code. */
-  labels?: Record<string, string>;
-};
+  labels?: Record<string, string>
+}
 
 const Stat = ({ label, value, danger = false }: { label: string; value: number; danger?: boolean }) => (
   <Box>
@@ -27,7 +27,7 @@ const Stat = ({ label, value, danger = false }: { label: string; value: number; 
       {label}
     </Typography>
   </Box>
-);
+)
 
 // Máscaras ya vienen como strings ("-", "R|W"): se pintan directo.
 const MaskFlow = ({ current, nuevo }: { current: string; nuevo: string }) => (
@@ -36,23 +36,23 @@ const MaskFlow = ({ current, nuevo }: { current: string; nuevo: string }) => (
     <i className='ri-arrow-right-line text-textSecondary' />
     <code>{nuevo}</code>
   </span>
-);
+)
 
 const UserId = ({ id }: { id: number }) => (
   <Typography component='span' variant='caption' color='text.secondary'>
     #{id}
   </Typography>
-);
+)
 
-const losesSomething = (u: PreviewPerUserRow) => u.changes.some(c => c.removedMask !== null);
+const losesSomething = (u: PreviewPerUserRow) => u.changes.some(c => c.removedMask !== null)
 
 const PresetPreviewPanel = ({ preview, mode, labels }: Props) => {
-  const { totals, perView, perUser } = preview;
+  const { totals, perView, perUser } = preview
 
-  const viewLabel = (code: string) => labels?.[code] ?? code;
+  const viewLabel = (code: string) => labels?.[code] ?? code
 
   // Solo en SET puede haber pérdidas; se listan aparte y primero (parte crítica).
-  const losers = mode === 'SET' ? perUser.filter(losesSomething) : [];
+  const losers = mode === 'SET' ? perUser.filter(losesSomething) : []
 
   return (
     <div className='flex flex-col gap-4'>
@@ -163,7 +163,7 @@ const PresetPreviewPanel = ({ preview, mode, labels }: Props) => {
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default PresetPreviewPanel;
+export default PresetPreviewPanel

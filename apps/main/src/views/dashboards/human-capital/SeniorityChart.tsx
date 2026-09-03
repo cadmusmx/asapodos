@@ -43,13 +43,7 @@ const SeniorityChart = ({ t, data }: Props) => {
       borderColor: 'var(--mui-palette-divider)'
     },
     dataLabels: { enabled: false },
-    colors: [
-      '#0dcaf0',
-      '#0d6efd',
-      '#198754',
-      '#6f42c1',
-      '#fd7e14'
-    ],
+    colors: ['#0dcaf0', '#0d6efd', '#198754', '#6f42c1', '#fd7e14'],
     xaxis: {
       categories: sortedData.map(d => d.bucket),
       tickPlacement: 'on',

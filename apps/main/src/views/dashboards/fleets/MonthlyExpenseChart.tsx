@@ -18,6 +18,7 @@ type Props = {
 const fmtMXN = (val: number) => {
   if (val >= 1000000) return `$${(val / 1000000).toFixed(1)}M`
   if (val >= 1000) return `$${(val / 1000).toFixed(0)}K`
+
   return `$${val}`
 }
 
@@ -25,12 +26,27 @@ const MonthlyExpenseChart = ({ t, data, height = 310 }: Props) => {
   const theme = useTheme()
 
   const months = [...new Set(data.map(d => d.month))].sort((a, b) => {
-    const order = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+    const order = [
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre'
+    ]
+
     return order.indexOf(a) - order.indexOf(b)
   })
 
   const seriesData = months.map(month => {
     const item = data.find(d => d.month === month)
+
     return item ? Number(item.monto) : 0
   })
 
@@ -66,7 +82,10 @@ const MonthlyExpenseChart = ({ t, data, height = 310 }: Props) => {
       shared: true,
       intersect: false,
       theme: 'light',
-      y: { formatter: (val: number) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(val) }
+      y: {
+        formatter: (val: number) =>
+          new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(val)
+      }
     },
     dataLabels: { enabled: false }
   }

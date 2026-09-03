@@ -21,9 +21,24 @@ type Props = {
 
 const ProjectCounters = ({ t, counters }: Props) => {
   const items = [
-    { label: t('dashboard.projects.totalProjects'), value: counters.total, color: 'primary' as const, icon: 'ri-briefcase-line' },
-    { label: t('dashboard.projects.active'), value: counters.activos, color: 'success' as const, icon: 'ri-checkbox-circle-line' },
-    { label: t('dashboard.projects.pending'), value: counters.inactivos, color: 'warning' as const, icon: 'ri-time-line' }
+    {
+      label: t('dashboard.projects.totalProjects'),
+      value: counters.total,
+      color: 'primary' as const,
+      icon: 'ri-briefcase-line'
+    },
+    {
+      label: t('dashboard.projects.active'),
+      value: counters.activos,
+      color: 'success' as const,
+      icon: 'ri-checkbox-circle-line'
+    },
+    {
+      label: t('dashboard.projects.pending'),
+      value: counters.inactivos,
+      color: 'warning' as const,
+      icon: 'ri-time-line'
+    }
   ]
 
   return (

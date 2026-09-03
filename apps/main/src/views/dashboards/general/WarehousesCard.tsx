@@ -34,7 +34,9 @@ const WarehousesCard = ({ t, data }: Props) => {
           </CustomAvatar>
           <div>
             <Typography variant='h5'>{data.total}</Typography>
-            <Typography variant='body2' color='text.secondary'>{t('dashboard.warehouses.totalWarehouses')}</Typography>
+            <Typography variant='body2' color='text.secondary'>
+              {t('dashboard.warehouses.totalWarehouses')}
+            </Typography>
           </div>
         </div>
         <div className='flex items-center gap-3 mb-2'>
@@ -43,7 +45,9 @@ const WarehousesCard = ({ t, data }: Props) => {
           </CustomAvatar>
           <div>
             <Typography variant='h5'>{data.capacidad.toLocaleString()} m²</Typography>
-            <Typography variant='body2' color='text.secondary'>{t('dashboard.warehouses.totalCapacity')}</Typography>
+            <Typography variant='body2' color='text.secondary'>
+              {t('dashboard.warehouses.totalCapacity')}
+            </Typography>
           </div>
         </div>
         <div className='flex items-center justify-between mb-2'>

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 
+import dynamic from 'next/dynamic'
+
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
@@ -18,10 +20,9 @@ import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
-import Skeleton from '@mui/material/Skeleton'
+import _Skeleton from '@mui/material/Skeleton'
 import { styled } from '@mui/material/styles'
 
-import dynamic from 'next/dynamic'
 
 import type {
   CapacityHistoryApiResponse,
@@ -45,7 +46,7 @@ type Props = {
   t: (key: string) => string
 }
 
-const GradientDialog = styled(Dialog)(({ theme }) => ({
+const GradientDialog = styled(Dialog)(({ theme: _theme }) => ({
   '& .MuiDialogTitle-root': {
     background: 'linear-gradient(135deg, #004080, #0099cc)',
     color: 'white'
@@ -53,11 +54,11 @@ const GradientDialog = styled(Dialog)(({ theme }) => ({
 }))
 
 const CapacityHistoryModal = ({ open, warehouseName, onClose, t }: Props) => {
-  const [isLoading, setIsLoading] = useState(false)
+  const [_isLoading, _setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(false)
   const [rawData, setRawData] = useState<CapacityHistoryItem[]>([])
-  const [capacidadTotal, setCapacidadTotal] = useState(100)
-  const [error, setError] = useState<string | null>(null)
+  const [_capacidadTotal, setCapacidadTotal] = useState(100)
+  const [_error, setError] = useState<string | null>(null)
   const [preset, setPreset] = useState<HistoryPreset>('last4')
   const [group, setGroup] = useState<HistoryGroup>('day')
   const [rangeStart, setRangeStart] = useState('')
@@ -68,10 +69,13 @@ const CapacityHistoryModal = ({ open, warehouseName, onClose, t }: Props) => {
   const fetchData = useCallback(async () => {
     setIsFetching(true)
     setError(null)
+
     try {
       const res = await fetch(`/api/warehouses/map/capacity-history?almacen=${encodeURIComponent(warehouseName)}`)
+
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json: CapacityHistoryApiResponse = await res.json()
+
       if (!json.ok) throw new Error('API error')
       setRawData(json.data)
       setCapacidadTotal(json.capacidadTotal)
@@ -101,12 +105,15 @@ const CapacityHistoryModal = ({ open, warehouseName, onClose, t }: Props) => {
   useEffect(() => {
     if (grouped.length === 0) {
       setSummary('')
-      return
+      
+return
     }
+
     const values = grouped.map(g => g.v)
     const min = Math.min(...values)
     const max = Math.max(...values)
     const last = values[values.length - 1]
+
     setSummary(`${t('navigation.warehouses.capacityHistory.records')}: ${values.length} · ${t('navigation.warehouses.capacityHistory.min')}: ${min}% · ${t('navigation.warehouses.capacityHistory.max')}: ${max}% · ${t('navigation.warehouses.capacityHistory.current')}: ${last}%`)
   }, [grouped, t])
 
@@ -127,9 +134,11 @@ const CapacityHistoryModal = ({ open, warehouseName, onClose, t }: Props) => {
   const handleDownloadChart = async () => {
     try {
       const chart = (chartRef.current as any)?.chart
+
       if (!chart) return
       const uri = await chart.dataURI()
       const a = document.createElement('a')
+
       a.href = uri
       a.download = `grafica-capacidad-${warehouseName.replace(/\s+/g, '-')}.png`
       document.body.appendChild(a)
@@ -147,6 +156,7 @@ const CapacityHistoryModal = ({ open, warehouseName, onClose, t }: Props) => {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
+
     a.href = url
     a.download = `capacidad-${warehouseName.replace(/\s+/g, '-')}.csv`
     document.body.appendChild(a)

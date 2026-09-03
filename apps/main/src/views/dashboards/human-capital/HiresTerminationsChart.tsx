@@ -22,7 +22,20 @@ const HiresTerminationsChart = ({ t, data }: Props) => {
   const theme = useTheme()
 
   const months = [...new Set(data.map(d => d.month))].sort((a, b) => {
-    const order = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    const order = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
+    ]
     return order.indexOf(a) - order.indexOf(b)
   })
 

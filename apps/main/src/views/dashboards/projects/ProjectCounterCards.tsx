@@ -16,9 +16,24 @@ type Props = {
 
 const ProjectCounterCards = ({ t, counters }: Props) => {
   const items = [
-    { label: t('dashboard.projects.totalProjects'), value: counters.total, color: 'var(--mui-palette-primary-main)', icon: 'ri-briefcase-line' },
-    { label: t('dashboard.projects.active'), value: counters.activos, color: 'var(--mui-palette-success-main)', icon: 'ri-checkbox-circle-line' },
-    { label: t('dashboard.projects.pending'), value: counters.inactivos, color: 'var(--mui-palette-warning-main)', icon: 'ri-time-line' }
+    {
+      label: t('dashboard.projects.totalProjects'),
+      value: counters.total,
+      color: 'var(--mui-palette-primary-main)',
+      icon: 'ri-briefcase-line'
+    },
+    {
+      label: t('dashboard.projects.active'),
+      value: counters.activos,
+      color: 'var(--mui-palette-success-main)',
+      icon: 'ri-checkbox-circle-line'
+    },
+    {
+      label: t('dashboard.projects.pending'),
+      value: counters.inactivos,
+      color: 'var(--mui-palette-warning-main)',
+      icon: 'ri-time-line'
+    }
   ]
 
   return (
@@ -53,11 +68,19 @@ const ProjectCounterCards = ({ t, counters }: Props) => {
                 <div>
                   <Typography
                     variant='body2'
-                    sx={{ color: 'var(--mui-palette-text-secondary)', fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}
+                    sx={{
+                      color: 'var(--mui-palette-text-secondary)',
+                      fontSize: '0.75rem',
+                      fontWeight: 500,
+                      lineHeight: 1.2
+                    }}
                   >
                     {item.label}
                   </Typography>
-                  <Typography variant='h4' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1.2 }}>
+                  <Typography
+                    variant='h4'
+                    sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1.2 }}
+                  >
                     {item.value.toLocaleString()}
                   </Typography>
                 </div>

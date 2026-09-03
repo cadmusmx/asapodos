@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 import Box from '@mui/material/Box'
-import Grid from '@mui/material/Grid2'
+import _Grid from '@mui/material/Grid2'
 
 import WarehouseMapStats from './WarehouseMapStats'
 import WarehouseMapView from './WarehouseMapView'
@@ -18,7 +18,7 @@ type Props = {
 }
 
 const WarehouseMapPage = ({ mapboxToken, t }: Props) => {
-  const { warehouses, statistics, capacities, isLoadingMap, isLoadingCapacities, errorMap } = useWarehouseMap()
+  const { warehouses, statistics, capacities, isLoadingMap, isLoadingCapacities, errorMap: _errorMap } = useWarehouseMap()
   const [filterType, setFilterType] = useState<MapFilterType>('all')
   const [historyOpen, setHistoryOpen] = useState(false)
   const [selectedWarehouse, setSelectedWarehouse] = useState('')

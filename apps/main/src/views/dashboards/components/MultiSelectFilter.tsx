@@ -11,9 +11,7 @@ import type { SelectChangeEvent } from '@mui/material/Select'
 type CatalogItems = Array<{ id: number; nombre: string }>
 type StaticOption = { value: string; label: string }
 
-type Option =
-  | { source: 'catalog'; items: CatalogItems }
-  | { source: 'static'; items: StaticOption[] }
+type Option = { source: 'catalog'; items: CatalogItems } | { source: 'static'; items: StaticOption[] }
 
 type MultiSelectFilterProps = {
   label: string
@@ -23,32 +21,37 @@ type MultiSelectFilterProps = {
   emptyText?: string
 }
 
-const MultiSelectFilter = ({ label, optionType, value, onChange, emptyText = 'Sin opciones' }: MultiSelectFilterProps) => {
+const MultiSelectFilter = ({
+  label,
+  optionType,
+  value,
+  onChange,
+  emptyText = 'Sin opciones'
+}: MultiSelectFilterProps) => {
   const handleChange = (event: SelectChangeEvent<string[]>) => {
     const val = event.target.value as string[]
-    onChange(val.filter((v) => v !== ''))
+
+    onChange(val.filter(v => v !== ''))
   }
 
   const renderValue = (selected: string[]) => (
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-      {selected.map((v) => {
+      {selected.map(v => {
         let display = v
+
         if (optionType.source === 'catalog') {
-          const opt = optionType.items.find((o) => String(o.id) === v)
+          const opt = optionType.items.find(o => String(o.id) === v)
+
           display = opt ? opt.nombre : v
         } else {
-          const opt = optionType.items.find((o) => o.value === v)
+          const opt = optionType.items.find(o => o.value === v)
+
           display = opt ? opt.label : v
         }
+
         const truncated = display.length > 15 ? display.substring(0, 15) + '...' : display
-        return (
-          <Chip
-            key={v}
-            label={truncated}
-            size='small'
-            sx={{ height: 20, fontSize: '0.7rem' }}
-          />
-        )
+
+        return <Chip key={v} label={truncated} size='small' sx={{ height: 20, fontSize: '0.7rem' }} />
       })}
     </Box>
   )
@@ -58,13 +61,15 @@ const MultiSelectFilter = ({ label, optionType, value, onChange, emptyText = 'Si
       if (optionType.items.length === 0) {
         return <MenuItem disabled>{emptyText}</MenuItem>
       }
-      return optionType.items.map((opt) => (
+
+      return optionType.items.map(opt => (
         <MenuItem key={opt.id} value={String(opt.id)}>
           {opt.nombre}
         </MenuItem>
       ))
     }
-    return optionType.items.map((opt) => (
+
+    return optionType.items.map(opt => (
       <MenuItem key={opt.value} value={opt.value}>
         {opt.label}
       </MenuItem>

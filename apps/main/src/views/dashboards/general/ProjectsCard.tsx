@@ -34,7 +34,9 @@ const ProjectsCard = ({ t, data }: Props) => {
               </CustomAvatar>
               <div>
                 <Typography variant='h5'>{data.total}</Typography>
-                <Typography variant='body2' color='text.secondary'>{t('dashboard.general.total')}</Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  {t('dashboard.general.total')}
+                </Typography>
               </div>
             </div>
           </Grid>
@@ -45,7 +47,9 @@ const ProjectsCard = ({ t, data }: Props) => {
               </CustomAvatar>
               <div>
                 <Typography variant='h5'>{data.activos}</Typography>
-                <Typography variant='body2' color='text.secondary'>{t('dashboard.general.active')}</Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  {t('dashboard.general.active')}
+                </Typography>
               </div>
             </div>
           </Grid>
@@ -56,7 +60,9 @@ const ProjectsCard = ({ t, data }: Props) => {
               </CustomAvatar>
               <div>
                 <Typography variant='h5'>{data.inactivos}</Typography>
-                <Typography variant='body2' color='text.secondary'>{t('dashboard.general.inactive')}</Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  {t('dashboard.general.inactive')}
+                </Typography>
               </div>
             </div>
           </Grid>

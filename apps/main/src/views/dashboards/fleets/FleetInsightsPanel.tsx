@@ -19,7 +19,12 @@ type Props = {
 }
 
 const formatMXN = (value: number) =>
-  new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value)
+  new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value)
 
 const FleetInsightsPanel = ({ t, insights }: Props) => {
   const { topUnit, topType, topResponsible, pending } = insights
@@ -29,15 +34,34 @@ const FleetInsightsPanel = ({ t, insights }: Props) => {
       {pending > 0 && (
         <Alert severity='warning' sx={{ borderRadius: 2 }}>
           <AlertTitle sx={{ fontWeight: 700, fontSize: '0.85rem' }}>{t('dashboard.fleets.pendingRequests')}</AlertTitle>
-          <Typography variant='body2'>{pending} {t('dashboard.fleets.pendingDescription')}</Typography>
+          <Typography variant='body2'>
+            {pending} {t('dashboard.fleets.pendingDescription')}
+          </Typography>
         </Alert>
       )}
 
       <Grid container spacing={2}>
         {topUnit && (
           <Grid size={{ xs: 12, sm: 4 }}>
-            <Box sx={{ p: 1.5, borderRadius: 2, border: '1px solid var(--mui-palette-divider)', background: 'var(--mui-palette-background-default)' }}>
-              <Typography variant='caption' sx={{ color: 'var(--mui-palette-text-disabled)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 0.5 }}>
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2,
+                border: '1px solid var(--mui-palette-divider)',
+                background: 'var(--mui-palette-background-default)'
+              }}
+            >
+              <Typography
+                variant='caption'
+                sx={{
+                  color: 'var(--mui-palette-text-disabled)',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  display: 'block',
+                  mb: 0.5
+                }}
+              >
                 {t('dashboard.fleets.topUnit')}
               </Typography>
               <Typography variant='body2' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', mb: 0.25 }}>
@@ -52,8 +76,25 @@ const FleetInsightsPanel = ({ t, insights }: Props) => {
 
         {topType && (
           <Grid size={{ xs: 12, sm: 4 }}>
-            <Box sx={{ p: 1.5, borderRadius: 2, border: '1px solid var(--mui-palette-divider)', background: 'var(--mui-palette-background-default)' }}>
-              <Typography variant='caption' sx={{ color: 'var(--mui-palette-text-disabled)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 0.5 }}>
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2,
+                border: '1px solid var(--mui-palette-divider)',
+                background: 'var(--mui-palette-background-default)'
+              }}
+            >
+              <Typography
+                variant='caption'
+                sx={{
+                  color: 'var(--mui-palette-text-disabled)',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  display: 'block',
+                  mb: 0.5
+                }}
+              >
                 {t('dashboard.fleets.topType')}
               </Typography>
               <Typography variant='body2' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', mb: 0.25 }}>
@@ -68,8 +109,25 @@ const FleetInsightsPanel = ({ t, insights }: Props) => {
 
         {topResponsible && (
           <Grid size={{ xs: 12, sm: 4 }}>
-            <Box sx={{ p: 1.5, borderRadius: 2, border: '1px solid var(--mui-palette-divider)', background: 'var(--mui-palette-background-default)' }}>
-              <Typography variant='caption' sx={{ color: 'var(--mui-palette-text-disabled)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 0.5 }}>
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2,
+                border: '1px solid var(--mui-palette-divider)',
+                background: 'var(--mui-palette-background-default)'
+              }}
+            >
+              <Typography
+                variant='caption'
+                sx={{
+                  color: 'var(--mui-palette-text-disabled)',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  display: 'block',
+                  mb: 0.5
+                }}
+              >
                 {t('dashboard.fleets.topResponsible')}
               </Typography>
               <Typography variant='body2' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', mb: 0.25 }}>

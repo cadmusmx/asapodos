@@ -118,7 +118,12 @@ const WarehouseTable = ({ t, data }: Props) => {
         title={t('dashboard.warehouses.warehouse')}
         action={
           <div className='flex gap-2'>
-            <Button variant='contained' size='small' onClick={handleExport} startIcon={<i className='ri-file-excel-line' />}>
+            <Button
+              variant='contained'
+              size='small'
+              onClick={handleExport}
+              startIcon={<i className='ri-file-excel-line' />}
+            >
               {t('dashboard.warehouses.exportExcel')}
             </Button>
           </div>
@@ -150,9 +155,7 @@ const WarehouseTable = ({ t, data }: Props) => {
             </TableHead>
             <TableBody>
               {sortedData.map(row => {
-                const pct = row.capacidad > 0
-                  ? Math.round((row.capacidadOcupada / row.capacidad) * 100)
-                  : 0
+                const pct = row.capacidad > 0 ? Math.round((row.capacidadOcupada / row.capacidad) * 100) : 0
                 const nivel = getNivel(pct)
                 const nivelColor = getNivelColor(pct)
 
@@ -163,7 +166,9 @@ const WarehouseTable = ({ t, data }: Props) => {
                     <TableCell>{row.ciudad}</TableCell>
                     <TableCell>
                       <Chip
-                        label={row.estadoAlmacen === 'Operativo' ? t('dashboard.warehouses.operational') : row.estadoAlmacen}
+                        label={
+                          row.estadoAlmacen === 'Operativo' ? t('dashboard.warehouses.operational') : row.estadoAlmacen
+                        }
                         color={row.estadoAlmacen === 'Operativo' ? 'success' : 'default'}
                         size='small'
                       />

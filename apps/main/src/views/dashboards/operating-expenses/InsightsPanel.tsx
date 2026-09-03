@@ -19,7 +19,12 @@ type Props = {
 }
 
 const formatMXN = (value: number) =>
-  new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value)
+  new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value)
 
 const InsightsPanel = ({ t, insights }: Props) => {
   const { topProject, topType, topApplicant, pending } = insights
@@ -28,7 +33,9 @@ const InsightsPanel = ({ t, insights }: Props) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, p: 1 }}>
       {pending > 0 && (
         <Alert severity='warning' sx={{ borderRadius: 2 }}>
-          <AlertTitle sx={{ fontWeight: 700, fontSize: '0.85rem' }}>{t('dashboard.expenses.pendingRequests')}</AlertTitle>
+          <AlertTitle sx={{ fontWeight: 700, fontSize: '0.85rem' }}>
+            {t('dashboard.expenses.pendingRequests')}
+          </AlertTitle>
           <Typography variant='body2'>
             {pending} {t('dashboard.expenses.pendingDescription')}
           </Typography>
@@ -38,8 +45,25 @@ const InsightsPanel = ({ t, insights }: Props) => {
       <Grid container spacing={2}>
         {topProject && (
           <Grid size={{ xs: 12, sm: 4 }}>
-            <Box sx={{ p: 1.5, borderRadius: 2, border: '1px solid var(--mui-palette-divider)', background: 'var(--mui-palette-background-default)' }}>
-              <Typography variant='caption' sx={{ color: 'var(--mui-palette-text-disabled)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 0.5 }}>
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2,
+                border: '1px solid var(--mui-palette-divider)',
+                background: 'var(--mui-palette-background-default)'
+              }}
+            >
+              <Typography
+                variant='caption'
+                sx={{
+                  color: 'var(--mui-palette-text-disabled)',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  display: 'block',
+                  mb: 0.5
+                }}
+              >
                 {t('dashboard.expenses.topProject')}
               </Typography>
               <Typography variant='body2' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', mb: 0.25 }}>
@@ -54,8 +78,25 @@ const InsightsPanel = ({ t, insights }: Props) => {
 
         {topType && (
           <Grid size={{ xs: 12, sm: 4 }}>
-            <Box sx={{ p: 1.5, borderRadius: 2, border: '1px solid var(--mui-palette-divider)', background: 'var(--mui-palette-background-default)' }}>
-              <Typography variant='caption' sx={{ color: 'var(--mui-palette-text-disabled)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 0.5 }}>
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2,
+                border: '1px solid var(--mui-palette-divider)',
+                background: 'var(--mui-palette-background-default)'
+              }}
+            >
+              <Typography
+                variant='caption'
+                sx={{
+                  color: 'var(--mui-palette-text-disabled)',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  display: 'block',
+                  mb: 0.5
+                }}
+              >
                 {t('dashboard.expenses.topType')}
               </Typography>
               <Typography variant='body2' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', mb: 0.25 }}>
@@ -70,8 +111,25 @@ const InsightsPanel = ({ t, insights }: Props) => {
 
         {topApplicant && (
           <Grid size={{ xs: 12, sm: 4 }}>
-            <Box sx={{ p: 1.5, borderRadius: 2, border: '1px solid var(--mui-palette-divider)', background: 'var(--mui-palette-background-default)' }}>
-              <Typography variant='caption' sx={{ color: 'var(--mui-palette-text-disabled)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 0.5 }}>
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2,
+                border: '1px solid var(--mui-palette-divider)',
+                background: 'var(--mui-palette-background-default)'
+              }}
+            >
+              <Typography
+                variant='caption'
+                sx={{
+                  color: 'var(--mui-palette-text-disabled)',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  display: 'block',
+                  mb: 0.5
+                }}
+              >
                 {t('dashboard.expenses.topApplicant')}
               </Typography>
               <Typography variant='body2' sx={{ fontWeight: 700, color: 'var(--mui-palette-text-primary)', mb: 0.25 }}>

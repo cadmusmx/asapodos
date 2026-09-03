@@ -23,16 +23,20 @@ function MeDisplay({ state, data }: Props) {
           USER
         </Typography>
         <Box className='flex flex-col gap-2'>
-          {([
-            ['ID', data.user.id],
-            ['Name', data.user.name],
-            ['Email', data.user.email],
-            ['Area', data.user.area],
-            ['Position', data.user.position],
-            ['Region', data.user.region],
-          ] as [string, unknown][]).map(([label, value]) => (
+          {(
+            [
+              ['ID', data.user.id],
+              ['Name', data.user.name],
+              ['Email', data.user.email],
+              ['Area', data.user.area],
+              ['Position', data.user.position],
+              ['Region', data.user.region]
+            ] as [string, unknown][]
+          ).map(([label, value]) => (
             <Box key={label} className='flex items-center justify-between'>
-              <Typography variant='body2' color='text.secondary'>{label}</Typography>
+              <Typography variant='body2' color='text.secondary'>
+                {label}
+              </Typography>
               <Typography variant='body2' className='font-medium'>
                 {String(value ?? 'null')}
               </Typography>
@@ -46,21 +50,24 @@ function MeDisplay({ state, data }: Props) {
           TENANT
         </Typography>
         <Box className='flex flex-col gap-2'>
-          {([
-            ['ID', data.tenant.id],
-            ['Slug', data.tenant.slug],
-            ['Name', data.tenant.name],
-            ['Active', data.tenant.isActive ? 'Yes' : 'No']
-          ] as [string, unknown][]).map(([label, value]) => (
+          {(
+            [
+              ['ID', data.tenant.id],
+              ['Slug', data.tenant.slug],
+              ['Name', data.tenant.name],
+              ['Active', data.tenant.isActive ? 'Yes' : 'No']
+            ] as [string, unknown][]
+          ).map(([label, value]) => (
             <Box key={label} className='flex items-center justify-between'>
-              <Typography variant='body2' color='text.secondary'>{label}</Typography>
+              <Typography variant='body2' color='text.secondary'>
+                {label}
+              </Typography>
               <Typography variant='body2' className='font-medium'>
                 {String(value ?? 'null')}
               </Typography>
             </Box>
           ))}
         </Box>
-
       </Grid>
       {/* data.permissions migrado por rbac */}
     </Grid>
@@ -78,9 +85,7 @@ export default function ApiMeTest() {
         autoFetch: true
       }}
     >
-      {(state, data, error, refetch) => (
-        <MeDisplay state={state} data={data} error={error} refetch={refetch} />
-      )}
+      {(state, data, error, refetch) => <MeDisplay state={state} data={data} error={error} refetch={refetch} />}
     </ApiTestCard>
   )
 }

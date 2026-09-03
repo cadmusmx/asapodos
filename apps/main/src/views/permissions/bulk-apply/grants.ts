@@ -10,34 +10,28 @@
 //    el grant carga R aunque R sea público, porque el grant DEBE ser canónico.
 //    `& ~public` decide SI se emite, nunca QUÉ valor.
 
-import { isProtectedView } from '../mask-ui';
-import type { DepartmentView, PresetGrant } from './types';
+import { isProtectedView } from '../mask-ui'
+import type { DepartmentView, PresetGrant } from './types'
 
-export function collectGrants(
-  workingMasks: Record<string, number>,
-  views: DepartmentView[]
-): PresetGrant[] {
-  const grants: PresetGrant[] = [];
+export function collectGrants(workingMasks: Record<string, number>, views: DepartmentView[]): PresetGrant[] {
+  const grants: PresetGrant[] = []
 
   for (const v of views) {
-    if (isProtectedView(v.viewCode)) continue; // permissions_access nunca se emite (defensa)
+    if (isProtectedView(v.viewCode)) continue // permissions_access nunca se emite (defensa)
 
-    const working = workingMasks[v.viewCode] ?? 0;
+    const working = workingMasks[v.viewCode] ?? 0
 
     // ~publicMask es NOT de 32 bits (negativo), pero AND nunca AGREGA bits:
     // el resultado ⊆ working ⊆ 0..15, así que el dominio de 4 bits se respeta.
     if ((working & ~v.publicMask) !== 0) {
-      grants.push({ viewCode: v.viewCode, permMask: working });
+      grants.push({ viewCode: v.viewCode, permMask: working })
     }
   }
 
-  return grants;
+  return grants
 }
 
 /** ¿Hay al menos un grant emitible? Habilita previsualizar/confirmar. */
-export function hasEmittableGrants(
-  workingMasks: Record<string, number>,
-  views: DepartmentView[]
-): boolean {
-  return collectGrants(workingMasks, views).length > 0;
+export function hasEmittableGrants(workingMasks: Record<string, number>, views: DepartmentView[]): boolean {
+  return collectGrants(workingMasks, views).length > 0
 }
