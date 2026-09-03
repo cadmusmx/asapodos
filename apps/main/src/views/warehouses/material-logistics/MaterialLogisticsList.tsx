@@ -28,6 +28,7 @@ import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '
 import styles from '@core/styles/table.module.css'
 
 import type { XdockRow, CarrierRow } from '@/app/api/warehouses/material-logistics/catalogs/route'
+import ExportDialog from '@/components/export/ExportDialog'
 import OutFolioModal from './components/OutFolioModal'
 
 
@@ -118,6 +119,7 @@ const MaterialLogisticsList = ({ canCreate }: { canCreate: boolean }) => {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [exportOpen, setExportOpen] = useState(false)
   const [outModalOpen, setOutModalOpen] = useState(false)
 
   const resetToFirst = () => setPageIndex(0)
@@ -346,6 +348,18 @@ const MaterialLogisticsList = ({ canCreate }: { canCreate: boolean }) => {
     state: { pagination: { pageIndex, pageSize } },
   })
 
+  const exportParams: Record<string, string> = {
+    re: String(re),
+    ...(xdock ? { idXdock: String(xdock) } : {}),
+    ...(carrier ? { idCarrier: String(carrier) } : {}),
+  }
+
+  const exportChips = [
+    re ? 'Recepciones' : 'Entregas',
+    xdock && `XDOCK: ${catalogs.xdocks.find(x => x.Id === Number(xdock))?.Nombre}`,
+    carrier && `Carrier: ${catalogs.carriers.find(c => c.Id === Number(carrier))?.Carrier}`,
+  ].filter(Boolean) as string[]
+
   return (
     <>
       <Card>
@@ -360,6 +374,9 @@ const MaterialLogisticsList = ({ canCreate }: { canCreate: boolean }) => {
                 </Button>
               )}
               <Button size='small' variant='outlined' color='secondary' onClick={goCatalogs}>Catálogos</Button>
+              <Button size='small' variant='outlined' color='success' startIcon={<i className='ri-file-excel-2-line' />} onClick={() => setExportOpen(true)}>
+                Exportar
+              </Button>
               <ToggleButtonGroup
                 exclusive
                 size='small'
@@ -502,6 +519,15 @@ const MaterialLogisticsList = ({ canCreate }: { canCreate: boolean }) => {
           />
         </CardContent>
       </Card>
+      <ExportDialog
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        exportBaseUrl='/api/warehouses/material-logistics/export/xlsx'
+        baseParams={exportParams}
+        filterChips={exportChips}
+        initialFechaInicio={fechaInicio}
+        initialFechaFin={fechaFin}
+      />
       <OutFolioModal open={outModalOpen} onClose={() => setOutModalOpen(false)} lang={String(lang)} />
     </>
   )
