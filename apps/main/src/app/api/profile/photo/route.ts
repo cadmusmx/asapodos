@@ -68,10 +68,7 @@ export async function POST(req: Request) {
     const ext = dot >= 0 ? name.slice(dot).toLowerCase() : ''
 
     if (!ALLOWED.includes(ext)) {
-      return NextResponse.json(
-        { message: 'Tipo de archivo no permitido. Solo JPG y PNG.' },
-        { status: 400 }
-      )
+      return NextResponse.json({ message: 'Tipo de archivo no permitido. Solo JPG y PNG.' }, { status: 400 })
     }
 
     if (file.size > MAX_BYTES) {
@@ -80,7 +77,7 @@ export async function POST(req: Request) {
 
     const buffer = Buffer.from(await file.arrayBuffer())
     const ts = new Date().toISOString().replace(/[:.]/g, '').slice(0, 15)
-    const folder = `${process.env.S3_FOLDER ?? 'Pr'}/`;
+    const folder = `${process.env.S3_FOLDER ?? 'Pr'}/`
 
     const key = `${folder}${slug}/profile-photos/web/${ts}-web${ext}`
 
@@ -95,7 +92,7 @@ export async function POST(req: Request) {
 
     const url = S3_PUBLIC_BASE_URL ? `${S3_PUBLIC_BASE_URL}${key}` : key
 
-    await withTenantContext(tenantId, async (tx) => {
+    await withTenantContext(tenantId, async tx => {
       const empRows = await tx.$queryRaw<Array<{ EmployeeID: number }>>(
         Prisma.sql`SELECT EmployeeID FROM dbo.GASOCO_Cat_Usuarios WHERE IdUsuario = ${userId} AND TenantID = CAST(${tenantId} AS uniqueidentifier)`
       )
@@ -116,7 +113,7 @@ export async function POST(req: Request) {
       oldData: null,
       newData: { employeeId: userId, fotoPerfil: url },
       idOrigin: ID_ORIGIN_WEB
-    }).catch(() => { })
+    }).catch(() => {})
 
     return NextResponse.json({ success: true, url })
   } catch (e) {

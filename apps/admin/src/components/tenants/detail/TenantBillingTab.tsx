@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Grid from '@mui/material/Grid'
@@ -19,6 +20,7 @@ import Chip from '@mui/material/Chip'
 import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
 import type { BillingRecord, BillingRecordStatus } from '@gaso/shared/types/plan'
+
 import EmptyState from '@/components/shared/EmptyState'
 
 const STATUS_CONFIG: Record<BillingRecordStatus, { color: 'default' | 'success' | 'error' | 'warning'; label: string }> = {
@@ -41,7 +43,9 @@ export default function TenantBillingTab({ tenantId, billingRecords }: TenantBil
   const formatDate = (date: Date | string | null) => {
     if (!date) return '-'
     const d = typeof date === 'string' ? new Date(date) : date
-    return d.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })
+
+    
+return d.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })
   }
 
   const handleMarkPaid = async (billingRecordId: string) => {
@@ -57,6 +61,7 @@ export default function TenantBillingTab({ tenantId, billingRecords }: TenantBil
 
       if (!res.ok) {
         const result = await res.json()
+
         throw new Error(result.message || 'Error al marcar como pagado')
       }
 
@@ -101,7 +106,9 @@ export default function TenantBillingTab({ tenantId, billingRecords }: TenantBil
                   <TableBody>
                     {billingRecords.map(record => {
                       const statusCfg = STATUS_CONFIG[record.status] ?? { color: 'default', label: record.status }
-                      return (
+
+                      
+return (
                         <TableRow key={record.billingRecordId} hover>
                           <TableCell>{formatDate(record.createdAt)}</TableCell>
                           <TableCell>

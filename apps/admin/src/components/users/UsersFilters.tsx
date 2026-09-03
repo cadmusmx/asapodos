@@ -1,7 +1,8 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
+
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
@@ -9,6 +10,7 @@ import MenuItem from '@mui/material/MenuItem'
 import Stack from '@mui/material/Stack'
 import InputAdornment from '@mui/material/InputAdornment'
 import CircularProgress from '@mui/material/CircularProgress'
+
 import type { PlatformRole } from '@/types/apps/platformUserTypes'
 
 const roleOptions: { value: PlatformRole | ''; label: string }[] = [
@@ -37,6 +39,7 @@ export default function UsersFilters() {
 
   const applyFilters = useCallback(() => {
     const params = new URLSearchParams()
+
     if (debouncedSearch) params.set('search', debouncedSearch)
     if (role) params.set('role', role)
     params.set('page', '1')
@@ -51,7 +54,9 @@ export default function UsersFilters() {
     timeoutRef.current = setTimeout(() => {
       setDebouncedSearch(search)
     }, 400)
-    return () => {
+
+    
+return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
   }, [search, mounted])
@@ -59,16 +64,7 @@ export default function UsersFilters() {
   useEffect(() => {
     if (!mounted) return
     applyFilters()
-  }, [debouncedSearch, role, mounted])
-
-  const handleClear = useCallback(() => {
-    setSearch('')
-    setRole('')
-    setDebouncedSearch('')
-    router.push('/admin/users')
-  }, [router])
-
-  const hasActiveFilters = Boolean(search || role)
+  }, [debouncedSearch, role, mounted, applyFilters])
 
   return (
     <Box sx={{ mb: 3 }}>

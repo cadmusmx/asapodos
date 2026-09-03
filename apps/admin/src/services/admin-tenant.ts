@@ -18,5 +18,6 @@ export async function getAdminTenantId(): Promise<string> {
   }
 
   cachedAdminTenantId = result[0].TenantID
-  return cachedAdminTenantId
+  
+return cachedAdminTenantId
 }

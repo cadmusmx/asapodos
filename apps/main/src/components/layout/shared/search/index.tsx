@@ -224,12 +224,12 @@ const NavSearch = () => {
           <i className='ri-search-line text-textPrimary' />
         </IconButton>
       ) : (
-          <div className='flex items-center gap-2 cursor-pointer' onClick={() => setOpen(true)}>
-            <IconButton className='text-textPrimary' onClick={() => setOpen(true)}>
-              <i className='ri-search-line text-textPrimary' />
-            </IconButton>
-            <div className='whitespace-nowrap select-none text-textDisabled'>{t('search.placeholder')}</div>
-          </div>
+        <div className='flex items-center gap-2 cursor-pointer' onClick={() => setOpen(true)}>
+          <IconButton className='text-textPrimary' onClick={() => setOpen(true)}>
+            <i className='ri-search-line text-textPrimary' />
+          </IconButton>
+          <div className='whitespace-nowrap select-none text-textDisabled'>{t('search.placeholder')}</div>
+        </div>
       )}
       <CommandDialog open={open} onOpenChange={setOpen}>
         <div className='flex items-center justify-between border-be pli-4 plb-3 gap-2'>

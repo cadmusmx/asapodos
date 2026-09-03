@@ -29,7 +29,6 @@ const Page = async (props: { params: Promise<{ lang: Locale; id: string }> }) =>
   const canDelete = (access.mask & PERM.D) === PERM.D
 
   return <EmployeeExpediente employeeId={employeeId} canCreate={canCreate} canEdit={canEdit} canDelete={canDelete} />
-
 }
 
 export default Page

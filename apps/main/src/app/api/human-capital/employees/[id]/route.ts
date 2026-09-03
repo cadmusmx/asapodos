@@ -80,10 +80,7 @@ export const PUT = withPermission(
 
       payload = parseEmployeePayload(body)
     } catch (error) {
-      return NextResponse.json(
-        { message: error instanceof Error ? error.message : 'Body inválido' },
-        { status: 400 }
-      )
+      return NextResponse.json({ message: error instanceof Error ? error.message : 'Body inválido' }, { status: 400 })
     }
 
     try {
@@ -136,7 +133,7 @@ export const PUT = withPermission(
         appUser: auth.email ?? null,
         oldData: result.oldEmployee,
         newData: result.newEmployee
-      }).catch(() => { })
+      }).catch(() => {})
 
       return NextResponse.json({ data: result.newEmployee })
     } catch (error) {
@@ -208,7 +205,7 @@ export const DELETE = withPermission(
         appUser: auth.email ?? null,
         oldData: result.oldEmployee,
         newData: result.newEmployee
-      }).catch(() => { })
+      }).catch(() => {})
 
       return NextResponse.json({ data: result.newEmployee })
     } catch (error) {
@@ -233,15 +230,17 @@ export const GET = withPermission(
     }
 
     return withTenantContext(tenantId, async tx => {
-      const rows = await tx.$queryRaw<Array<{
-        EmployeeID: number
-        EmployeeNumber: string | null
-        FirstName: string
-        LastName: string
-        Email: string | null
-        EmploymentStatus: string | null
-        IsActive: boolean | number
-      }>>(
+      const rows = await tx.$queryRaw<
+        Array<{
+          EmployeeID: number
+          EmployeeNumber: string | null
+          FirstName: string
+          LastName: string
+          Email: string | null
+          EmploymentStatus: string | null
+          IsActive: boolean | number
+        }>
+      >(
         Prisma.sql`
           SELECT e.EmployeeID, e.EmployeeNumber, e.FirstName, e.LastName, e.Email, e.EmploymentStatus, e.IsActive
           FROM HumanCapital.Employees e

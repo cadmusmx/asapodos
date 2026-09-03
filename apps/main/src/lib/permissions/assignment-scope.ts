@@ -1,11 +1,11 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '@prisma/client'
 
-type Tx = Prisma.TransactionClient;
+type Tx = Prisma.TransactionClient
 
 export type AssignmentScope = {
-  actorDept: number;
-  hasFullScope: boolean;
-};
+  actorDept: number
+  hasFullScope: boolean
+}
 
 /**
  * Alcance de asignación del actor. PUNTO ÚNICO DE VERDAD:
@@ -23,7 +23,7 @@ export type AssignmentScope = {
 export async function resolveAssignmentScope(
   tx: Tx,
   tenantId: string,
-  userId: number,
+  userId: number
 ): Promise<AssignmentScope | null> {
   const actorRows = await tx.$queryRaw<Array<{ DepartmentID: number | null }>>`
     SELECT e.DepartmentID
@@ -33,12 +33,12 @@ export async function resolveAssignmentScope(
     AND e.EmployeeID = u.EmployeeID
     WHERE u.IdUsuario = ${userId}
       AND u.TenantID = CAST(${tenantId} AS uniqueidentifier)
-  `;
+  `
 
-  const actorDept = actorRows[0]?.DepartmentID ?? null;
+  const actorDept = actorRows[0]?.DepartmentID ?? null
 
   if (actorDept === null) {
-    return null;
+    return null
   }
 
   const privRows = await tx.$queryRaw<Array<{ ok: number }>>`
@@ -46,7 +46,7 @@ export async function resolveAssignmentScope(
     FROM Security.AssignableDepartments
     WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
       AND IdDepartamento = ${actorDept}
-  `;
+  `
 
-  return { actorDept, hasFullScope: privRows.length > 0 };
+  return { actorDept, hasFullScope: privRows.length > 0 }
 }

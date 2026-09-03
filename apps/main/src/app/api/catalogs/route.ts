@@ -29,32 +29,32 @@ type CatalogType =
   | 'vehicleNoEconomico'
   | 'vehicleShops'
 
-export const GET = withPermission(
-  'dashboard_veh',
-  async (req, { tenantId }) => {
-    try {
-      const { searchParams } = new URL(req.url)
-      const type = searchParams.get('type') as CatalogType
+export const GET = withPermission('dashboard_veh', async (req, { tenantId }) => {
+  try {
+    const { searchParams } = new URL(req.url)
+    const type = searchParams.get('type') as CatalogType
 
-      if (!type) {
-        return NextResponse.json({ error: 'Missing type parameter' }, { status: 400 })
-      }
+    if (!type) {
+      return NextResponse.json({ error: 'Missing type parameter' }, { status: 400 })
+    }
 
-      let result: Array<{ id: number; nombre: string }> = []
+    let result: Array<{ id: number; nombre: string }> = []
 
-      switch (type) {
-        case 'regions': {
-          const regions = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
+    switch (type) {
+      case 'regions': {
+        const regions = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
             SELECT IdReg as id, ISNULL(NombreReg, 'Sin nombre') as nombre
             FROM Cat_Regiones
             ORDER BY NombreReg
           `
-          result = regions || []
-          break
-        }
+        result = regions || []
+        break
+      }
 
-        case 'departments': {
-          const depts = await withTenantContext(tenantId, async tx =>
+      case 'departments': {
+        const depts = await withTenantContext(
+          tenantId,
+          async tx =>
             tx.$queryRaw<Array<{ id: number; nombre: string }>>`
               SELECT DepartmentID as id, Name as nombre
               FROM HumanCapital.Departments
@@ -62,13 +62,15 @@ export const GET = withPermission(
                 AND IsActive = 1
               ORDER BY Name
             `
-          )
-          result = depts || []
-          break
-        }
+        )
+        result = depts || []
+        break
+      }
 
-        case 'areas': {
-          const areas = await withTenantContext(tenantId, async tx =>
+      case 'areas': {
+        const areas = await withTenantContext(
+          tenantId,
+          async tx =>
             tx.$queryRaw<Array<{ id: number; nombre: string }>>`
               SELECT AreaID as id, Name as nombre
               FROM HumanCapital.Areas
@@ -76,13 +78,15 @@ export const GET = withPermission(
                 AND IsActive = 1
               ORDER BY Name
             `
-          )
-          result = areas || []
-          break
-        }
+        )
+        result = areas || []
+        break
+      }
 
-        case 'positions': {
-          const puestos = await withTenantContext(tenantId, async tx =>
+      case 'positions': {
+        const puestos = await withTenantContext(
+          tenantId,
+          async tx =>
             tx.$queryRaw<Array<{ id: number; nombre: string }>>`
               SELECT PositionID as id, Name as nombre
               FROM HumanCapital.Positions
@@ -90,36 +94,36 @@ export const GET = withPermission(
                 AND IsActive = 1
               ORDER BY Name
             `
-          )
-          result = puestos || []
-          break
-        }
+        )
+        result = puestos || []
+        break
+      }
 
-        case 'projects': {
-          const proyectos = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
+      case 'projects': {
+        const proyectos = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
             SELECT Id as id, ISNULL(ProyectoNombre, 'Sin nombre') as nombre
             FROM GASOCO_Cat_Proyectos
             WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
             ORDER BY ProyectoNombre
           `
-          result = proyectos || []
-          break
-        }
+        result = proyectos || []
+        break
+      }
 
-        case 'clients': {
-          console.log('[catalogs] Fetching clients, tenantId:', tenantId)
-          const clientes = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
+      case 'clients': {
+        const clientes = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
             SELECT IdCliente as id, ISNULL(ClienteNombre, 'Sin nombre') as nombre
             FROM GASOCO_Cat_Clientes
             ORDER BY ClienteNombre
           `
-          console.log('[catalogs] Clients result:', clientes)
-          result = clientes || []
-          break
-        }
+        result = clientes || []
+        break
+      }
 
-        case 'employees': {
-          const empleados = await withTenantContext(tenantId, async tx =>
+      case 'employees': {
+        const empleados = await withTenantContext(
+          tenantId,
+          async tx =>
             tx.$queryRaw<Array<{ id: number; nombre: string }>>`
               SELECT u.IdUsuario as id,
                      LTRIM(RTRIM(e.FirstName + ' ' + e.LastName)) as nombre
@@ -130,91 +134,90 @@ export const GET = withPermission(
                 AND e.IsActive=1
               ORDER BY e.FirstName, e.LastName
             `
-          )
-          result = empleados || []
-          break
-        }
+        )
+        result = empleados || []
+        break
+      }
 
-        case 'vehicleTypes': {
-          const tipos = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
+      case 'vehicleTypes': {
+        const tipos = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
             SELECT Id as id, Text as nombre
             FROM Cat_RVTipoVehiculo
             ORDER BY Text
           `
-          result = tipos || []
-          break
-        }
+        result = tipos || []
+        break
+      }
 
-        case 'warehouses': {
-          const almacenes = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
+      case 'warehouses': {
+        const almacenes = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
             SELECT Id as id, Almacen as nombre
             FROM GASOAL_CatalogoAlmacenes
             WHERE Almacen != ''
             ORDER BY Almacen
           `
-          result = almacenes || []
-          break
-        }
+        result = almacenes || []
+        break
+      }
 
-        case 'expenseTypes': {
-          const tipos = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
+      case 'expenseTypes': {
+        const tipos = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
             SELECT IdTipoSolicitud as id, NombreSolicitud as nombre
             FROM GASOSOL_TipoSolGastos
             ORDER BY NombreSolicitud
           `
-          result = tipos || []
-          break
-        }
+        result = tipos || []
+        break
+      }
 
-        case 'vehicleExpenseTypes': {
-          const tipos = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
+      case 'vehicleExpenseTypes': {
+        const tipos = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
             SELECT IdSolicitud as id, ISNULL(NombreSolicitud, 'No Especificado') as nombre
             FROM GASOGASTOVEH_Cat_Solicitud
             ORDER BY NombreSolicitud
           `
-          result = tipos || []
-          break
-        }
+        result = tipos || []
+        break
+      }
 
-        case 'vehicleResponsibles': {
-          const responsibles = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
+      case 'vehicleResponsibles': {
+        const responsibles = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
             SELECT IdResposable as id, ISNULL(NombreResposable, 'No Especificado') as nombre
             FROM GASOGASTOVEH_Cat_Responsable
             ORDER BY NombreResposable
           `
-          result = responsibles || []
-          break
-        }
+        result = responsibles || []
+        break
+      }
 
-        case 'vehicleNoEconomico': {
-          const unidades = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
+      case 'vehicleNoEconomico': {
+        const unidades = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
             SELECT DISTINCT CAST(noEconomico AS INT) as id, CAST(noEconomico AS VARCHAR(20)) as nombre
             FROM GASOGASTOVEH
             WHERE noEconomico IS NOT NULL AND noEconomico != ''
             ORDER BY CAST(noEconomico AS INT)
           `
-          result = unidades || []
-          break
-        }
+        result = unidades || []
+        break
+      }
 
-        case 'vehicleShops': {
-          const talleres = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
+      case 'vehicleShops': {
+        const talleres = await prisma.$queryRaw<Array<{ id: number; nombre: string }>>`
             SELECT IdTaller as id, ISNULL(NombreTaller, 'No Especificado') as nombre
             FROM GASOCO_Cat_Talleres
             ORDER BY NombreTaller
           `
-          result = talleres || []
-          break
-        }
-
-        default:
-          return NextResponse.json({ error: 'Invalid type parameter' }, { status: 400 })
+        result = talleres || []
+        break
       }
 
-      return NextResponse.json({ data: result })
-    } catch (error) {
-      console.error('[catalogs] Error:', error)
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+      default:
+        return NextResponse.json({ error: 'Invalid type parameter' }, { status: 400 })
     }
+
+    return NextResponse.json({ data: result })
+  } catch (error) {
+    console.error('[catalogs] Error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-)
+})

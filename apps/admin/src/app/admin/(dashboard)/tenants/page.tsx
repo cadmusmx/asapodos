@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { requirePlatformRole } from '@gaso/shared'
+
 import { listTenants, type TenantStatus } from '@/services/tenant-service'
 import TenantsPageClient from '@/components/tenants/TenantsPageClient'
 

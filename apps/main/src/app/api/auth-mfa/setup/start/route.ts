@@ -103,12 +103,18 @@ export async function POST(req: Request) {
       )
     }
 
-    const emp = await withTenantContext(tenantId, async (tx) => {
-      const rows = await tx.$queryRaw<Array<{
-        Nombre: string | null; Email: string | null
-        IdDepartamento: number | null; IdPuesto: number | null
-        IdArea: number | null; IdRegion: number | null; IsActive: boolean
-      }>>`
+    const emp = await withTenantContext(tenantId, async tx => {
+      const rows = await tx.$queryRaw<
+        Array<{
+          Nombre: string | null
+          Email: string | null
+          IdDepartamento: number | null
+          IdPuesto: number | null
+          IdArea: number | null
+          IdRegion: number | null
+          IsActive: boolean
+        }>
+      >`
         SELECT e.Email, e.IsActive
         FROM HumanCapital.Employees e
         WHERE e.TenantID = CAST(${tenantId} AS uniqueidentifier) AND e.EmployeeID = ${user.EmployeeID}
@@ -118,7 +124,16 @@ export async function POST(req: Request) {
     })
 
     if (!emp || !emp.IsActive) {
-      await writeAuthAudit({ eventType: 'LOGIN_FAILED', eventStatus: 'FAILED', tenantId, tenantSlug, username, userId: user.IdUsuario, reason: 'EMPLOYEE_NOT_FOUND', idOrigin })
+      await writeAuthAudit({
+        eventType: 'LOGIN_FAILED',
+        eventStatus: 'FAILED',
+        tenantId,
+        tenantSlug,
+        username,
+        userId: user.IdUsuario,
+        reason: 'EMPLOYEE_NOT_FOUND',
+        idOrigin
+      })
 
       return NextResponse.json({ ok: false, message: ['User or Password is invalid'] }, { status: 401 })
     }

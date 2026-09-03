@@ -89,7 +89,9 @@ export async function POST(req: Request) {
         LEFT JOIN HumanCapital.EmployeeData ed ON ed.TenantID = e.TenantID AND ed.EmployeeID = e.EmployeeID
         WHERE e.TenantID = CAST(${tenantId} AS uniqueidentifier) AND e.EmployeeID = ${user.EmployeeID}
       `
-      return rows[0] ?? null
+
+      
+return rows[0] ?? null
     })
 
     if (!emp) {

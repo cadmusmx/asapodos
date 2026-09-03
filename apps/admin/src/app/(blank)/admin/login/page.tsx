@@ -2,8 +2,11 @@
 
 import { Suspense, useState } from 'react'
 
-import { signIn, getSession } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
+
+import Image from 'next/image'
+
+import { signIn, getSession } from 'next-auth/react'
 import { Controller, useForm } from 'react-hook-form'
 import { valibotResolver } from '@hookform/resolvers/valibot'
 import { object, minLength, string, pipe, nonEmpty } from 'valibot'
@@ -16,7 +19,8 @@ import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import Image from 'next/image'
+
+
 import Box from '@mui/material/Box'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
@@ -26,7 +30,7 @@ import FormControlLabel from '@mui/material/FormControlLabel'
 import classnames from 'classnames'
 
 import Logo from '@components/layout/shared/Logo'
-import Illustrations from '@components/Illustrations'
+import _Illustrations from '@components/Illustrations'
 
 import { useSettings } from '@core/hooks/useSettings'
 import { useImageVariant } from '@core/hooks/useImageVariant'
@@ -79,8 +83,9 @@ const AdminLoginForm = () => {
 
   const mode = settings.mode === 'system' ? 'light' : settings.mode ?? 'light'
 
-  const authBackground = useImageVariant(mode, lightImg, darkImg)
-  const characterIllustration = useImageVariant(
+  const _authBackground = useImageVariant(mode, lightImg, darkImg)
+
+  const _characterIllustration = useImageVariant(
     mode,
     lightIllustration,
     darkIllustration,
@@ -235,6 +240,7 @@ const AdminLoginForm = () => {
       if (res && res.ok && res.error === null) {
         const session = await getSession()
         const redirectUrl = session?.user?.platformRole === 'auditor' ? '/admin/audit' : callbackUrl
+
         window.location.replace(redirectUrl)
 
         return
@@ -242,12 +248,15 @@ const AdminLoginForm = () => {
 
       if (res?.error) {
         let errorMessage = 'An error occurred'
+
         try {
           const parsed = JSON.parse(res.error)
+
           errorMessage = Array.isArray(parsed.message) ? parsed.message[0] : (parsed.message || errorMessage)
         } catch {
           errorMessage = res.error || 'An error occurred'
         }
+
         setErrorState({ message: [errorMessage] })
         setMfaStep(false)
         setChallengeId(null)
@@ -414,7 +423,7 @@ const AdminLoginForm = () => {
 
                   <Typography variant='body2'>2. Toca el botón +.</Typography>
 
-                  <Typography variant='body2'>3. Selecciona "Escanear código QR".</Typography>
+                  <Typography variant='body2'>3. Selecciona &quot;Escanear código QR&quot;.</Typography>
 
                   <Typography variant='body2'>
                     4. Ingresa abajo el código de 6 dígitos generado por la app.

@@ -11,8 +11,8 @@ export const config = {
   ]
 }
 
-const DEFAULT_TENANT_SLUG = process.env.DEFAULT_TENANT_SLUG ?? 'gasohub' // Sin TLD
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+const DEFAULT_TENANT_SLUG = process.env.DEFAULT_TENANT_SLUG ?? ''
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? ''
 
 const LOCALES = ['en', 'es'] as const
 
@@ -63,7 +63,7 @@ function extractSubdomain(host: string): string {
 
   const parts = cleanHost.split('.')
 
-  if (parts[0] === 'develop') return parts[1];
+  if (parts[0] === 'develop') return parts[1]
 
   return parts[0] ?? ''
 }
@@ -80,7 +80,7 @@ function auditAccessDenied(payload: object) {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload)
-  }).catch(() => { })
+  }).catch(() => {})
 }
 
 function mobileTenantError(code: string, message: string, status: number) {
@@ -90,7 +90,6 @@ function mobileTenantError(code: string, message: string, status: number) {
 export async function middleware(request: NextRequest) {
   const host = request.headers.get('host') ?? ''
   const pathname = request.nextUrl.pathname
-
 
   // --- Resolución de tenant para origen móvil (x-origin-id: 3) ---
   // La app no tiene subdominio: resuelve el tenant desde el x-tenant-slug entrante y responde JSON (no redirect).
@@ -114,9 +113,10 @@ export async function middleware(request: NextRequest) {
       if (!tenant.isActive) {
         const errorCode = tenant.Status === 'SUSPENDED' ? 'TENANT_SUSPENDED' : 'TENANT_INACTIVE'
 
-        const errorMessage = tenant.Status === 'SUSPENDED'
-          ? (tenant.SuspendedMessage ?? 'Organization is suspended')
-          : 'Organization is inactive'
+        const errorMessage =
+          tenant.Status === 'SUSPENDED'
+            ? (tenant.SuspendedMessage ?? 'Organization is suspended')
+            : 'Organization is inactive'
 
         return NextResponse.json(
           { ok: false, code: errorCode, message: errorMessage, reason: tenant.SuspendedReason ?? null },

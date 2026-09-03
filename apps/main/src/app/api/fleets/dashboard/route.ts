@@ -38,12 +38,15 @@ export const GET = withPermission(
       const year = yearParam ? Number(yearParam) : new Date().getFullYear()
 
       const parseMulti = (vals: string[]): number[] =>
-        vals.flatMap(v => v.split(',')).map(Number).filter(n => !isNaN(n) && n > 0)
+        vals
+          .flatMap(v => v.split(','))
+          .map(Number)
+          .filter(n => !isNaN(n) && n > 0)
 
       const tipoArr = parseMulti(rawTipo)
       const responsableArr = parseMulti(rawResponsable)
 
-      return await withTenantContext(tenantId, async (tx) => {
+      return await withTenantContext(tenantId, async tx => {
         const tenantCondition = Prisma.sql`1 = 1`
 
         const buildWhere = (extra: Prisma.Sql[] = []) => {
@@ -58,13 +61,15 @@ export const GET = withPermission(
 
         const baseWhere = buildWhere()
 
-        const countersResult = await prisma.$queryRaw<Array<{
-          gastoTotal: number
-          solicitado: number
-          unidades: number
-          solicitudes: number
-          diferencia: number
-        }>>(
+        const countersResult = await prisma.$queryRaw<
+          Array<{
+            gastoTotal: number
+            solicitado: number
+            unidades: number
+            solicitudes: number
+            diferencia: number
+          }>
+        >(
           Prisma.sql`
             SELECT
               ISNULL(SUM(g.Costo), 0) as gastoTotal,
@@ -231,15 +236,17 @@ export const GET = withPermission(
           `
         )
 
-        const allRows = await prisma.$queryRaw<Array<{
-          noEconomico: number | null
-          Costo: number | null
-          CostoSolicitado: number | null
-          DiferenciaCosto: number | null
-          IdSolicitud: number | null
-          IdResposable: number | null
-          EstatusSolicitud: number | null
-        }>>(
+        const allRows = await prisma.$queryRaw<
+          Array<{
+            noEconomico: number | null
+            Costo: number | null
+            CostoSolicitado: number | null
+            DiferenciaCosto: number | null
+            IdSolicitud: number | null
+            IdResposable: number | null
+            EstatusSolicitud: number | null
+          }>
+        >(
           Prisma.sql`
             SELECT g.noEconomico, g.Costo, g.CostoSolicitado, g.DiferenciaCosto, g.IdSolicitud, g.IdResposable, g.EstatusSolicitud
             FROM GASOGASTOVEH g
@@ -256,20 +263,30 @@ export const GET = withPermission(
               gastoTotal: Number(counters?.gastoTotal ?? 0),
               solicitado: Number(counters?.solicitado ?? 0),
               unidades: Number(counters?.unidades ?? 0),
-              promedio: Number(counters?.unidades ?? 0) > 0
-                ? Number(counters?.gastoTotal ?? 0) / Number(counters?.unidades)
-                : 0,
+              promedio:
+                Number(counters?.unidades ?? 0) > 0
+                  ? Number(counters?.gastoTotal ?? 0) / Number(counters?.unidades)
+                  : 0,
               solicitudes: Number(counters?.solicitudes ?? 0),
               diferencia: Number(counters?.diferencia ?? 0)
             },
-            monthlyKm: monthlyKm.map(r => ({ month: r.month, year: r.year, count: Number(r.count), monto: Number(r.monto) })),
+            monthlyKm: monthlyKm.map(r => ({
+              month: r.month,
+              year: r.year,
+              count: Number(r.count),
+              monto: Number(r.monto)
+            })),
             statusData: statusData.map(r => ({ key: r.key, count: Number(r.count) })),
             porUnidad: topUnits.map(r => ({ key: r.key, count: Number(r.count), monto: Number(r.monto) })),
             porTipo: porTipo.map(r => ({ key: r.key, count: Number(r.count), monto: Number(r.monto) })),
             porResponsable: porResponsable.map(r => ({ key: r.key, count: Number(r.count), monto: Number(r.monto) })),
             porTaller: porTaller.map(r => ({ key: r.key, count: Number(r.count), monto: Number(r.monto) })),
             unitsTable: unitsTable.map(r => ({ key: r.key, count: Number(r.count), monto: Number(r.monto) })),
-            facturadoPagado: facturadoPagadoTable.map(r => ({ key: r.key, count: Number(r.count), monto: Number(r.monto) })),
+            facturadoPagado: facturadoPagadoTable.map(r => ({
+              key: r.key,
+              count: Number(r.count),
+              monto: Number(r.monto)
+            })),
             insights
           }
         })
@@ -282,15 +299,17 @@ export const GET = withPermission(
   { bit: PERM.R }
 )
 
-function computeInsights(rows: Array<{
-  noEconomico: number | null
-  Costo: number | null
-  CostoSolicitado: number | null
-  DiferenciaCosto: number | null
-  IdSolicitud: number | null
-  IdResposable: number | null
-  EstatusSolicitud: number | null
-}>): FleetInsights {
+function computeInsights(
+  rows: Array<{
+    noEconomico: number | null
+    Costo: number | null
+    CostoSolicitado: number | null
+    DiferenciaCosto: number | null
+    IdSolicitud: number | null
+    IdResposable: number | null
+    EstatusSolicitud: number | null
+  }>
+): FleetInsights {
   const unitMap: Record<string, number> = {}
   const typeMap: Record<string, number> = {}
   const respMap: Record<string, number> = {}
@@ -324,7 +343,9 @@ function computeInsights(rows: Array<{
   return {
     topUnit: topUnit ? { label: topUnit[0], value: topUnit[1] } : null,
     topType: topType ? { label: topType[0].replace('Tipo-', ''), value: topType[1] } : null,
-    topResponsible: topResponsible ? { label: topResponsible[0].replace('Resposable-', ''), value: topResponsible[1] } : null,
+    topResponsible: topResponsible
+      ? { label: topResponsible[0].replace('Resposable-', ''), value: topResponsible[1] }
+      : null,
     pending
   }
 }

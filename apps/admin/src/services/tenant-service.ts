@@ -1,6 +1,6 @@
 import { revalidateTag } from 'next/cache'
+
 import { prisma, writeTransactionLog } from '@gaso/shared'
-import type { PlatformRole } from '@gaso/shared'
 
 export type TenantStatus = 'ACTIVE' | 'SUSPENDED' | 'INACTIVE' | 'TRIAL'
 
@@ -56,6 +56,7 @@ export async function listTenants({
     CreatedAt: 't.CreatedAt',
     SubscriptionPlan: 't.SubscriptionPlan'
   }
+
   const safeSortField = allowedSortFields[sortField] || 't.CreatedAt'
   const safeSortDir = sortDir === 'asc' ? 'ASC' : 'DESC'
 
@@ -178,7 +179,8 @@ export async function createTenant(options: CreateTenantOptions): Promise<{ ok: 
     return { ok: true, tenantId }
   } catch (error) {
     console.error('[CREATE_TENANT_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 
@@ -198,6 +200,7 @@ export async function updateTenant(options: UpdateTenantOptions): Promise<Tenant
 
   try {
     const tenant = await getTenantById(tenantId)
+
     if (!tenant) {
       return { ok: false, error: 'TENANT_NOT_FOUND' }
     }
@@ -210,18 +213,22 @@ export async function updateTenant(options: UpdateTenantOptions): Promise<Tenant
       params.push(companyName)
       updates.push(`CompanyName = @p${paramIndex++}`)
     }
+
     if (dominio !== undefined) {
       params.push(dominio)
       updates.push(`Dominio = @p${paramIndex++}`)
     }
+
     if (subscriptionPlan !== undefined) {
       params.push(subscriptionPlan)
       updates.push(`SubscriptionPlan = @p${paramIndex++}`)
     }
+
     if (maxUsers !== undefined) {
       params.push(maxUsers)
       updates.push(`MaxUsers = @p${paramIndex++}`)
     }
+
     if (region !== undefined) {
       params.push(region)
       updates.push(`Region = @p${paramIndex++}`)
@@ -240,6 +247,7 @@ export async function updateTenant(options: UpdateTenantOptions): Promise<Tenant
     `, ...params)
 
     const newData: Record<string, unknown> = {}
+
     if (companyName) newData.companyName = companyName
     if (dominio) newData.dominio = dominio
     if (subscriptionPlan !== undefined) newData.subscriptionPlan = subscriptionPlan
@@ -261,7 +269,8 @@ export async function updateTenant(options: UpdateTenantOptions): Promise<Tenant
     return { ok: true, tenantId }
   } catch (error) {
     console.error('[UPDATE_TENANT_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 
@@ -312,7 +321,8 @@ export async function suspendTenant(
     return { ok: true, tenantId }
   } catch (error) {
     console.error('[SUSPEND_TENANT_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 
@@ -362,7 +372,8 @@ export async function activateTenant(
     return { ok: true, tenantId }
   } catch (error) {
     console.error('[ACTIVATE_TENANT_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 
@@ -408,6 +419,7 @@ export async function deactivateTenant(
     return { ok: true, tenantId }
   } catch (error) {
     console.error('[DEACTIVATE_TENANT_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }

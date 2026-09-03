@@ -995,8 +995,8 @@ model EmployeeData {
   TieneLicencia                                                   Boolean?
   FechaCaducidadLicencia                                          DateTime?  @db.Date
   FechaDC3                                                        DateTime?  @db.Date
-  SexoID                                                          Int?       @db.SmallInt
-  TipoSangreID                                                    Int?       @db.SmallInt
+  Sexo                                                            String?  @db.VarChar(10)
+  TipoSangre                                                      String?  @db.VarChar(10)
   RegionID                                                        Int?
   SupervisorEmployeeID                                            Int?
   CreatedAt                                                       DateTime   @default(dbgenerated("sysutcdatetime()"), map: "DF__EmployeeD__Creat__487B981A")

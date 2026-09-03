@@ -1,48 +1,48 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client'
 
-import { PERM, withPermission, writeTransactionLog } from '@gaso/shared';
+import { PERM, withPermission, writeTransactionLog } from '@gaso/shared'
 
-import { withTenantContext } from '@/lib/tenant-context';
+import { withTenantContext } from '@/lib/tenant-context'
 
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'
 
-type RouteContext = { params: Promise<{ id: string }> };
+type RouteContext = { params: Promise<{ id: string }> }
 
 type EmployeeDataRow = {
-  EmployeeID: number;
-  CURP: string | null;
-  RFC: string | null;
-  NSS: string | null;
-  FechaNacimiento: Date | string | null;
-  Sueldo: unknown;
-  TieneLicencia: boolean | number | null;
-  FechaCaducidadLicencia: Date | string | null;
-  FechaDC3: Date | string | null;
-  Sexo: string | null;
-  TipoSangre: string | null;
-  RegionID: number | null;
-  AreaID: number | null;
-  AreaName: string | null;
-  SupervisorEmployeeID: number | null;
-  SupNumber: string | null;
-  SupFirst: string | null;
-  SupLast: string | null;
-};
+  EmployeeID: number
+  CURP: string | null
+  RFC: string | null
+  NSS: string | null
+  FechaNacimiento: Date | string | null
+  Sueldo: unknown
+  TieneLicencia: boolean | number | null
+  FechaCaducidadLicencia: Date | string | null
+  FechaDC3: Date | string | null
+  Sexo: string | null
+  TipoSangre: string | null
+  RegionID: number | null
+  AreaID: number | null
+  AreaName: string | null
+  SupervisorEmployeeID: number | null
+  SupNumber: string | null
+  SupFirst: string | null
+  SupLast: string | null
+}
 
 const toDateStr = (value: Date | string | null): string | null => {
-  if (!value) return null;
-  if (value instanceof Date) return value.toISOString().slice(0, 10);
-  if (typeof value === 'string') return value.slice(0, 10);
+  if (!value) return null
+  if (value instanceof Date) return value.toISOString().slice(0, 10)
+  if (typeof value === 'string') return value.slice(0, 10)
 
-  return null;
-};
+  return null
+}
 
 const normalizeData = (row: EmployeeDataRow) => {
   const supName = row.SupervisorEmployeeID
     ? `${row.SupNumber ? `${row.SupNumber} - ` : ''}${row.SupFirst ?? ''} ${row.SupLast ?? ''}`.trim()
-    : null;
+    : null
 
   return {
     employeeId: row.EmployeeID,
@@ -61,53 +61,53 @@ const normalizeData = (row: EmployeeDataRow) => {
     areaName: row.AreaName ?? null,
     supervisorEmployeeId: row.SupervisorEmployeeID ?? null,
     supervisorName: supName
-  };
-};
+  }
+}
 
 type DataPayload = {
-  curp: string | null;
-  rfc: string | null;
-  nss: string | null;
-  fechaNacimiento: string | null;
-  sueldo: number | null;
-  tieneLicencia: boolean | null;
-  fechaCaducidadLicencia: string | null;
-  fechaDC3: string | null;
-  sexo: 'M' | 'F' | null;
-  tipoSangre: string | null;
-  regionId: number | null;
-  areaId: number | null;
-  supervisorEmployeeId: number | null;
-};
+  curp: string | null
+  rfc: string | null
+  nss: string | null
+  fechaNacimiento: string | null
+  sueldo: number | null
+  tieneLicencia: boolean | null
+  fechaCaducidadLicencia: string | null
+  fechaDC3: string | null
+  sexo: 'M' | 'F' | null
+  tipoSangre: string | null
+  regionId: number | null
+  areaId: number | null
+  supervisorEmployeeId: number | null
+}
 
-const asStr = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null);
+const asStr = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null)
 
 const asPosInt = (v: unknown): number | null => {
-  const n = Number(v);
+  const n = Number(v)
 
-  return Number.isInteger(n) && n > 0 ? n : null;
-};
+  return Number.isInteger(n) && n > 0 ? n : null
+}
 
 const asNum = (v: unknown): number | null => {
-  if (v === null || v === undefined || v === '') return null;
-  const n = Number(v);
+  if (v === null || v === undefined || v === '') return null
+  const n = Number(v)
 
-  return Number.isFinite(n) ? n : null;
-};
+  return Number.isFinite(n) ? n : null
+}
 
-const asDate = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.slice(0, 10) : null);
-const asBool = (v: unknown): boolean | null => (typeof v === 'boolean' ? v : null);
+const asDate = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.slice(0, 10) : null)
+const asBool = (v: unknown): boolean | null => (typeof v === 'boolean' ? v : null)
 
 const parseDataPayload = (body: unknown): DataPayload => {
-  if (typeof body !== 'object' || body === null) throw new Error('Body inválido');
+  if (typeof body !== 'object' || body === null) throw new Error('Body inválido')
 
-  const raw = body as Record<string, unknown>;
+  const raw = body as Record<string, unknown>
 
-  const sexoRaw = asStr(raw.sexo);
-  const sexo = sexoRaw === 'M' || sexoRaw === 'F' ? sexoRaw : null;
+  const sexoRaw = asStr(raw.sexo)
+  const sexo = sexoRaw === 'M' || sexoRaw === 'F' ? sexoRaw : null
 
-  const regionRaw = asPosInt(raw.regionId);
-  const regionId = regionRaw !== null && regionRaw >= 1 && regionRaw <= 12 ? regionRaw : null;
+  const regionRaw = asPosInt(raw.regionId)
+  const regionId = regionRaw !== null && regionRaw >= 1 && regionRaw <= 12 ? regionRaw : null
 
   return {
     curp: asStr(raw.curp),
@@ -123,17 +123,17 @@ const parseDataPayload = (body: unknown): DataPayload => {
     regionId,
     areaId: asPosInt(raw.areaId),
     supervisorEmployeeId: asPosInt(raw.supervisorEmployeeId)
-  };
-};
+  }
+}
 
 export const GET = withPermission(
   'employees',
   async (_req, { tenantId }, context: RouteContext) => {
-    const { id } = await context.params;
-    const employeeId = Number(id);
+    const { id } = await context.params
+    const employeeId = Number(id)
 
     if (!Number.isInteger(employeeId) || employeeId <= 0) {
-      return NextResponse.json({ message: 'Empleado inválido.' }, { status: 400 });
+      return NextResponse.json({ message: 'Empleado inválido.' }, { status: 400 })
     }
 
     return withTenantContext(tenantId, async tx => {
@@ -153,42 +153,39 @@ export const GET = withPermission(
           WHERE ed.TenantID = CAST(${tenantId} AS uniqueidentifier)
             AND ed.EmployeeID = ${employeeId}
         `
-      );
+      )
 
-      const row = rows[0];
+      const row = rows[0]
 
       // 1:1 puede no existir aún → data null (el form arranca vacío).
-      return NextResponse.json({ data: row ? normalizeData(row) : null });
-    });
+      return NextResponse.json({ data: row ? normalizeData(row) : null })
+    })
   },
   { bit: PERM.R }
-);
+)
 
 export const PUT = withPermission(
   'employees',
   async (req, { auth, tenantId }, context: RouteContext) => {
-    const { id } = await context.params;
-    const employeeId = Number(id);
+    const { id } = await context.params
+    const employeeId = Number(id)
 
     if (!Number.isInteger(employeeId) || employeeId <= 0) {
-      return NextResponse.json({ message: 'Empleado inválido.' }, { status: 400 });
+      return NextResponse.json({ message: 'Empleado inválido.' }, { status: 400 })
     }
 
-    let payload: DataPayload;
+    let payload: DataPayload
 
     try {
-      payload = parseDataPayload(await req.json());
+      payload = parseDataPayload(await req.json())
     } catch (error) {
-      return NextResponse.json(
-        { message: error instanceof Error ? error.message : 'Body inválido' },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: error instanceof Error ? error.message : 'Body inválido' }, { status: 400 })
     }
 
-    const licencia = payload.tieneLicencia === null ? null : payload.tieneLicencia ? 1 : 0;
-    const fechaNac = payload.fechaNacimiento ?? '';
-    const fechaCad = payload.fechaCaducidadLicencia ?? '';
-    const fechaDC3v = payload.fechaDC3 ?? '';
+    const licencia = payload.tieneLicencia === null ? null : payload.tieneLicencia ? 1 : 0
+    const fechaNac = payload.fechaNacimiento ?? ''
+    const fechaCad = payload.fechaCaducidadLicencia ?? ''
+    const fechaDC3v = payload.fechaDC3 ?? ''
 
     try {
       await withTenantContext(tenantId, async tx => {
@@ -197,16 +194,16 @@ export const PUT = withPermission(
             SELECT EmployeeID FROM HumanCapital.Employees
             WHERE TenantID = CAST(${tenantId} AS uniqueidentifier) AND EmployeeID = ${employeeId}
           `
-        );
+        )
 
-        if (!emp[0]) throw new Error('EMPLOYEE_NOT_FOUND');
+        if (!emp[0]) throw new Error('EMPLOYEE_NOT_FOUND')
 
         const existing = await tx.$queryRaw<Array<{ EmployeeID: number }>>(
           Prisma.sql`
             SELECT EmployeeID FROM HumanCapital.EmployeeData
             WHERE TenantID = CAST(${tenantId} AS uniqueidentifier) AND EmployeeID = ${employeeId}
           `
-        );
+        )
 
         if (existing.length) {
           await tx.$executeRaw(
@@ -229,7 +226,7 @@ export const PUT = withPermission(
                 UpdatedBy = ${auth.userId}
               WHERE TenantID = CAST(${tenantId} AS uniqueidentifier) AND EmployeeID = ${employeeId}
             `
-          );
+          )
         } else {
           await tx.$executeRaw(
             Prisma.sql`
@@ -244,9 +241,9 @@ export const PUT = withPermission(
                 ${payload.supervisorEmployeeId}, ${auth.userId}
               )
             `
-          );
+          )
         }
-      });
+      })
 
       writeTransactionLog({
         tenantId,
@@ -256,28 +253,28 @@ export const PUT = withPermission(
         appUser: auth.email ?? null,
         oldData: null,
         newData: { employeeId } // PII: no volcamos el payload al log
-      }).catch(() => { });
+      }).catch(() => {})
 
-      return NextResponse.json({ data: { employeeId } });
+      return NextResponse.json({ data: { employeeId } })
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR';
+      const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR'
 
       if (message.includes('EMPLOYEE_NOT_FOUND')) {
-        return NextResponse.json({ message: 'El empleado no existe.' }, { status: 404 });
+        return NextResponse.json({ message: 'El empleado no existe.' }, { status: 404 })
       }
 
       if (message.includes('FK_HC_EmployeeData_Area')) {
-        return NextResponse.json({ message: 'Área inválida.' }, { status: 400 });
+        return NextResponse.json({ message: 'Área inválida.' }, { status: 400 })
       }
 
       if (message.includes('FK_HC_EmployeeData_Supervisor')) {
-        return NextResponse.json({ message: 'Supervisor inválido.' }, { status: 400 });
+        return NextResponse.json({ message: 'Supervisor inválido.' }, { status: 400 })
       }
 
-      console.error('[EMPLOYEE_DATA_UPSERT_ERROR]', { message });
+      console.error('[EMPLOYEE_DATA_UPSERT_ERROR]', { message })
 
-      return NextResponse.json({ message: 'Error al guardar los datos.' }, { status: 500 });
+      return NextResponse.json({ message: 'Error al guardar los datos.' }, { status: 500 })
     }
   },
   { bit: PERM.U }
-);
+)

@@ -1,15 +1,16 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
 
+import { useRouter, useSearchParams } from 'next/navigation'
+
 import Box from '@mui/material/Box'
-import TextField from '@mui/material/TextField'
+import CircularProgress from '@mui/material/CircularProgress'
+import InputAdornment from '@mui/material/InputAdornment'
 import MenuItem from '@mui/material/MenuItem'
 import Stack from '@mui/material/Stack'
-import InputAdornment from '@mui/material/InputAdornment'
-import Chip from '@mui/material/Chip'
-import CircularProgress from '@mui/material/CircularProgress'
+import TextField from '@mui/material/TextField'
+
 import type { TenantStatus } from '@/services/tenant-service'
 
 const statusOptions: { value: TenantStatus | ''; label: string; color: 'success' | 'warning' | 'error' | 'info' | 'default' }[] = [
@@ -40,6 +41,7 @@ export default function TenantFilters() {
 
   const applyFilters = useCallback(() => {
     const params = new URLSearchParams()
+
     if (debouncedSearch) params.set('search', debouncedSearch)
     if (status) params.set('status', status)
     params.set('page', '1')
@@ -54,7 +56,9 @@ export default function TenantFilters() {
     timeoutRef.current = setTimeout(() => {
       setDebouncedSearch(search)
     }, 400)
-    return () => {
+
+    
+return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
   }, [search, mounted])
@@ -62,16 +66,7 @@ export default function TenantFilters() {
   useEffect(() => {
     if (!mounted) return
     applyFilters()
-  }, [debouncedSearch, status, mounted])
-
-  const handleClear = useCallback(() => {
-    setSearch('')
-    setStatus('')
-    setDebouncedSearch('')
-    router.push('/admin/tenants')
-  }, [router])
-
-  const hasActiveFilters = Boolean(search || status)
+  }, [debouncedSearch, status, mounted, applyFilters])
 
   return (
     <Box sx={{ mb: 3 }}>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Dialog from '@mui/material/Dialog'
@@ -15,8 +16,10 @@ import Chip from '@mui/material/Chip'
 import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
 import Alert from '@mui/material/Alert'
-import type { PlatformUserRow } from '@/types/apps/platformUserTypes'
+
 import { toast } from 'react-toastify'
+
+import type { PlatformUserRow } from '@/types/apps/platformUserTypes'
 
 interface UserRemoveModalProps {
   open: boolean
@@ -51,6 +54,7 @@ export default function UserRemoveModal({ open, onClose, user, onSuccess }: User
 
       if (!res.ok) {
         const result = await res.json()
+
         throw new Error(result.message?.[0] || 'Failed to remove role')
       }
 

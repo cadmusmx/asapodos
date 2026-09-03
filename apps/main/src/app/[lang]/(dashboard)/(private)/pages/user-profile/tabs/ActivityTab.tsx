@@ -103,21 +103,18 @@ const ActivityTab = ({ onError }: Props) => {
 
           if (!hasOld && !hasNew) return '—'
 
-          const label = hasOld && hasNew ? t('userProfile.activityTab.viewChanges') : t('userProfile.activityTab.viewData')
+          const label =
+            hasOld && hasNew ? t('userProfile.activityTab.viewChanges') : t('userProfile.activityTab.viewData')
 
           return (
-            <Button
-              size='small'
-              variant='text'
-              onClick={() => setDetailRow(r)}
-            >
+            <Button size='small' variant='text' onClick={() => setDetailRow(r)}>
               {label}
             </Button>
           )
         }
       })
     ],
-    []
+    [t]
   )
 
   const table = useReactTable({
@@ -129,34 +126,37 @@ const ActivityTab = ({ onError }: Props) => {
     state: { pagination: { pageIndex: page, pageSize } }
   })
 
-  const loadActivity = useCallback(async (pageNum: number) => {
-    setLoading(true)
+  const loadActivity = useCallback(
+    async (pageNum: number) => {
+      setLoading(true)
 
-    try {
-      const params = new URLSearchParams({
-        page: String(pageNum + 1),
-        pageSize: String(pageSize)
-      })
+      try {
+        const params = new URLSearchParams({
+          page: String(pageNum + 1),
+          pageSize: String(pageSize)
+        })
 
-      const res = await fetch(`/api/profile/activity?${params}`)
-      const raw = await res.json().catch(() => null)
+        const res = await fetch(`/api/profile/activity?${params}`)
+        const raw = await res.json().catch(() => null)
 
-      if (!res.ok || !raw) {
-        const err = raw as { message?: string } | null
+        if (!res.ok || !raw) {
+          const err = raw as { message?: string } | null
 
-        throw new Error(err?.message ?? t('userProfile.activityTab.errorLoading'))
+          throw new Error(err?.message ?? t('userProfile.activityTab.errorLoading'))
+        }
+
+        const data = raw as ProfileActivityResponse
+
+        setRows(data.data as ActivityRow[])
+        setTotal(data.total)
+      } catch (e) {
+        onErrorRef.current(e instanceof Error ? e.message : t('userProfile.activityTab.errorLoading'))
+      } finally {
+        setLoading(false)
       }
-
-      const data = raw as ProfileActivityResponse
-
-      setRows(data.data as ActivityRow[])
-      setTotal(data.total)
-    } catch (e) {
-      onErrorRef.current(e instanceof Error ? e.message : t('userProfile.activityTab.errorLoading'))
-    } finally {
-      setLoading(false)
-    }
-  }, [pageSize])
+    },
+    [pageSize, t]
+  )
 
   useEffect(() => {
     loadActivity(page)
@@ -173,9 +173,7 @@ const ActivityTab = ({ onError }: Props) => {
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map(header => (
                       <th key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                       </th>
                     ))}
                   </tr>
@@ -206,9 +204,7 @@ const ActivityTab = ({ onError }: Props) => {
                   table.getRowModel().rows.map(row => (
                     <tr key={row.id}>
                       {row.getVisibleCells().map(cell => (
-                        <td key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
+                        <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                       ))}
                     </tr>
                   ))

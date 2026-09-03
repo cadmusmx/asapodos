@@ -1,6 +1,5 @@
 'use client'
 
-import Typography from '@mui/material/Typography'
 import classnames from 'classnames'
 
 import NavToggle from './NavToggle'

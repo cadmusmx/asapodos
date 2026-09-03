@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Dialog from '@mui/material/Dialog'
@@ -8,7 +9,6 @@ import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import IconButton from '@mui/material/IconButton'
-import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
 import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
@@ -17,9 +17,11 @@ import Grid from '@mui/material/Grid'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Checkbox from '@mui/material/Checkbox'
 import Divider from '@mui/material/Divider'
+
+import { toast } from 'react-toastify'
+
 import type { PlanWithFeatures } from './PlansPageClient'
 import ModuleTreeSelector from './ModuleTreeSelector'
-import { toast } from 'react-toastify'
 
 interface PlanEditModalProps {
   open: boolean
@@ -32,6 +34,7 @@ export default function PlanEditModal({ open, onClose, plan }: PlanEditModalProp
   const [loading, setLoading] = useState(false)
   const [moduleIds, setModuleIds] = useState<number[]>([])
   const [submoduleIds, setSubmoduleIds] = useState<number[]>([])
+
   const [form, setForm] = useState({
     displayName: '',
     description: '',
@@ -64,6 +67,7 @@ export default function PlanEditModal({ open, onClose, plan }: PlanEditModalProp
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value
+
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
@@ -100,6 +104,7 @@ export default function PlanEditModal({ open, onClose, plan }: PlanEditModalProp
 
       if (!res.ok) {
         const result = await res.json()
+
         throw new Error(result.message || 'Error al actualizar el plan')
       }
 

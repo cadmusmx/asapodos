@@ -34,9 +34,11 @@ export async function getModuleCatalog(): Promise<ModuleCatalog> {
 
   for (const sm of submodules) {
     if (sm.IdModulo == null) continue
+
     if (!submoduleMap.has(sm.IdModulo)) {
       submoduleMap.set(sm.IdModulo, [])
     }
+
     submoduleMap.get(sm.IdModulo)!.push(sm)
   }
 

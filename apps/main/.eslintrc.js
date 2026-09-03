@@ -1,7 +1,6 @@
 module.exports = {
   extends: ['next/core-web-vitals', 'plugin:@typescript-eslint/recommended', 'plugin:import/recommended', 'prettier'],
 
-  ignorePatterns: ['src/app/api/v1/*', 'src/views/apps/*'], //only qa
   rules: {
     'jsx-a11y/alt-text': 'off',
     'react/display-name': 'off',
@@ -11,9 +10,8 @@ module.exports = {
     '@typescript-eslint/consistent-type-imports': 'error',
     '@typescript-eslint/ban-ts-comment': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
-    '@typescript-eslint/no-unused-vars': 'error',
     '@typescript-eslint/no-non-null-assertion': 'off',
-    "@typescript-eslint/no-unused-vars": ["error", { "ignoreRestSiblings": true }],
+    "@typescript-eslint/no-unused-vars": ["error", { "ignoreRestSiblings": true, "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" }],
     'import/named': 'off',
     'lines-around-comment': [
       'error',

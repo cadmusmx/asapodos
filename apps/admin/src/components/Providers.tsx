@@ -16,7 +16,7 @@ type Props = {
 
 const Providers = ({ children, dictionary }: Props) => {
   return (
-    <SessionProvider>
+    <SessionProvider basePath={process.env.NEXTAUTH_BASEPATH}>
       <DictionaryProvider dictionary={dictionary}>
         <VerticalNavProvider>
           <SettingsProvider>

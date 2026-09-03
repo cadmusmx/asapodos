@@ -44,14 +44,11 @@ export async function PUT(req: Request) {
 
     payload = parseChangePasswordPayload(body)
   } catch (e) {
-    return NextResponse.json(
-      { message: e instanceof Error ? e.message : 'Payload inválido' },
-      { status: 400 }
-    )
+    return NextResponse.json({ message: e instanceof Error ? e.message : 'Payload inválido' }, { status: 400 })
   }
 
   try {
-    await withTenantContext(tenantId, async (tx) => {
+    await withTenantContext(tenantId, async tx => {
       const rows = await tx.$queryRaw<Array<{ Password: string | null }>>(
         Prisma.sql`
           SELECT Password

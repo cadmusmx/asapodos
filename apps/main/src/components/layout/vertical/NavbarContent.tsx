@@ -142,9 +142,7 @@ const NavbarContent = () => {
   const hasTenantError = Boolean(error && !hasTenant)
 
   const tenantLabel =
-    isLoading && !hasTenant
-      ? t('tenant.loading')
-      : tenantName || tenantSlug || t('tenant.unavailable')
+    isLoading && !hasTenant ? t('tenant.loading') : tenantName || tenantSlug || t('tenant.unavailable')
 
   return (
     <div className={classnames(verticalLayoutClasses.navbarContent, 'flex items-center justify-between gap-4 is-full')}>
@@ -157,12 +155,7 @@ const NavbarContent = () => {
             {t('tenant.label')}
           </Typography>
 
-          <Chip
-            size='small'
-            variant='outlined'
-            color={hasTenantError ? 'error' : 'default'}
-            label={tenantLabel}
-          />
+          <Chip size='small' variant='outlined' color={hasTenantError ? 'error' : 'default'} label={tenantLabel} />
         </div>
       </div>
 

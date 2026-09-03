@@ -5,6 +5,8 @@ import type { ReactNode } from 'react'
 import type { ChipProps } from '@mui/material/Chip'
 
 // Type Imports
+import type { PlatformRole } from '@gaso/shared'
+
 import type {
   SubMenuProps as VerticalSubMenuProps,
   MenuItemProps as VerticalMenuItemProps,
@@ -15,7 +17,6 @@ import type {
   MenuItemProps as HorizontalMenuItemProps
 } from '@menu/horizontal-menu'
 import type { MenuItemExactMatchUrlProps } from '@menu/types'
-import type { PlatformRole } from '@gaso/shared'
 
 // Vertical Menu Data
 export type VerticalMenuItemDataType = Omit<

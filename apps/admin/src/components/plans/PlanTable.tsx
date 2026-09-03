@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+
 import { useRouter } from 'next/navigation'
+
 import Box from '@mui/material/Box'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
@@ -16,8 +18,7 @@ import Chip from '@mui/material/Chip'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import ListItemIcon from '@mui/material/ListItemIcon'
-import type { PlanDefinition } from '@gaso/shared/types/plan'
-import type { PlanFeaturesById, PlanFeature } from '@gaso/shared/types/plan'
+
 import EmptyState from '@/components/shared/EmptyState'
 import type { PlanWithFeatures } from './PlansPageClient'
 
@@ -27,8 +28,11 @@ function SupportChip({ level }: { level: string }) {
     priority: { color: 'info', label: 'Prioridad' },
     dedicated: { color: 'success', label: 'Dedicado' }
   }
+
   const c = config[level] ?? { color: 'default', label: level }
-  return <Chip label={c.label} color={c.color} size='small' variant='outlined' />
+
+  
+return <Chip label={c.label} color={c.color} size='small' variant='outlined' />
 }
 
 interface PlanTableProps {
@@ -57,6 +61,7 @@ export default function PlanTable({ plans, onEdit, onDeactivate, onActivate }: P
     if (menuPlan) {
       onEdit(menuPlan)
     }
+
     handleMenuClose()
   }
 
@@ -64,6 +69,7 @@ export default function PlanTable({ plans, onEdit, onDeactivate, onActivate }: P
     if (menuPlan) {
       onDeactivate(menuPlan)
     }
+
     handleMenuClose()
   }
 
@@ -71,6 +77,7 @@ export default function PlanTable({ plans, onEdit, onDeactivate, onActivate }: P
     if (menuPlan) {
       onActivate(menuPlan)
     }
+
     handleMenuClose()
   }
 
@@ -78,6 +85,7 @@ export default function PlanTable({ plans, onEdit, onDeactivate, onActivate }: P
     if (menuPlan) {
       router.push(`/admin/plans/${menuPlan.id}`)
     }
+
     handleMenuClose()
   }
 

@@ -54,7 +54,7 @@ export const GET = withPermission(
       const totalOcupado = allWarehouses.reduce((sum, w) => {
         const capacidad = w.Capacidad ?? 0
         const pct = w.Capacidad_Ocupada ?? 0
-        return sum + capacidad * pct / 100
+        return sum + (capacidad * pct) / 100
       }, 0)
 
       return NextResponse.json({

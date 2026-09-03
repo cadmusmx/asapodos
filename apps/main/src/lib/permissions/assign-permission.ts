@@ -1,7 +1,15 @@
-import { ForbiddenError, isCanonical, PERM, resolveUserViews, ValidationError, withTenantContext, getEnabledMenuGroups } from '@gaso/shared';
-import type { ErpModuleKey } from '@gaso/shared';
+import {
+  ForbiddenError,
+  isCanonical,
+  PERM,
+  resolveUserViews,
+  ValidationError,
+  withTenantContext,
+  getEnabledMenuGroups
+} from '@gaso/shared'
+import type { ErpModuleKey } from '@gaso/shared'
 
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '@prisma/client'
 
 /**
  * RBAC · Asignación de permisos
@@ -25,105 +33,103 @@ import type { Prisma } from '@prisma/client';
  */
 
 export interface AssignPermissionInput {
-  tenantId: string;
+  tenantId: string
 
   /** Actor: viene de la sesión ya resuelta por withPermission. */
-  actorIdUsuario: number;
+  actorIdUsuario: number
 
   /** Target: del body. */
-  targetIdUsuario: number;
-  viewCode: string;
+  targetIdUsuario: number
+  viewCode: string
 
   /** Del body. 0 = revocar (borra la fila). */
-  mask: number;
+  mask: number
 }
 
 export interface AssignPermissionResult {
 
   /** Máscara previa del target sobre la vista (null si no existía fila). */
-  old: number | null;
+  old: number | null
 
   /** Máscara resultante (0 = fila borrada). */
-  new: number;
+  new: number
 
   /** idUsuario del target, para el log de auditoría. */
-  target: number;
+  target: number
 }
 
 interface UsuarioRow {
-  IdUsuario: number;
-  IdDepartamento: number | null;
+  IdUsuario: number
+  IdDepartamento: number | null
 }
 
 export function assignPermission(input: AssignPermissionInput): Promise<AssignPermissionResult> {
-  const { actorIdUsuario, targetIdUsuario, viewCode, mask } = input;
-  const tenantId = input.tenantId.toLowerCase();
+  const { actorIdUsuario, targetIdUsuario, viewCode, mask } = input
+  const tenantId = input.tenantId.toLowerCase()
 
   return withTenantContext(tenantId, async tx => {
-    const actor = await resolveActorContext(tx, tenantId, actorIdUsuario);
-    const planMenuGroups = await getEnabledMenuGroups(tx, tenantId);
-    const r = await applyOneChange(tx, tenantId, actor, planMenuGroups, targetIdUsuario, { viewCode, mask });
+    const actor = await resolveActorContext(tx, tenantId, actorIdUsuario)
+    const planMenuGroups = await getEnabledMenuGroups(tx, tenantId)
+    const r = await applyOneChange(tx, tenantId, actor, planMenuGroups, targetIdUsuario, { viewCode, mask })
 
     // preserva EXACTO el contrato AssignPermissionResult { old, new, target } (sin viewCode)
-    return { old: r.old, new: r.new, target: r.target };
-  });
+    return { old: r.old, new: r.new, target: r.target }
+  })
 }
 
 export interface AssignPermissionsBatchInput {
-  tenantId: string;
-  actorIdUsuario: number;
-  targetIdUsuario: number;
-  changes: ChangeInput[];
+  tenantId: string
+  actorIdUsuario: number
+  targetIdUsuario: number
+  changes: ChangeInput[]
 }
 
 export interface BatchChangeResult {
-  viewCode: string;
-  old: number | null;
-  new: number;
+  viewCode: string
+  old: number | null
+  new: number
 }
 
 export interface AssignPermissionsBatchResult {
-  ok: true;
-  target: number;
-  results: BatchChangeResult[];
+  ok: true
+  target: number
+  results: BatchChangeResult[]
 }
 
-export function assignPermissionsBatch(
-  input: AssignPermissionsBatchInput
-): Promise<AssignPermissionsBatchResult> {
-  const { actorIdUsuario, targetIdUsuario, changes } = input;
-  const tenantId = input.tenantId.toLowerCase();
+export function assignPermissionsBatch(input: AssignPermissionsBatchInput): Promise<AssignPermissionsBatchResult> {
+  const { actorIdUsuario, targetIdUsuario, changes } = input
+  const tenantId = input.tenantId.toLowerCase()
 
   return withTenantContext(tenantId, async tx => {
     // actor: INVARIANTE del lote -> se resuelve una vez (autoridad + privilegio territorial)
-    const actor = await resolveActorContext(tx, tenantId, actorIdUsuario);
-    const planMenuGroups = await getEnabledMenuGroups(tx, tenantId);   // invariante del lote
+    const actor = await resolveActorContext(tx, tenantId, actorIdUsuario)
+    const planMenuGroups = await getEnabledMenuGroups(tx, tenantId) // invariante del lote
 
-    const results: BatchChangeResult[] = [];
+    const results: BatchChangeResult[] = []
 
     // SECUENCIAL a propósito: la interactive tx de Prisma no es concurrente (nada de Promise.all sobre el mismo tx).
     // Cualquier throw se propaga -> $transaction hace rollback -> CERO escrituras (atomicidad real).
     for (const change of changes) {
-      const r = await applyOneChange(tx, tenantId, actor, planMenuGroups, targetIdUsuario, change);
+      const r = await applyOneChange(tx, tenantId, actor, planMenuGroups, targetIdUsuario, change)
 
-      results.push({ viewCode: r.viewCode, old: r.old, new: r.new });
+      results.push({ viewCode: r.viewCode, old: r.old, new: r.new })
     }
 
-    return { ok: true, target: targetIdUsuario, results };
-  });
+    return { ok: true, target: targetIdUsuario, results }
+  })
 }
 
 interface ActorContext {
-  idUsuario: number;
-  idDepartamento: number | null;
+  idUsuario: number
+  idDepartamento: number | null
 
   /** depto del actor ∈ Security.AssignableDepartments → alcance a todo el tenant. */
-  privileged: boolean;
+  privileged: boolean
 }
 
 interface ActorRow {
-  IdUsuario: number;
-  IdDepartamento: number | null;
+  IdUsuario: number
+  IdDepartamento: number | null
 }
 
 async function resolveActorContext(
@@ -137,24 +143,24 @@ async function resolveActorContext(
     FROM dbo.GASOCO_Cat_Usuarios u
     INNER JOIN HumanCapital.Employees e ON e.TenantID = u.TenantID AND e.EmployeeID = u.EmployeeID
     WHERE u.IdUsuario = ${actorIdUsuario} AND u.TenantID = CAST(${tenantId} AS uniqueidentifier)
-  `;
+  `
 
-  const actor = actorRows[0];
+  const actor = actorRows[0]
 
   if (!actor) {
-    throw new ForbiddenError('No autorizado para asignar permisos', 'PERMISSION_DENIED');
+    throw new ForbiddenError('No autorizado para asignar permisos', 'PERMISSION_DENIED')
   }
 
   // A2) autoridad: permissions_access:U EN VIVO, sobre el mismo tx.
-  const views = await resolveUserViews(tx, { tenantId, idUsuario: actorIdUsuario });
-  const permMask = views.find(v => v.viewCode === 'permissions_access')?.mask ?? 0;
+  const views = await resolveUserViews(tx, { tenantId, idUsuario: actorIdUsuario })
+  const permMask = views.find(v => v.viewCode === 'permissions_access')?.mask ?? 0
 
   if ((permMask & PERM.U) === 0) {
-    throw new ForbiddenError('No autorizado para asignar permisos', 'PERMISSION_DENIED');
+    throw new ForbiddenError('No autorizado para asignar permisos', 'PERMISSION_DENIED')
   }
 
   // A3) privilegio territorial. Filtro TenantID explícito (convención del archivo).
-  let privileged = false;
+  let privileged = false
 
   if (actor.IdDepartamento != null) {
     const privRows = await tx.$queryRaw<Array<{ ok: number }>>`
@@ -162,44 +168,44 @@ async function resolveActorContext(
       FROM Security.AssignableDepartments
       WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
         AND IdDepartamento = ${actor.IdDepartamento}
-    `;
+    `
 
-    privileged = privRows.length > 0;
+    privileged = privRows.length > 0
   }
 
-  return { idUsuario: actor.IdUsuario, idDepartamento: actor.IdDepartamento, privileged };
+  return { idUsuario: actor.IdUsuario, idDepartamento: actor.IdDepartamento, privileged }
 }
 
 interface ChangeInput {
-  viewCode: string;
-  mask: number;
+  viewCode: string
+  mask: number
 }
 
 interface ChangeResult {
-  viewCode: string;
-  old: number | null;
-  new: number;
-  target: number;
+  viewCode: string
+  old: number | null
+  new: number
+  target: number
 }
 
 async function applyOneChange(
   tx: Prisma.TransactionClient,
-  tenantId: string,        // ya .toLowerCase() por el wrapper
-  actor: ActorContext,     // resuelto UNA vez por resolveActorContext
-  planMenuGroups: Set<ErpModuleKey>,   // ← nuevo, invariante del lote
+  tenantId: string, // ya .toLowerCase() por el wrapper
+  actor: ActorContext, // resuelto UNA vez por resolveActorContext
+  planMenuGroups: Set<ErpModuleKey>, // ← nuevo, invariante del lote
   targetIdUsuario: number,
   { viewCode, mask }: ChangeInput
 ): Promise<ChangeResult> {
   // I1) viewCode existe + su MenuGroup (para la compuerta de plan). Catálogo GLOBAL.
   const viewRows = await tx.$queryRaw<Array<{ MenuGroup: string | null }>>`
     SELECT TOP 1 MenuGroup FROM Security.Views WHERE ViewCode = ${viewCode}
-  `;
+  `
 
   if (viewRows.length === 0) {
-    throw new ValidationError(`Vista desconocida: ${viewCode}`, 'UNKNOWN_VIEW', { viewCode });
+    throw new ValidationError(`Vista desconocida: ${viewCode}`, 'UNKNOWN_VIEW', { viewCode })
   }
 
-  const menuGroup = viewRows[0].MenuGroup;
+  const menuGroup = viewRows[0].MenuGroup
 
   // I2) regla b (Modelo A): permissions_access NO se escribe por este flujo, para NADIE (ni a otro admin ni a uno mismo).
   // Depende solo del viewCode -> va temprano.
@@ -208,12 +214,12 @@ async function applyOneChange(
       'La vista permissions_access solo se administra por aprovisionamiento',
       'PROTECTED_VIEW',
       { viewCode }
-    );
+    )
   }
 
   // I3) canonicidad (función pura -> falla barato, antes de leer al target)
   if (!isCanonical(mask)) {
-    throw new ValidationError('Máscara de permisos no válida', 'INVALID_MASK', { viewCode, mask });
+    throw new ValidationError('Máscara de permisos no válida', 'INVALID_MASK', { viewCode, mask })
   }
 
   // I4) target en vivo. SIN RLS -> filtro TenantID. No revelamos "no existe" vs "otro tenant".
@@ -222,32 +228,32 @@ async function applyOneChange(
     FROM dbo.GASOCO_Cat_Usuarios u
     INNER JOIN HumanCapital.Employees e ON e.TenantID = u.TenantID AND e.EmployeeID = u.EmployeeID
     WHERE u.IdUsuario = ${targetIdUsuario} AND u.TenantID = CAST(${tenantId} AS uniqueidentifier)
-  `;
+  `
 
-  const target = targetRows[0];
+  const target = targetRows[0]
 
   if (!target) {
-    throw new ForbiddenError('Usuario destino no válido', 'PERMISSION_DENIED');
+    throw new ForbiddenError('Usuario destino no válido', 'PERMISSION_DENIED')
   }
 
   // I5) alcance: actor privilegiado, o mismo depto que el target
   const sameDept =
-    actor.idDepartamento != null &&
-    target.IdDepartamento != null &&
-    actor.idDepartamento === target.IdDepartamento;
+    actor.idDepartamento != null && target.IdDepartamento != null && actor.idDepartamento === target.IdDepartamento
 
   if (!actor.privileged && !sameDept) {
-    throw new ForbiddenError('Fuera de tu alcance de administración', 'PERMISSION_DENIED', { viewCode, targetIdUsuario });
+    throw new ForbiddenError('Fuera de tu alcance de administración', 'PERMISSION_DENIED', {
+      viewCode,
+      targetIdUsuario
+    })
   }
 
   // I6) compuerta de PLAN (reemplaza el techo). Solo bloquea GRANTS (mask>0):
   // revocar (mask=0) una vista fuera del plan se permite (limpieza de grants stale tras downgrade).
   if (mask !== 0 && (!menuGroup || !planMenuGroups.has(menuGroup as ErpModuleKey))) {
-    throw new ForbiddenError(
-      `Módulo fuera del plan del tenant: ${menuGroup}`,
-      'PLAN_RESTRICTED',
-      { viewCode, menuGroup }
-    );
+    throw new ForbiddenError(`Módulo fuera del plan del tenant: ${menuGroup}`, 'PLAN_RESTRICTED', {
+      viewCode,
+      menuGroup
+    })
   }
 
   // lee máscara previa para auditoría
@@ -255,9 +261,9 @@ async function applyOneChange(
     SELECT PermMask FROM Security.UserViews
     WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
       AND IdUsuario = ${targetIdUsuario} AND ViewCode = ${viewCode}
-  `;
+  `
 
-  const oldMask = oldRows.length ? Number(oldRows[0].PermMask) : null;
+  const oldMask = oldRows.length ? Number(oldRows[0].PermMask) : null
 
   // escribe: mask 0 = borra; si no -> upsert (update-then-insert, no MERGE)
   if (mask === 0) {
@@ -265,21 +271,21 @@ async function applyOneChange(
       DELETE FROM Security.UserViews
       WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
         AND IdUsuario = ${targetIdUsuario} AND ViewCode = ${viewCode}
-    `;
+    `
   } else {
     const affected = await tx.$executeRaw`
       UPDATE Security.UserViews SET PermMask = ${mask}
       WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
         AND IdUsuario = ${targetIdUsuario} AND ViewCode = ${viewCode}
-    `;
+    `
 
     if (affected === 0) {
       await tx.$executeRaw`
         INSERT INTO Security.UserViews (TenantID, IdUsuario, ViewCode, PermMask)
         VALUES (CAST(${tenantId} AS uniqueidentifier), ${targetIdUsuario}, ${viewCode}, ${mask})
-      `;
+      `
     }
   }
 
-  return { viewCode, old: oldMask, new: mask, target: targetIdUsuario };
+  return { viewCode, old: oldMask, new: mask, target: targetIdUsuario }
 }

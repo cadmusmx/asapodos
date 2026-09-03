@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import { useRouter } from 'next/navigation'
+
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
 import Card from '@mui/material/Card'
@@ -16,9 +18,11 @@ import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
 import Collapse from '@mui/material/Collapse'
 import CircularProgress from '@mui/material/CircularProgress'
+
+import type { ModuleCatalog } from '@gaso/shared/types/plan'
+
 import SupportChip from './SupportChip'
 import type { PlanWithFeatures } from './PlansPageClient'
-import type { ModuleCatalog } from '@gaso/shared/types/plan'
 
 interface PlanDetailPageClientProps {
   plan: PlanWithFeatures
@@ -34,14 +38,17 @@ export default function PlanDetailPageClient({ plan }: PlanDetailPageClientProps
     async function loadCatalog() {
       try {
         const res = await fetch('/api/admin/modules/catalog')
+
         if (res.ok) {
           const data = await res.json()
+
           setCatalog(data.modules)
         }
       } finally {
         setLoadingCatalog(false)
       }
     }
+
     loadCatalog()
   }, [])
 
@@ -53,7 +60,6 @@ export default function PlanDetailPageClient({ plan }: PlanDetailPageClientProps
   const isSubmoduleEnabled = (smId: number) => plan.featuresById.submodules[smId] === true
 
   const enabledModuleCount = Object.keys(plan.featuresById.modules).filter(k => plan.featuresById.modules[Number(k)]).length
-  const enabledSubmoduleCount = Object.keys(plan.featuresById.submodules).filter(k => plan.featuresById.submodules[Number(k)]).length
 
   return (
     <Box sx={{ mb: 4 }}>
@@ -204,7 +210,9 @@ export default function PlanDetailPageClient({ plan }: PlanDetailPageClientProps
                             <List disablePadding sx={{ pl: 4 }}>
                               {mod.submodules.map(sm => {
                                 const smEnabled = isSubmoduleEnabled(sm.idSubModulo)
-                                return (
+
+                                
+return (
                                   <ListItem key={sm.idSubModulo} disablePadding sx={{ py: 0.25 }}>
                                     <ListItemIcon sx={{ minWidth: 32 }}>
                                       {smEnabled ? (

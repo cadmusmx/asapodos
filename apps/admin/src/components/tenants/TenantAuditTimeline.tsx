@@ -5,8 +5,8 @@ import Typography from '@mui/material/Typography'
 import Paper from '@mui/material/Paper'
 import Chip from '@mui/material/Chip'
 import Stack from '@mui/material/Stack'
-import type { TransactionLogEntry } from '@gaso/shared'
-import { AUDIT_ACTION_LABELS, type AuditActionCode } from '@gaso/shared'
+import { AUDIT_ACTION_LABELS, type AuditActionCode, type TransactionLogEntry } from '@gaso/shared'
+
 import EmptyState from '@/components/shared/EmptyState'
 
 interface TenantAuditTimelineProps {
@@ -23,6 +23,7 @@ const actionColors: Record<string, 'success' | 'warning' | 'error' | 'info' | 'd
 
 function safeJsonParse(value: unknown): Record<string, unknown> | null {
   if (typeof value !== 'string' || !value) return null
+
   try {
     return JSON.parse(value) as Record<string, unknown>
   } catch {
@@ -44,18 +45,23 @@ function getChangedFields(oldData: Record<string, unknown> | null, newData: Reco
   if (!oldData && !newData) return []
   const changes: Array<{ key: string; oldVal: unknown; newVal: unknown }> = []
   const allKeys = new Set([...Object.keys(oldData || {}), ...Object.keys(newData || {})])
+
   for (const key of allKeys) {
     const oldVal = oldData?.[key]
     const newVal = newData?.[key]
+
     if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
       changes.push({ key, oldVal, newVal })
     }
   }
-  return changes
+
+  
+return changes
 }
 
 function DiffView({ oldData, newData }: { oldData: Record<string, unknown> | null; newData: Record<string, unknown> | null }) {
   const changes = getChangedFields(oldData, newData)
+
   if (changes.length === 0) return null
 
   return (

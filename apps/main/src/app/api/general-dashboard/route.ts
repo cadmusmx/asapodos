@@ -37,7 +37,7 @@ export const GET = withPermission(
       FROM HumanCapital.Employees e
       LEFT JOIN HumanCapital.EmployeeData ed ON ed.TenantID = e.TenantID AND ed.EmployeeID = e.EmployeeID`
 
-    return withTenantContext(tenantId, async (tx) => {
+    return withTenantContext(tenantId, async tx => {
       // `tc` = filtro de tenant para tablas legacy tenant-scoped (GASOSOL/GASOCO) → van sobre `tx`.
       const tc = Prisma.sql`TenantID = CAST(${tenantId} AS uniqueidentifier)`
 
@@ -55,8 +55,9 @@ export const GET = withPermission(
       )
       const altasBajas = await safeQuery(
         'altasBajas',
-        () => tx.$queryRaw<Array<{ month: string; year: string; type: string; count: number }>>(
-          Prisma.sql`
+        () =>
+          tx.$queryRaw<Array<{ month: string; year: string; type: string; count: number }>>(
+            Prisma.sql`
           SELECT DATENAME(MONTH, e.HireDate) as month, CAST(YEAR(e.HireDate) AS VARCHAR(4)) as year, 'Altas' as type, COUNT(*) as count
           ${employeeBase}
           WHERE ${tcEmp} ${regionCondEmp} AND YEAR(e.HireDate) = ${year}
@@ -66,94 +67,116 @@ export const GET = withPermission(
           ${employeeBase}
           WHERE ${tcEmp} ${regionCondEmp} AND e.TerminationDate IS NOT NULL AND YEAR(e.TerminationDate) = ${year}
           GROUP BY DATENAME(MONTH, e.TerminationDate), CAST(YEAR(e.TerminationDate) AS VARCHAR(4))`
-        ),
+          ),
         []
       )
 
       // ────────────────────────────────────────────────────────────
       // GLOBAL (GASOAL_*, sin filtro de tenant) — se quedan en el pool `prisma`
       // ────────────────────────────────────────────────────────────
-      const movMetrics = await prisma.$queryRaw<Array<{ total: bigint; palets: bigint; arribos: bigint; salidas: bigint }>>(
+      const movMetrics = await prisma.$queryRaw<
+        Array<{ total: bigint; palets: bigint; arribos: bigint; salidas: bigint }>
+      >(
         Prisma.sql`SELECT COUNT_BIG(1) as total, SUM(CASE WHEN tipo = 'ENTRADA' THEN 1 ELSE 0 END) as palets, SUM(CASE WHEN Estatus = 'ARRIBO' THEN 1 ELSE 0 END) as arribos, SUM(CASE WHEN Estatus = 'SALIDA' THEN 1 ELSE 0 END) as salidas FROM GASOAL_MovimientosLote WHERE YEAR(fecha) = ${year}`
       )
 
       const invPorMes = await safeQuery(
         'invPorMes',
-        () => prisma.$queryRaw<Array<{ mes: string; arribos: number; salidas: number; sitiosAtt: number; sitiosTelcel: number }>>(
-          Prisma.sql`SELECT DATENAME(MONTH, fecha) as mes, SUM(CASE WHEN Estatus = 'ARRIBO' THEN 1 ELSE 0 END) as arribos, SUM(CASE WHEN Estatus = 'SALIDA' THEN 1 ELSE 0 END) as salidas, 0 as sitiosAtt, 0 as sitiosTelcel FROM GASOAL_MovimientosLote WHERE YEAR(fecha) = ${year} GROUP BY DATENAME(MONTH, fecha) ORDER BY DATENAME(MONTH, fecha)`
-        ),
+        () =>
+          prisma.$queryRaw<
+            Array<{ mes: string; arribos: number; salidas: number; sitiosAtt: number; sitiosTelcel: number }>
+          >(
+            Prisma.sql`SELECT DATENAME(MONTH, fecha) as mes, SUM(CASE WHEN Estatus = 'ARRIBO' THEN 1 ELSE 0 END) as arribos, SUM(CASE WHEN Estatus = 'SALIDA' THEN 1 ELSE 0 END) as salidas, 0 as sitiosAtt, 0 as sitiosTelcel FROM GASOAL_MovimientosLote WHERE YEAR(fecha) = ${year} GROUP BY DATENAME(MONTH, fecha) ORDER BY DATENAME(MONTH, fecha)`
+          ),
         []
       )
 
       // ────────────────────────────────────────────────────────────
       // TENANT-SCOPED (GASOSOL/GASOCO, RLS PedidosPolicy) — a `tx`
       // ────────────────────────────────────────────────────────────
-      const solCounters = await tx.$queryRaw<Array<{ total: bigint; aceptadas: bigint; pendientes: bigint; rechazadas: bigint; pagadas: bigint; montoPagadas: number }>>(
+      const solCounters = await tx.$queryRaw<
+        Array<{
+          total: bigint
+          aceptadas: bigint
+          pendientes: bigint
+          rechazadas: bigint
+          pagadas: bigint
+          montoPagadas: number
+        }>
+      >(
         Prisma.sql`SELECT COUNT_BIG(1) as total, SUM(CASE WHEN EstatusSolicitud = 1 THEN 1 ELSE 0 END) as aceptadas, SUM(CASE WHEN EstatusSolicitud = 3 THEN 1 ELSE 0 END) as pendientes, SUM(CASE WHEN EstatusSolicitud = 2 THEN 1 ELSE 0 END) as rechazadas, SUM(CASE WHEN EstatusSolicitud = 4 THEN 1 ELSE 0 END) as pagadas, ISNULL(SUM(CASE WHEN EstatusSolicitud = 4 THEN MontoGastado ELSE 0 END), 0) as montoPagadas FROM GASOSOL_SolGastos WHERE ${tc} AND YEAR(FechaSolicitud) = ${year}`
       )
 
       const gasPorMes = await safeQuery(
         'gasPorMes',
-        () => tx.$queryRaw<Array<{ mes: string; year: string; aceptadas: number; rechazadas: number; pagadas: number }>>(
-          Prisma.sql`SELECT DATENAME(MONTH, FechaSolicitud) as mes, CAST(YEAR(FechaSolicitud) AS VARCHAR(4)) as year, SUM(CASE WHEN EstatusSolicitud = 1 THEN 1 ELSE 0 END) as aceptadas, SUM(CASE WHEN EstatusSolicitud = 2 THEN 1 ELSE 0 END) as rechazadas, SUM(CASE WHEN EstatusSolicitud = 4 THEN 1 ELSE 0 END) as pagadas FROM GASOSOL_SolGastos WHERE ${tc} AND YEAR(FechaSolicitud) = ${year} GROUP BY DATENAME(MONTH, FechaSolicitud), CAST(YEAR(FechaSolicitud) AS VARCHAR(4)) ORDER BY year, DATENAME(MONTH, FechaSolicitud)`
-        ),
+        () =>
+          tx.$queryRaw<Array<{ mes: string; year: string; aceptadas: number; rechazadas: number; pagadas: number }>>(
+            Prisma.sql`SELECT DATENAME(MONTH, FechaSolicitud) as mes, CAST(YEAR(FechaSolicitud) AS VARCHAR(4)) as year, SUM(CASE WHEN EstatusSolicitud = 1 THEN 1 ELSE 0 END) as aceptadas, SUM(CASE WHEN EstatusSolicitud = 2 THEN 1 ELSE 0 END) as rechazadas, SUM(CASE WHEN EstatusSolicitud = 4 THEN 1 ELSE 0 END) as pagadas FROM GASOSOL_SolGastos WHERE ${tc} AND YEAR(FechaSolicitud) = ${year} GROUP BY DATENAME(MONTH, FechaSolicitud), CAST(YEAR(FechaSolicitud) AS VARCHAR(4)) ORDER BY year, DATENAME(MONTH, FechaSolicitud)`
+          ),
         []
       )
 
       const gasPorProyecto = await safeQuery(
         'gasPorProyecto',
-        () => tx.$queryRaw<Array<{ key: string; count: number; monto: number }>>(
-          Prisma.sql`SELECT TOP 10 ISNULL(p.ProyectoNombre, 'Sin proyecto') as [key], COUNT(*) as [count], ISNULL(SUM(g.MontoGastado), 0) as monto FROM GASOSOL_SolGastos g LEFT JOIN GASOCO_Cat_Proyectos p ON g.IdProyecto = p.Id WHERE g.TenantID = CAST(${tenantId} AS uniqueidentifier) AND YEAR(g.FechaSolicitud) = ${year} GROUP BY p.ProyectoNombre ORDER BY monto DESC`
-        ),
+        () =>
+          tx.$queryRaw<Array<{ key: string; count: number; monto: number }>>(
+            Prisma.sql`SELECT TOP 10 ISNULL(p.ProyectoNombre, 'Sin proyecto') as [key], COUNT(*) as [count], ISNULL(SUM(g.MontoGastado), 0) as monto FROM GASOSOL_SolGastos g LEFT JOIN GASOCO_Cat_Proyectos p ON g.IdProyecto = p.Id WHERE g.TenantID = CAST(${tenantId} AS uniqueidentifier) AND YEAR(g.FechaSolicitud) = ${year} GROUP BY p.ProyectoNombre ORDER BY monto DESC`
+          ),
         []
       )
 
       const cotizCounters = await safeQuery(
         'cotizCounters',
-        () => tx.$queryRaw<Array<{ total: bigint; aceptadas: bigint; pendientes: bigint; rechazadas: bigint }>>(
-          Prisma.sql`SELECT COUNT_BIG(1) as total, SUM(CASE WHEN CotizacionEstatus = 1 THEN 1 ELSE 0 END) as aceptadas, SUM(CASE WHEN CotizacionEstatus = 0 THEN 1 ELSE 0 END) as pendientes, SUM(CASE WHEN CotizacionEstatus = 2 THEN 1 ELSE 0 END) as rechazadas FROM GASOCO_Cat_Cotizaciones WHERE ${tc}`
-        ),
+        () =>
+          tx.$queryRaw<Array<{ total: bigint; aceptadas: bigint; pendientes: bigint; rechazadas: bigint }>>(
+            Prisma.sql`SELECT COUNT_BIG(1) as total, SUM(CASE WHEN CotizacionEstatus = 1 THEN 1 ELSE 0 END) as aceptadas, SUM(CASE WHEN CotizacionEstatus = 0 THEN 1 ELSE 0 END) as pendientes, SUM(CASE WHEN CotizacionEstatus = 2 THEN 1 ELSE 0 END) as rechazadas FROM GASOCO_Cat_Cotizaciones WHERE ${tc}`
+          ),
         [{ total: 0n, aceptadas: 0n, pendientes: 0n, rechazadas: 0n }]
       )
 
       const projCounters = await safeQuery(
         'projCounters',
-        () => tx.$queryRaw<Array<{ total: bigint; activos: bigint; inactivos: bigint }>>(
-          Prisma.sql`SELECT COUNT_BIG(1) as total, SUM(CASE WHEN ProyectoEstatus = 1 THEN 1 ELSE 0 END) as activos, SUM(CASE WHEN ProyectoEstatus = 0 THEN 1 ELSE 0 END) as inactivos FROM GASOCO_Cat_Proyectos WHERE ${tc}`
-        ),
+        () =>
+          tx.$queryRaw<Array<{ total: bigint; activos: bigint; inactivos: bigint }>>(
+            Prisma.sql`SELECT COUNT_BIG(1) as total, SUM(CASE WHEN ProyectoEstatus = 1 THEN 1 ELSE 0 END) as activos, SUM(CASE WHEN ProyectoEstatus = 0 THEN 1 ELSE 0 END) as inactivos FROM GASOCO_Cat_Proyectos WHERE ${tc}`
+          ),
         [{ total: 0n, activos: 0n, inactivos: 0n }]
       )
 
       const projPorResponsable = await safeQuery(
         'projPorResponsable',
-        () => tx.$queryRaw<Array<{ key: string; count: bigint }>>(
-          Prisma.sql`SELECT TOP 10 ISNULL(ProyectoResponsableGaso, 'Sin asignar') as [key], COUNT(*) as [count] FROM GASOCO_Cat_Proyectos WHERE ${tc} GROUP BY ProyectoResponsableGaso ORDER BY [count] DESC`
-        ),
+        () =>
+          tx.$queryRaw<Array<{ key: string; count: bigint }>>(
+            Prisma.sql`SELECT TOP 10 ISNULL(ProyectoResponsableGaso, 'Sin asignar') as [key], COUNT(*) as [count] FROM GASOCO_Cat_Proyectos WHERE ${tc} GROUP BY ProyectoResponsableGaso ORDER BY [count] DESC`
+          ),
         []
       )
 
       const projPorMes = await safeQuery(
         'projPorMes',
-        () => tx.$queryRaw<Array<{ mes: string; year: string; status: string; count: number }>>(
-          Prisma.sql`SELECT DATENAME(MONTH, ProyectoFechaCreacion) as mes, CAST(YEAR(ProyectoFechaCreacion) AS VARCHAR(4)) as year, CASE WHEN ProyectoEstatus = 1 THEN 'Activos' ELSE 'Cerrados' END as status, COUNT(*) as count FROM GASOCO_Cat_Proyectos WHERE ${tc} AND YEAR(ProyectoFechaCreacion) = ${year} GROUP BY DATENAME(MONTH, ProyectoFechaCreacion), CAST(YEAR(ProyectoFechaCreacion) AS VARCHAR(4)), CASE WHEN ProyectoEstatus = 1 THEN 'Activos' ELSE 'Cerrados' END ORDER BY year, DATENAME(MONTH, ProyectoFechaCreacion)`
-        ),
+        () =>
+          tx.$queryRaw<Array<{ mes: string; year: string; status: string; count: number }>>(
+            Prisma.sql`SELECT DATENAME(MONTH, ProyectoFechaCreacion) as mes, CAST(YEAR(ProyectoFechaCreacion) AS VARCHAR(4)) as year, CASE WHEN ProyectoEstatus = 1 THEN 'Activos' ELSE 'Cerrados' END as status, COUNT(*) as count FROM GASOCO_Cat_Proyectos WHERE ${tc} AND YEAR(ProyectoFechaCreacion) = ${year} GROUP BY DATENAME(MONTH, ProyectoFechaCreacion), CAST(YEAR(ProyectoFechaCreacion) AS VARCHAR(4)), CASE WHEN ProyectoEstatus = 1 THEN 'Activos' ELSE 'Cerrados' END ORDER BY year, DATENAME(MONTH, ProyectoFechaCreacion)`
+          ),
         []
       )
 
       // GLOBAL (GASOAL_CatalogoAlmacenes) — pool
       const almacenes = await safeQuery(
         'almacenes',
-        () => prisma.$queryRaw<Array<{ total: bigint; capacidad: number; ocupada: number }>>(
-          Prisma.sql`SELECT COUNT_BIG(1) as total, ISNULL(SUM(Capacidad), 0) as capacidad, ISNULL(SUM(Capacidad_Ocupada), 0) as ocupada FROM GASOAL_CatalogoAlmacenes`
-        ),
+        () =>
+          prisma.$queryRaw<Array<{ total: bigint; capacidad: number; ocupada: number }>>(
+            Prisma.sql`SELECT COUNT_BIG(1) as total, ISNULL(SUM(Capacidad), 0) as capacidad, ISNULL(SUM(Capacidad_Ocupada), 0) as ocupada FROM GASOAL_CatalogoAlmacenes`
+          ),
         [{ total: 0n, capacidad: 0, ocupada: 0 }]
       )
 
       const almacenesCapacidad = await safeQuery(
         'almacenesCapacidad',
-        () => prisma.$queryRaw<Array<{ almacen: string; capacidad: number; ocupado: number }>>(
-          Prisma.sql`SELECT ISNULL(Almacen, 'Sin nombre') as almacen, ISNULL(Capacidad, 0) as capacidad, ISNULL(Capacidad_Ocupada, 0) as ocupado FROM GASOAL_CatalogoAlmacenes ORDER BY Capacidad DESC`
-        ),
+        () =>
+          prisma.$queryRaw<Array<{ almacen: string; capacidad: number; ocupado: number }>>(
+            Prisma.sql`SELECT ISNULL(Almacen, 'Sin nombre') as almacen, ISNULL(Capacidad, 0) as capacidad, ISNULL(Capacidad_Ocupada, 0) as ocupado FROM GASOAL_CatalogoAlmacenes ORDER BY Capacidad DESC`
+          ),
         []
       )
 
@@ -161,17 +184,21 @@ export const GET = withPermission(
 
       const flotillasCounters = await safeQuery(
         'flotillasCounters',
-        () => tx.$queryRaw<Array<{ total: bigint; aceptadas: bigint; rechazadas: bigint; pagadas: bigint; pendientes: bigint }>>(
-          Prisma.sql`SELECT COUNT_BIG(1) as total, SUM(CASE WHEN EstatusSolicitud = 1 THEN 1 ELSE 0 END) as aceptadas, SUM(CASE WHEN EstatusSolicitud = 2 THEN 1 ELSE 0 END) as rechazadas, SUM(CASE WHEN EstatusSolicitud = 4 THEN 1 ELSE 0 END) as pagadas, SUM(CASE WHEN EstatusSolicitud NOT IN (1,2,4) THEN 1 ELSE 0 END) as pendientes FROM GASOGASTOVEH WHERE ${tcVeh}`
-        ),
+        () =>
+          tx.$queryRaw<
+            Array<{ total: bigint; aceptadas: bigint; rechazadas: bigint; pagadas: bigint; pendientes: bigint }>
+          >(
+            Prisma.sql`SELECT COUNT_BIG(1) as total, SUM(CASE WHEN EstatusSolicitud = 1 THEN 1 ELSE 0 END) as aceptadas, SUM(CASE WHEN EstatusSolicitud = 2 THEN 1 ELSE 0 END) as rechazadas, SUM(CASE WHEN EstatusSolicitud = 4 THEN 1 ELSE 0 END) as pagadas, SUM(CASE WHEN EstatusSolicitud NOT IN (1,2,4) THEN 1 ELSE 0 END) as pendientes FROM GASOGASTOVEH WHERE ${tcVeh}`
+          ),
         [{ total: 0n, aceptadas: 0n, rechazadas: 0n, pagadas: 0n, pendientes: 0n }]
       )
 
       const flotillasPorMes = await safeQuery(
         'flotillasPorMes',
-        () => tx.$queryRaw<Array<{ mes: string; year: string; aceptadas: number; rechazadas: number; pagadas: number }>>(
-          Prisma.sql`SELECT DATENAME(MONTH, Fecha) as mes, CAST(YEAR(Fecha) AS VARCHAR(4)) as year, SUM(CASE WHEN EstatusSolicitud = 1 THEN 1 ELSE 0 END) as aceptadas, SUM(CASE WHEN EstatusSolicitud = 2 THEN 1 ELSE 0 END) as rechazadas, SUM(CASE WHEN EstatusSolicitud = 4 THEN 1 ELSE 0 END) as pagadas FROM GASOGASTOVEH WHERE ${tcVeh} AND YEAR(Fecha) = ${year} GROUP BY DATENAME(MONTH, Fecha), CAST(YEAR(Fecha) AS VARCHAR(4)) ORDER BY year, DATENAME(MONTH, Fecha)`
-        ),
+        () =>
+          tx.$queryRaw<Array<{ mes: string; year: string; aceptadas: number; rechazadas: number; pagadas: number }>>(
+            Prisma.sql`SELECT DATENAME(MONTH, Fecha) as mes, CAST(YEAR(Fecha) AS VARCHAR(4)) as year, SUM(CASE WHEN EstatusSolicitud = 1 THEN 1 ELSE 0 END) as aceptadas, SUM(CASE WHEN EstatusSolicitud = 2 THEN 1 ELSE 0 END) as rechazadas, SUM(CASE WHEN EstatusSolicitud = 4 THEN 1 ELSE 0 END) as pagadas FROM GASOGASTOVEH WHERE ${tcVeh} AND YEAR(Fecha) = ${year} GROUP BY DATENAME(MONTH, Fecha), CAST(YEAR(Fecha) AS VARCHAR(4)) ORDER BY year, DATENAME(MONTH, Fecha)`
+          ),
         []
       )
 

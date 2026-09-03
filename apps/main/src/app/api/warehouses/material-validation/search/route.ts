@@ -1,73 +1,73 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 
-import { Prisma } from '@prisma/client';
-import { PERM, withPermission } from '@gaso/shared';
+import { Prisma } from '@prisma/client'
+import { PERM, withPermission } from '@gaso/shared'
 
-import { withTenantContext } from '@/lib/tenant-context';
+import { withTenantContext } from '@/lib/tenant-context'
 
 interface SearchBody {
-  es?: boolean | string;
-  fechaInicio?: string;
-  fechaFin?: string;
-  fechaInicioFin?: string;   // compat legacy: "inicio - fin"
-  idUsuario?: number;
-  proyecto?: number;
-  tipoMaterial?: number;
-  almacen?: number;
-  carrier?: number;
+  es?: boolean | string
+  fechaInicio?: string
+  fechaFin?: string
+  fechaInicioFin?: string // compat legacy: "inicio - fin"
+  idUsuario?: number
+  proyecto?: number
+  tipoMaterial?: number
+  almacen?: number
+  carrier?: number
 }
 
 function toDate(v?: string): Date | null {
-  if (!v) return null;
-  const d = new Date(v.trim());
+  if (!v) return null
+  const d = new Date(v.trim())
 
-  return isNaN(d.getTime()) ? null : d;
+  return isNaN(d.getTime()) ? null : d
 }
 
 export const POST = withPermission(
   'material_validation',
   async (req: { json: () => Promise<any>; url: string | URL }, { tenantId }: { tenantId: string }) => {
     try {
-      const body = (await req.json().catch(() => ({}))) as SearchBody;
-      const url = new URL(req.url);
+      const body = (await req.json().catch(() => ({}))) as SearchBody
+      const url = new URL(req.url)
 
-      const entradas = body.es === true || body.es === 'true';
+      const entradas = body.es === true || body.es === 'true'
 
-      const pagina = Math.max(1, Number(url.searchParams.get('pagina')) || 1);
-      const limite = Math.min(100, Math.max(1, Number(url.searchParams.get('limite')) || 10));
-      const orden = url.searchParams.get('orden')?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+      const pagina = Math.max(1, Number(url.searchParams.get('pagina')) || 1)
+      const limite = Math.min(100, Math.max(1, Number(url.searchParams.get('limite')) || 10))
+      const orden = url.searchParams.get('orden')?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
 
       // Rango de fechas: explícito (ISO) o compat "inicio - fin".
-      let fInicio = toDate(body.fechaInicio);
-      let fFin = toDate(body.fechaFin);
+      let fInicio = toDate(body.fechaInicio)
+      let fFin = toDate(body.fechaFin)
 
       if ((!fInicio || !fFin) && body.fechaInicioFin) {
-        const [a, b] = body.fechaInicioFin.split(' - ');
+        const [a, b] = body.fechaInicioFin.split(' - ')
 
-        fInicio = toDate(a); fFin = toDate(b);
+        fInicio = toDate(a)
+        fFin = toDate(b)
       }
 
       // Condiciones parametrizadas (ES ya NO interpolado).
-      const conds: Prisma.Sql[] = [
-        Prisma.sql`VM.TenantID = ${tenantId}`,
-        Prisma.sql`VM.ES = ${entradas ? 1 : 0}`,
-      ];
+      const conds: Prisma.Sql[] = [Prisma.sql`VM.TenantID = ${tenantId}`, Prisma.sql`VM.ES = ${entradas ? 1 : 0}`]
 
-      if (fInicio && fFin) conds.push(Prisma.sql`VM.FechaCaptura BETWEEN ${fInicio} AND ${fFin}`);
-      if (body.idUsuario != null) conds.push(Prisma.sql`VM.IdUsuario = ${body.idUsuario}`);
-      if (body.proyecto != null) conds.push(Prisma.sql`VM.IdProyecto = ${body.proyecto}`);
-      if (body.tipoMaterial != null) conds.push(Prisma.sql`VM.IdTipoMaterial = ${body.tipoMaterial}`);
-      if (body.almacen != null) conds.push(Prisma.sql`VM.IdAlmacenDestino = ${body.almacen}`);
-      if (body.carrier != null) conds.push(Prisma.sql`VM.IdCarrier = ${body.carrier}`);
+      if (fInicio && fFin) conds.push(Prisma.sql`VM.FechaCaptura BETWEEN ${fInicio} AND ${fFin}`)
+      if (body.idUsuario != null) conds.push(Prisma.sql`VM.IdUsuario = ${body.idUsuario}`)
+      if (body.proyecto != null) conds.push(Prisma.sql`VM.IdProyecto = ${body.proyecto}`)
+      if (body.tipoMaterial != null) conds.push(Prisma.sql`VM.IdTipoMaterial = ${body.tipoMaterial}`)
+      if (body.almacen != null) conds.push(Prisma.sql`VM.IdAlmacenDestino = ${body.almacen}`)
+      if (body.carrier != null) conds.push(Prisma.sql`VM.IdCarrier = ${body.carrier}`)
 
-      const where = Prisma.join(conds, ' AND ');
+      const where = Prisma.join(conds, ' AND ')
 
       // orden: valor de whitelist ('ASC'|'DESC'), seguro para Prisma.raw.
-      const ordenSql = Prisma.raw(orden);
+      const ordenSql = Prisma.raw(orden)
 
-      type Row = Record<string, unknown> & { TotalRows?: number | bigint };
+      type Row = Record<string, unknown> & { TotalRows?: number | bigint }
 
-      const rows = await withTenantContext(tenantId, tx => tx.$queryRaw<Row[]>`
+      const rows = await withTenantContext(
+        tenantId,
+        tx => tx.$queryRaw<Row[]>`
         SELECT VM.*, LTRIM(RTRIM(UE.FirstName + ' ' + UE.LastName)) AS Responsable, pro.Proyecto, tm.Tipo AS TipoMaterial,
                al.Nombre AS AlmacenDestino, ca.Carrier,
                ( SELECT pm.Id AS id, pm.Clave AS cl, cm.Motivo AS clt, pm.Piezas AS pzs
@@ -85,11 +85,8 @@ export const POST = withPermission(
                    WHERE VM.Folio = VFV.FolioEntrada
                       OR VM.Folio = VFV.FolioSalida
                       OR VM.Folio = VFV.FolioValidacion ) AS Vinculado,
-               COUNT(*) OVER() AS TotalRows,
-               voOut.FolioIN AS FolioOrigen, voIn.FolioOut AS FolioSalida
+               COUNT(*) OVER() AS TotalRows
           FROM dbo.GASOAL_VMES VM
-          LEFT JOIN dbo.GASOAL_VMOut voOut ON voOut.TenantID = VM.TenantID AND voOut.IdOut  = VM.Id
-          LEFT JOIN dbo.GASOAL_VMOut voIn  ON voIn.TenantID  = VM.TenantID AND voIn.FolioIN = VM.Folio
           INNER JOIN dbo.GASOAL_VMAlmacenes al ON VM.IdAlmacenDestino = al.Id
           INNER JOIN dbo.Cat_VMProyecto pro ON VM.IdProyecto = pro.Id
           INNER JOIN dbo.Cat_VMTiposMaterial tm ON VM.IdTipoMaterial = tm.Id
@@ -99,18 +96,22 @@ export const POST = withPermission(
           WHERE ${where}
           ORDER BY VM.FechaCaptura ${ordenSql}
           OFFSET (${pagina} - 1) * ${limite} ROWS FETCH NEXT ${limite} ROWS ONLY
-      `);
+      `
+      )
 
       // COUNT(*) OVER() = total del set filtrado ANTES del OFFSET/FETCH.
-      const total = rows.length ? ((typeof rows[0].TotalRows === 'bigint' ? Number(rows[0].TotalRows) : rows[0].TotalRows) ?? 0) : 0;
-      const items = rows.map(({ TotalRows, ...rest }) => rest);
+      const total = rows.length
+        ? ((typeof rows[0].TotalRows === 'bigint' ? Number(rows[0].TotalRows) : rows[0].TotalRows) ?? 0)
+        : 0
 
-      return NextResponse.json({ rows: items, total, pagina, limite });
+      const items = rows.map(({ TotalRows, ...rest }) => rest)
+
+      return NextResponse.json({ rows: items, total, pagina, limite })
     } catch (e) {
-      console.error('[material-validation/search]', e);
+      console.error('[material-validation/search]', e)
 
-      return NextResponse.json({ message: 'Ha ocurrido un error inesperado' }, { status: 500 });
+      return NextResponse.json({ message: 'Ha ocurrido un error inesperado' }, { status: 500 })
     }
   },
-  { bit: PERM.R },
-);
+  { bit: PERM.R }
+)

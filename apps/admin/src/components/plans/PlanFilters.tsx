@@ -1,7 +1,8 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
+
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
@@ -38,6 +39,7 @@ export default function PlanFilters() {
 
   const applyFilters = useCallback(() => {
     const params = new URLSearchParams()
+
     if (debouncedSearch) params.set('search', debouncedSearch)
     if (status) params.set('status', status)
     params.set('page', '1')
@@ -52,7 +54,9 @@ export default function PlanFilters() {
     timeoutRef.current = setTimeout(() => {
       setDebouncedSearch(search)
     }, 400)
-    return () => {
+
+    
+return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
   }, [search, mounted])
@@ -60,9 +64,9 @@ export default function PlanFilters() {
   useEffect(() => {
     if (!mounted) return
     applyFilters()
-  }, [debouncedSearch, status, mounted])
+  }, [debouncedSearch, status, mounted, applyFilters])
 
-  const hasActiveFilters = Boolean(search || status)
+  const _hasActiveFilters = Boolean(search || status)
 
   return (
     <Box sx={{ mb: 3 }}>

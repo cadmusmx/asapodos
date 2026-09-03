@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
+
 import { getToken } from 'next-auth/jwt'
 
 const PUBLIC_PATHS = ['/admin/login', '/api/admin/login', '/api/admin/auth-mfa/start', '/api/auth/', '/images/']
@@ -21,8 +22,10 @@ export async function middleware(request: NextRequest) {
 
   if (!token) {
     const loginUrl = new URL('/admin/login', request.url)
+
     loginUrl.searchParams.set('callbackUrl', pathname)
-    return NextResponse.redirect(loginUrl)
+    
+return NextResponse.redirect(loginUrl)
   }
 
   if (!token.platformRole) {
@@ -34,6 +37,7 @@ export async function middleware(request: NextRequest) {
   }
 
   const headers = new Headers(request.headers)
+
   headers.set('x-admin-user-id', String(token.id ?? ''))
   headers.set('x-admin-role', String(token.platformRole))
 

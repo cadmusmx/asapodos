@@ -1,13 +1,13 @@
-import '@tanstack/react-table';
-import type { RowData } from '@tanstack/react-table';
-import type { RankingInfo } from '@tanstack/match-sorter-utils';
+import '@tanstack/react-table'
+import type { RowData } from '@tanstack/react-table'
+import type { RankingInfo } from '@tanstack/match-sorter-utils'
 
 // Augmentaciones centralizadas de TanStack Table para todo el proyecto.
 // Mantener TODOS los campos OPCIONALES: así ninguna tabla obliga a las demás a proveer un meta que no usan.
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
     updateData?: (rowIndex: number, columnId: string, value: unknown) => void
-    openDetail?: (row: TData) => void,
+    openDetail?: (row: TData) => void
   }
 
   // La interface FilterFns no necesita declarase si solo se usa con fuzzy

@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requirePlatformRole } from '@gaso/shared'
+
 import { activatePlan } from '@/services/plan-service'
 
 export async function POST(
@@ -29,6 +31,7 @@ export async function POST(
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('[ACTIVATE_PLAN_ERROR]', error)
-    return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
+    
+return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
   }
 }

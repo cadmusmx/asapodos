@@ -5,6 +5,7 @@ import { useState } from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
+
 import type { TenantStatus, TenantRow } from '@/services/tenant-service'
 import TenantTable from '@/components/tenants/TenantTable'
 import TenantFilters from '@/components/tenants/TenantFilters'

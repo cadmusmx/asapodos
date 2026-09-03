@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { requirePlatformRole } from '@gaso/shared'
-import { prisma } from '@gaso/shared'
+
+import { requirePlatformRole , prisma } from '@gaso/shared'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +19,7 @@ export async function GET() {
     return NextResponse.json({ tenants })
   } catch (error) {
     console.error('[ADMIN_AUDIT_TENANTS_ERROR]', error)
-    return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
+    
+return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
   }
 }

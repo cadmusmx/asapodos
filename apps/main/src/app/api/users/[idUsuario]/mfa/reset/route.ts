@@ -1,13 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client'
 
-import { PERM, withPermission, withTenantContext, writeAuthAudit } from '@gaso/shared';
+import { PERM, withPermission, withTenantContext, writeAuthAudit } from '@gaso/shared'
 
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'
 
 // El id va antes de /mfa/reset, no es el último segmento → se lee de context.params.
-type RouteContext = { params: Promise<{ idUsuario: string }> };
+type RouteContext = { params: Promise<{ idUsuario: string }> }
 
 /**
  * Restablecer MFA (TOTP) de una cuenta.
@@ -20,15 +20,15 @@ export const POST = withPermission(
   'users',
   async (req, { auth, tenantId }, context: RouteContext) => {
     try {
-      const { idUsuario } = await context.params;
-      const targetUserId = Number(idUsuario);
+      const { idUsuario } = await context.params
+      const targetUserId = Number(idUsuario)
 
       if (!Number.isInteger(targetUserId) || targetUserId <= 0) {
-        return NextResponse.json({ ok: false, message: ['Usuario inválido.'] }, { status: 400 });
+        return NextResponse.json({ ok: false, message: ['Usuario inválido.'] }, { status: 400 })
       }
 
-      const body = await req.json().catch(() => ({}));
-      const reason = String(body.reason ?? 'Admin MFA reset').trim();
+      const body = await req.json().catch(() => ({}))
+      const reason = String(body.reason ?? 'Admin MFA reset').trim()
 
       const result = await withTenantContext(tenantId, async tx => {
         const targetRows = await tx.$queryRaw<Array<{ IdUsuario: number; Usuario: string }>>(
@@ -39,11 +39,11 @@ export const POST = withPermission(
               AND TenantID = CAST(${tenantId} AS uniqueidentifier)
               AND Estatus = 'A'
           `
-        );
+        )
 
-        const targetUser = targetRows[0];
+        const targetUser = targetRows[0]
 
-        if (!targetUser) return null;
+        if (!targetUser) return null
 
         const updatedRows = await tx.$executeRaw(
           Prisma.sql`
@@ -55,16 +55,16 @@ export const POST = withPermission(
               AND FactorType = 'TOTP'
               AND IsEnabled = 1
           `
-        );
+        )
 
-        return { targetUser, updatedRows };
-      });
+        return { targetUser, updatedRows }
+      })
 
       if (!result) {
         return NextResponse.json(
           { ok: false, message: ['Cuenta no encontrada para el tenant actual.'] },
           { status: 404 }
-        );
+        )
       }
 
       await writeAuthAudit({
@@ -82,14 +82,14 @@ export const POST = withPermission(
           performedBy: auth.email ?? String(auth.userId),
           updatedRows: result.updatedRows
         }
-      });
+      })
 
-      return NextResponse.json({ ok: true, message: ['MFA reset completed'], updatedRows: result.updatedRows });
+      return NextResponse.json({ ok: true, message: ['MFA reset completed'], updatedRows: result.updatedRows })
     } catch (error) {
-      console.error('[MFA_RESET_ERROR]', { message: error instanceof Error ? error.message : 'Unknown error' });
+      console.error('[MFA_RESET_ERROR]', { message: error instanceof Error ? error.message : 'Unknown error' })
 
-      return NextResponse.json({ ok: false, message: ['Server error while resetting MFA'] }, { status: 500 });
+      return NextResponse.json({ ok: false, message: ['Server error while resetting MFA'] }, { status: 500 })
     }
   },
   { bit: PERM.U }
-);
+)

@@ -2,14 +2,8 @@ import { NextResponse } from 'next/server'
 
 import { Prisma } from '@prisma/client'
 
-import {
-  resolveSession,
-  getTenantFromHeaders,
-  withTenantContext,
-  AUDIT_ACTION_LABELS
-} from '@gaso/shared'
+import { resolveSession, getTenantFromHeaders, withTenantContext, AUDIT_ACTION_LABELS } from '@gaso/shared'
 
-import type { ProfileActivityRow } from '@/types/profile'
 import { normalizeActivityFromRow } from '@/lib/profile/normalize'
 
 export const runtime = 'nodejs'
@@ -43,7 +37,7 @@ export async function GET(req: Request) {
   const offset = (page - 1) * pageSize
 
   try {
-    const result = await withTenantContext(tenantId, async (tx) => {
+    const result = await withTenantContext(tenantId, async tx => {
       const [countRows, rows] = await Promise.all([
         tx.$queryRaw<Array<{ total: string }>>(
           Prisma.sql`
@@ -53,7 +47,21 @@ export async function GET(req: Request) {
               AND UserID = ${userId}
           `
         ),
-        tx.$queryRaw<Array<{ AuditID: string; TenantID: string; UserID: string | null; TableName: string; Action: string; OldData: string | null; NewData: string | null; ChangedAt: Date | string; AppUser: string | null; IdOrigin: string | null; Origin: string | null }>>(
+        tx.$queryRaw<
+          Array<{
+            AuditID: string
+            TenantID: string
+            UserID: string | null
+            TableName: string
+            Action: string
+            OldData: string | null
+            NewData: string | null
+            ChangedAt: Date | string
+            AppUser: string | null
+            IdOrigin: string | null
+            Origin: string | null
+          }>
+        >(
           Prisma.sql`
             SELECT
               CAST(TL.AuditID AS NVARCHAR(50)) AS AuditID,
@@ -87,9 +95,6 @@ export async function GET(req: Request) {
   } catch (e) {
     console.error('[profile/activity]', e instanceof Error ? e.message : e)
 
-    return NextResponse.json(
-      { message: 'Error al cargar la actividad' },
-      { status: 500 }
-    )
+    return NextResponse.json({ message: 'Error al cargar la actividad' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Box from '@mui/material/Box'
@@ -8,10 +9,10 @@ import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
+
+import type { TenantSubscription , TenantUsage , BillingRecord } from '@gaso/shared/types/plan'
+
 import type { TenantRow } from '@/services/tenant-service'
-import type { TenantSubscription } from '@gaso/shared/types/plan'
-import type { TenantUsage } from '@gaso/shared/types/plan'
-import type { BillingRecord } from '@gaso/shared/types/plan'
 import TenantOverviewTab from './TenantOverviewTab'
 import TenantSubscriptionTab from './TenantSubscriptionTab'
 import TenantUsageTab from './TenantUsageTab'
@@ -34,9 +35,6 @@ export default function TenantDetailPageClient({
 }: TenantDetailPageClientProps) {
   const router = useRouter()
   const [tab, setTab] = useState(0)
-
-  const isSuspended = tenant.Status === 'SUSPENDED'
-  const isInactive = tenant.Status === 'INACTIVE'
 
   return (
     <Box>

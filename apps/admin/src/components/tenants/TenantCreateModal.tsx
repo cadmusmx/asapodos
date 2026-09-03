@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Dialog from '@mui/material/Dialog'
@@ -22,6 +23,7 @@ const DOMAIN_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]*/
 
 function validateDomain(value: string): boolean {
   const trimmed = value.trim()
+
   if (!trimmed) return false
 
   return DOMAIN_REGEX.test(trimmed)
@@ -45,6 +47,7 @@ export default function TenantCreateModal({ open, onClose, onSuccess }: TenantCr
   const [loading, setLoading] = useState(false)
   const [dominioError, setDominioError] = useState<string | null>(null)
   const [plans, setPlans] = useState<PlanOption[]>([])
+
   const [form, setForm] = useState({
     companyName: '',
     dominio: '',
@@ -72,10 +75,12 @@ export default function TenantCreateModal({ open, onClose, onSuccess }: TenantCr
     setDominioError(null)
 
     const dominio = form.dominio.trim()
+
     if (!validateDomain(dominio)) {
       setDominioError('Ingresa un dominio válido (ej. empresa.com)')
       setLoading(false)
-      return
+      
+return
     }
 
     const data = {
@@ -94,6 +99,7 @@ export default function TenantCreateModal({ open, onClose, onSuccess }: TenantCr
 
       if (!res.ok) {
         const result = await res.json()
+
         throw new Error(result.message?.[0] || 'Failed to create tenant')
       }
 

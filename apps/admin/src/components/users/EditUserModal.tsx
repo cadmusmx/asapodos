@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Dialog from '@mui/material/Dialog'
@@ -14,8 +15,10 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
-import type { PlatformUserEditRow, PlatformUserRow } from '@/types/apps/platformUserTypes'
+
 import { toast } from 'react-toastify'
+
+import type { PlatformUserEditRow, PlatformUserRow } from '@/types/apps/platformUserTypes'
 
 interface EditUserModalProps {
   open: boolean;
@@ -47,6 +50,7 @@ export default function EditUserModal({ open, onClose, user, onSuccess }: EditUs
         .catch(() => {
           // Fallback: si el GET falla, parte el Nombre concatenado del prop
           const parts = (user.Nombre || '').trim().split(/\s+/)
+
           setForm({ nombre: parts[0] || '', apellidos: parts.slice(1).join(' '), email: user.Email || '' })
         })
         .finally(() => setFetching(false))
@@ -55,6 +59,7 @@ export default function EditUserModal({ open, onClose, user, onSuccess }: EditUs
 
   const handleChange = (field: 'nombre' | 'apellidos' | 'email') => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [field]: e.target.value }))
+
     if (fieldErrors[field]) {
       setFieldErrors(prev => ({ ...prev, [field]: undefined }))
     }
@@ -62,12 +67,14 @@ export default function EditUserModal({ open, onClose, user, onSuccess }: EditUs
 
   const validate = (): boolean => {
     const errors: { nombre?: string; apellidos?: string; email?: string } = {}
+
     if (!form.nombre.trim()) errors.nombre = 'El nombre es requerido'
     if (!form.apellidos.trim()) errors.apellidos = 'Los apellidos son requeridos'
     if (!form.email.trim()) errors.email = 'El email es requerido'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.email = 'Email inválido'
     setFieldErrors(errors)
-    return Object.keys(errors).length === 0
+    
+return Object.keys(errors).length === 0
   }
 
   const handleSubmit = async () => {
@@ -88,6 +95,7 @@ export default function EditUserModal({ open, onClose, user, onSuccess }: EditUs
 
       if (!res.ok) {
         const result = await res.json()
+
         throw new Error(result.message?.[0] || 'Failed to update user')
       }
 

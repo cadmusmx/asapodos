@@ -35,15 +35,7 @@ const formatDate = (value: string | null): string => {
   }
 }
 
-const FieldGroup = ({
-  label,
-  value,
-  mono = false
-}: {
-  label: string
-  value: React.ReactNode
-  mono?: boolean
-}) => (
+const FieldGroup = ({ label, value, mono = false }: { label: string; value: React.ReactNode; mono?: boolean }) => (
   <Box>
     <Typography variant='caption' color='text.secondary' display='block'>
       {label}
@@ -65,11 +57,7 @@ const EmployeeInfoTab = ({ employee }: Props) => {
   const { t } = useTranslatePage()
 
   if (!employee) {
-    return (
-      <Alert severity='info'>
-        {t('userProfile.employeeInfoTab.noEmployeeInfo')}
-      </Alert>
-    )
+    return <Alert severity='info'>{t('userProfile.employeeInfoTab.noEmployeeInfo')}</Alert>
   }
 
   const statusConfig: Record<StatusKey, { color: 'success' | 'default' | 'warning' | 'error' }> = {
@@ -118,7 +106,10 @@ const EmployeeInfoTab = ({ employee }: Props) => {
 
             <Grid container spacing={3}>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <FieldGroup label={t('userProfile.employeeInfoTab.department')} value={employee.departmentName ?? '—'} />
+                <FieldGroup
+                  label={t('userProfile.employeeInfoTab.department')}
+                  value={employee.departmentName ?? '—'}
+                />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <FieldGroup label={t('userProfile.employeeInfoTab.position')} value={employee.positionName ?? '—'} />

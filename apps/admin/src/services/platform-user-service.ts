@@ -1,12 +1,15 @@
 import { revalidateTag } from 'next/cache'
+
 import { prisma, writeTransactionLog, setTenantContext, withTenantContext } from '@gaso/shared'
+
+import { Prisma } from '@prisma/client'
+
 import type {
   PlatformUserRow, AddPlatformRoleOptions, PlatformUserListResult,
   CreateUserInput, UpdatePlatformUserOptions, ListPlatformUsersOptions,
   PlatformUserEditRow
 } from '@/types/apps/platformUserTypes'
 import { getAdminTenantId } from './admin-tenant'
-import { Prisma } from '@prisma/client'
 
 export async function listPlatformUsers({
   page = 1, pageSize = 20, role, search
@@ -24,6 +27,7 @@ export async function listPlatformUsers({
 
   if (search) {
     params.push(`%${search}%`)
+
     // nombre ahora desde Employee:
     whereClause += ` AND (u.Usuario LIKE @p${params.length} OR (e.FirstName + ' ' + e.LastName) LIKE @p${params.length})`
   }
@@ -94,7 +98,9 @@ export async function createPlatformUser(input: CreateUserInput, adminUserId: nu
         'active', 1, ${adminUserId}
       )
     `)
+
     const employeeId = empRows[0]?.EmployeeID
+
     if (!employeeId) throw new Error('EMPLOYEE_INSERT_FAILED')
 
     // ── Paso 2: cáscara Cat_Usuarios (con OUTPUT INTO por el trigger) ──
@@ -109,7 +115,9 @@ export async function createPlatformUser(input: CreateUserInput, adminUserId: nu
       );
       SELECT IdUsuario FROM @NewUser;
     `)
+
     const newUserId = userRows[0]?.IdUsuario
+
     if (!newUserId) throw new Error('USER_INSERT_FAILED')
 
     // ── Paso 3: rol de plataforma ──
@@ -123,6 +131,7 @@ export async function createPlatformUser(input: CreateUserInput, adminUserId: nu
 
   // Fuera de la tx: re-leer el registro compuesto (mismo patrón que RH re-lee el employee)
   const created = await getPlatformUserById(userId)
+
   if (!created) throw new Error('PLATFORM_USER_CREATE_READBACK_FAILED')
 
   writeTransactionLog({
@@ -167,7 +176,8 @@ export async function addPlatformRole(options: AddPlatformRoleOptions): Promise<
     return { ok: true }
   } catch (error) {
     console.error('[ADD_PLATFORM_ROLE_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 
@@ -182,11 +192,13 @@ export async function removePlatformRole(options: RemovePlatformRoleOptions): Pr
 
   try {
     const existing = await getPlatformUserById(userId)
+
     if (!existing) {
       return { ok: false, error: 'USER_NOT_FOUND' }
     }
 
     const oldestUserId = await getOldestPlatformUserId()
+
     if (oldestUserId === userId) {
       return { ok: false, error: 'CANNOT_REMOVE_OLDEST_USER' }
     }
@@ -211,12 +223,14 @@ export async function removePlatformRole(options: RemovePlatformRoleOptions): Pr
     return { ok: true }
   } catch (error) {
     console.error('[REMOVE_PLATFORM_ROLE_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 
 export async function getOldestPlatformUserId(): Promise<number | null> {
   const tenantId = await getAdminTenantId()
+
   await setTenantContext(tenantId)
 
   const [result] = await prisma.$queryRawUnsafe<Array<{ UserID: number }>>(
@@ -232,11 +246,13 @@ export async function updatePlatformUser(options: UpdatePlatformUserOptions): Pr
   try {
     const tenantId = await getAdminTenantId()
     const existing = await getPlatformUserById(userId)
+
     if (!existing) {
       return { ok: false, error: 'USER_NOT_FOUND' }
     }
 
     const oldestUserId = await getOldestPlatformUserId()
+
     if (oldestUserId === userId) {
       return { ok: false, error: 'CANNOT_EDIT_OLDEST_USER' }
     }
@@ -249,10 +265,12 @@ export async function updatePlatformUser(options: UpdatePlatformUserOptions): Pr
       params.push(nombre)
       updates.push(`FirstName = @p${paramIndex++}`)
     }
+
     if (apellidos !== undefined) {
       params.push(apellidos)
       updates.push(`LastName = @p${paramIndex++}`)
     }
+
     if (email !== undefined) {
       params.push(email)
       updates.push(`Email = @p${paramIndex++}`)
@@ -292,7 +310,8 @@ export async function updatePlatformUser(options: UpdatePlatformUserOptions): Pr
     })
   } catch (error) {
     console.error('[UPDATE_PLATFORM_USER_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 
@@ -303,11 +322,13 @@ export async function deactivatePlatformUser(
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     const existing = await getPlatformUserById(userId)
+
     if (!existing) {
       return { ok: false, error: 'USER_NOT_FOUND' }
     }
 
     const oldestUserId = await getOldestPlatformUserId()
+
     if (oldestUserId === userId) {
       return { ok: false, error: 'CANNOT_DEACTIVATE_OLDEST_USER' }
     }
@@ -335,7 +356,8 @@ export async function deactivatePlatformUser(
     })
   } catch (error) {
     console.error('[DEACTIVATE_PLATFORM_USER_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 
@@ -346,6 +368,7 @@ export async function activatePlatformUser(
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     const existing = await getPlatformUserById(userId)
+
     if (!existing) {
       return { ok: false, error: 'USER_NOT_FOUND' }
     }
@@ -373,7 +396,8 @@ export async function activatePlatformUser(
     })
   } catch (error) {
     console.error('[ACTIVATE_PLATFORM_USER_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 
@@ -387,11 +411,13 @@ export async function deletePlatformUser(
 
   try {
     const existing = await getPlatformUserById(userId)
+
     if (!existing) {
       return { ok: false, error: 'USER_NOT_FOUND' }
     }
 
     const oldestUserId = await getOldestPlatformUserId()
+
     if (oldestUserId === userId) {
       return { ok: false, error: 'CANNOT_DELETE_OLDEST_USER' }
     }
@@ -412,6 +438,7 @@ export async function deletePlatformUser(
           SELECT EmployeeID FROM @DeletedUser;`,
         userId
       )
+
       const employeeId = empRows[0]?.EmployeeID
 
       // 3. Empleado — solo en modo 'full'
@@ -445,6 +472,7 @@ export async function deletePlatformUser(
     }
 
     console.error('[DELETE_PLATFORM_USER_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }

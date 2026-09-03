@@ -1,13 +1,14 @@
 import { redirect } from 'next/navigation'
 
 import { requirePlatformRole } from '@gaso/shared'
+
+import type { BillingRecord } from '@gaso/shared/types/plan'
+
 import { getTenantById } from '@/services/tenant-service'
 import { getTenantSubscription } from '@/services/subscription-service'
 import { getTenantUsageWithPlanLimit } from '@/services/usage-service'
 import { getTenantBillingRecords } from '@/services/billing-service'
 import TenantDetailPageClient from '@/components/tenants/detail/TenantDetailPageClient'
-import type { TenantRow } from '@/services/tenant-service'
-import type { BillingRecord } from '@gaso/shared/types/plan'
 
 export const dynamic = 'force-dynamic'
 

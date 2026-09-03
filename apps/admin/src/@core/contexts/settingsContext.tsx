@@ -70,7 +70,8 @@ export const SettingsProvider = (props: Props) => {
 
   // On the first render (SSR), use the deterministic initial settings
   // On the client after mount, use the cookie value
-  const [mounted, setMounted] = useState(false)
+  const [_mounted, setMounted] = useState(false)
+
   const [settingsCookie, updateSettingsCookie] = useObjectCookie<Settings>(
     themeConfig.settingsCookieName,
     props.settingsCookie && JSON.stringify(props.settingsCookie) !== '{}' ? props.settingsCookie : updatedInitialSettings
@@ -86,6 +87,7 @@ export const SettingsProvider = (props: Props) => {
     if (settingsCookie && JSON.stringify(settingsCookie) !== '{}') {
       _updateSettingsState(settingsCookie)
     }
+
     setMounted(true)
   }, [settingsCookie])
 

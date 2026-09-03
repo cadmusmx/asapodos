@@ -62,8 +62,10 @@ const CustomThemeProvider = (props: Props) => {
     }
   }
 
-    const tenantPrimaryColor = meData?.settings?.branding?.primaryColor ?? initialBranding?.primaryColor ?? primaryColorConfig[0].main
-    const tenantFontFamily = meData?.settings?.branding?.fontFamily ?? initialBranding?.fontFamily ?? null
+  const tenantPrimaryColor =
+    meData?.settings?.branding?.primaryColor ?? initialBranding?.primaryColor ?? primaryColorConfig[0].main
+
+  const tenantFontFamily = meData?.settings?.branding?.fontFamily ?? initialBranding?.fontFamily ?? null
 
   // Merge the primary color scheme override with the core theme
   const theme = useMemo(() => {

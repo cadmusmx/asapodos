@@ -25,11 +25,7 @@ import type { ProfileResponse } from '@/types/profile'
 
 type FeedbackState = { type: 'success' | 'error' | 'info'; message: string } | null
 
-type Props = {
-  dictionary: any
-}
-
-const UserProfileView = ({ dictionary }: Props) => {
+const UserProfileView = () => {
   const [profile, setProfile] = useState<ProfileResponse | null>(null)
   const [loadingProfile, setLoadingProfile] = useState(true)
   const [profileError, setProfileError] = useState<string | null>(null)
@@ -73,7 +69,7 @@ const UserProfileView = ({ dictionary }: Props) => {
     } finally {
       setLoadingProfile(false)
     }
-  }, [])
+  }, [t])
 
   const handlePhotoUpload = async (file: File) => {
     setUploadingPhoto(true)
@@ -203,10 +199,7 @@ const UserProfileView = ({ dictionary }: Props) => {
             </TabPanel>
 
             <TabPanel value='security' className='p-0'>
-              <SecurityTab
-                onPasswordChanged={handlePasswordChanged}
-                onPasswordError={handlePasswordError}
-              />
+              <SecurityTab onPasswordChanged={handlePasswordChanged} onPasswordError={handlePasswordError} />
             </TabPanel>
 
             <TabPanel value='activity' className='p-0'>
@@ -222,11 +215,7 @@ const UserProfileView = ({ dictionary }: Props) => {
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert
-          severity={snackbar.severity}
-          variant='filled'
-          onClose={handleSnackbarClose}
-        >
+        <Alert severity={snackbar.severity} variant='filled' onClose={handleSnackbarClose}>
           {snackbar.message}
         </Alert>
       </Snackbar>

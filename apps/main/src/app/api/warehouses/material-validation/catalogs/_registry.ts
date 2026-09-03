@@ -7,12 +7,12 @@
  * es seguro porque SIEMPRE salen de este registro, nunca del cliente.
  */
 export const CATALOG_REGISTRY = {
-  'almacenes': { table: 'GASOAL_VMAlmacenes', nameCol: 'Nombre', label: 'Almacén' },
-  'proyectos': { table: 'Cat_VMProyecto', nameCol: 'Proyecto', label: 'Proyecto' },
-  'tipos-material': { table: 'Cat_VMTiposMaterial', nameCol: 'Tipo', label: 'Tipo de material' },
-} as const;
+  almacenes: { table: 'GASOAL_VMAlmacenes', nameCol: 'Nombre', label: 'Almacén' },
+  proyectos: { table: 'Cat_VMProyecto', nameCol: 'Proyecto', label: 'Proyecto' },
+  'tipos-material': { table: 'Cat_VMTiposMaterial', nameCol: 'Tipo', label: 'Tipo de material' }
+} as const
 
-export type CatalogKey = keyof typeof CATALOG_REGISTRY;
+export type CatalogKey = keyof typeof CATALOG_REGISTRY
 
 export const isCatalogKey = (value: string): value is CatalogKey =>
-  Object.prototype.hasOwnProperty.call(CATALOG_REGISTRY, value);
+  Object.prototype.hasOwnProperty.call(CATALOG_REGISTRY, value)

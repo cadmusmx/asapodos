@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Dialog from '@mui/material/Dialog'
@@ -13,8 +14,10 @@ import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
 import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
-import type { TenantRow } from '@/services/tenant-service'
+
 import { toast } from 'react-toastify'
+
+import type { TenantRow } from '@/services/tenant-service'
 
 interface TenantSuspendModalProps {
   open: boolean
@@ -42,6 +45,7 @@ export default function TenantSuspendModal({ open, onClose, tenant, onSuccess }:
 
       if (!res.ok) {
         const result = await res.json()
+
         throw new Error(result.message?.[0] || 'Failed to suspend tenant')
       }
 

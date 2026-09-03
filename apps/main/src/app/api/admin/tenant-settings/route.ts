@@ -8,9 +8,7 @@ import type { TenantSettings } from '@gaso/shared/types/tenant-settings'
 
 import { withPermission, PERM, writeTransactionLog } from '@gaso/shared'
 
-import type {
-  TenantSettingsRow
-} from '@/lib/tenant-settings/normalize';
+import type { TenantSettingsRow } from '@/lib/tenant-settings/normalize'
 import {
   normalizeTenantSettingsFromRow,
   serializeTenantSettings,
@@ -72,7 +70,7 @@ export const GET = withPermission(
         userId,
         appUser: auth.email ?? null,
         newData: { tenantId }
-      }).catch(() => { })
+      }).catch(() => {})
 
       return NextResponse.json(result)
     } catch (error) {
@@ -193,7 +191,7 @@ export const PUT = withPermission(
         oldData: { branding: oldBranding },
         newData: { branding: normalizedSettings.branding },
         idOrigin: 1
-      }).catch(() => { })
+      }).catch(() => {})
 
       return NextResponse.json(result)
     } catch (error) {
@@ -217,26 +215,29 @@ async function withTenantSettingsContext<T>(
 ): Promise<T> {
   const { prisma } = await import('@/lib/prisma')
 
-  return prisma.$transaction(async tx => {
-    const [contextRows] = await tx.$queryRawUnsafe<Array<{ CurrentTenantID: string | null }>>(
-      `SELECT CONVERT(nvarchar(100), SESSION_CONTEXT(N'TenantID')) AS CurrentTenantID`
-    )
+  return prisma.$transaction(
+    async tx => {
+      const [contextRows] = await tx.$queryRawUnsafe<Array<{ CurrentTenantID: string | null }>>(
+        `SELECT CONVERT(nvarchar(100), SESSION_CONTEXT(N'TenantID')) AS CurrentTenantID`
+      )
 
-    const currentTenantId = contextRows?.CurrentTenantID ?? null
+      const currentTenantId = contextRows?.CurrentTenantID ?? null
 
-    if (currentTenantId?.toLowerCase() === tenantId.toLowerCase()) {
+      if (currentTenantId?.toLowerCase() === tenantId.toLowerCase()) {
+        return callback(tx)
+      }
+
+      if (currentTenantId && currentTenantId.toLowerCase() !== tenantId.toLowerCase()) {
+        throw new Error('UNAUTHORIZED')
+      }
+
+      await tx.$executeRawUnsafe(`EXEC sp_SetTenantContext @TenantID = '${tenantId.replace(/'/g, "''")}'`)
+
       return callback(tx)
+    },
+    {
+      maxWait: 15000,
+      timeout: 30000
     }
-
-    if (currentTenantId && currentTenantId.toLowerCase() !== tenantId.toLowerCase()) {
-      throw new Error('UNAUTHORIZED')
-    }
-
-    await tx.$executeRawUnsafe(`EXEC sp_SetTenantContext @TenantID = '${tenantId.replace(/'/g, "''")}'`)
-
-    return callback(tx)
-  }, {
-    maxWait: 15000,
-    timeout: 30000
-  })
+  )
 }

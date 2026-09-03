@@ -25,16 +25,20 @@ const METRIC_LABELS: Record<string, { label: string; unit: string }> = {
 function getProgressColor(current: number, limit: number | null): 'error' | 'warning' | 'success' {
   if (limit === null) return 'success'
   const pct = (current / limit) * 100
+
   if (pct >= 100) return 'error'
   if (pct >= 80) return 'warning'
-  return 'success'
+  
+return 'success'
 }
 
 function formatValue(current: number, unit: string): string {
   if (unit === 'MB' && current >= 1024) {
     return `${(current / 1024).toFixed(2)} GB`
   }
-  return `${current} ${unit}`
+
+  
+return `${current} ${unit}`
 }
 
 export default function TenantUsageTab({ usage }: TenantUsageTabProps) {

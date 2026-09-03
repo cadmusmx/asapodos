@@ -73,7 +73,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
     isLoading: isNavigationLoading,
     views: me?.views,
     menuGroups: me?.menuGroups,
-    planMenuGroups: me?.planMenuGroups,
+    planMenuGroups: me?.planMenuGroups
   })
 
   return (
@@ -82,13 +82,13 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
     <ScrollWrapper
       {...(isBreakpointReached
         ? {
-          className: 'bs-full overflow-y-auto overflow-x-hidden',
-          onScroll: container => scrollMenu(container, false)
-        }
+            className: 'bs-full overflow-y-auto overflow-x-hidden',
+            onScroll: container => scrollMenu(container, false)
+          }
         : {
-          options: { wheelPropagation: false, suppressScrollX: true },
-          onScrollY: container => scrollMenu(container, true)
-        })}
+            options: { wheelPropagation: false, suppressScrollX: true },
+            onScrollY: container => scrollMenu(container, true)
+          })}
     >
       {/* Vertical Menu */}
       <Menu
@@ -116,7 +116,11 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className={`text-lg ${module.icon}`} />}
             >
               {module.items.map(item => (
-                <MenuItem key={item.key} href={`/${locale}${item.href}`} icon={<i className={`text-lg ${item.icon}`} />}>
+                <MenuItem
+                  key={item.key}
+                  href={`/${locale}${item.href}`}
+                  icon={<i className={`text-lg ${item.icon}`} />}
+                >
                   {getDictionaryValue(dictionary, item.labelKey)}
                 </MenuItem>
               ))}

@@ -1,11 +1,7 @@
 'use client'
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable padding-line-between-statements */
-/* eslint-disable newline-before-return */
-/* eslint-disable import/order */
+import { useCallback, useEffect, useState } from 'react'
 
-import { useEffect, useState } from 'react'
 import Grid from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
@@ -55,10 +51,11 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
   const [data, setData] = useState<DashboardData | null>(null)
   const [catalogs, setCatalogs] = useState<CatalogData>({ areas: [], departments: [], positions: [], regions: [] })
   const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
+  const [, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchKey, setSearchKey] = useState(0)
   const [modalOpen, setModalOpen] = useState(false)
+
   const [filters, setFilters] = useState({
     activo: '',
     area: '' as number | '',
@@ -68,7 +65,7 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
   })
 
   const t = (key: string) => {
-    return key.split('.').reduce((obj, k) => obj?.[k], dictionary) as unknown as string ?? key
+    return (key.split('.').reduce((obj, k) => obj?.[k], dictionary) as unknown as string) ?? key
   }
 
   const fetchCatalogs = async () => {
@@ -79,12 +76,14 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
         fetch('/api/catalogs?type=positions'),
         fetch('/api/catalogs?type=regions')
       ])
+
       const [areas, depts, positions, regions] = await Promise.all([
         areasRes.json(),
         deptsRes.json(),
         positionsRes.json(),
         regionsRes.json()
       ])
+
       setCatalogs({
         areas: areas.data || [],
         departments: depts.data || [],
@@ -96,36 +95,44 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
     }
   }
 
-  const fetchData = async (signal?: AbortSignal) => {
-    try {
-      if (data !== null) setRefreshing(true)
-      setLoading(true)
-      const params = new URLSearchParams()
-      if (filters.activo) params.set('active', filters.activo === 'A' ? 'active' : 'inactive')
-      if (filters.area) params.set('area', String(filters.area))
-      if (filters.departamento) params.set('department', String(filters.departamento))
-      if (filters.puesto) params.set('puesto', String(filters.puesto))
-      if (filters.region) params.set('region', String(filters.region))
+  const fetchData = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        setRefreshing(true)
+        setLoading(true)
+        const params = new URLSearchParams()
 
-      const response = await fetch(`/api/human-capital/dashboard?${params.toString()}`, { signal })
-      if (!response.ok) throw new Error('Failed to fetch dashboard data')
-      const result = await response.json()
-      setData(result.data)
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') return
-      setError(err instanceof Error ? err.message : 'Unknown error')
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }
+        if (filters.activo) params.set('active', filters.activo === 'A' ? 'active' : 'inactive')
+        if (filters.area) params.set('area', String(filters.area))
+        if (filters.departamento) params.set('department', String(filters.departamento))
+        if (filters.puesto) params.set('puesto', String(filters.puesto))
+        if (filters.region) params.set('region', String(filters.region))
+
+        const response = await fetch(`/api/human-capital/dashboard?${params.toString()}`, { signal })
+
+        if (!response.ok) throw new Error('Failed to fetch dashboard data')
+        const result = await response.json()
+
+        setData(result.data)
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return
+        setError(err instanceof Error ? err.message : 'Unknown error')
+      } finally {
+        setLoading(false)
+        setRefreshing(false)
+      }
+    },
+    [filters]
+  )
 
   useEffect(() => {
     const controller = new AbortController()
+
     fetchCatalogs()
     fetchData(controller.signal)
+
     return () => controller.abort()
-  }, [searchKey])
+  }, [searchKey, fetchData])
 
   const handleFilterChange = (field: string, value: string | number) => {
     setFilters(prev => ({ ...prev, [field]: value }))
@@ -250,7 +257,11 @@ const HumanCapitalDashboard = ({ dictionary }: Props) => {
           iconColor='#b45309'
           iconClass='fa-solid fa-briefcase'
           action={
-              <IconButton size='small' onClick={() => setModalOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
+            <IconButton
+              size='small'
+              onClick={() => setModalOpen(true)}
+              sx={{ color: 'var(--mui-palette-text-secondary)' }}
+            >
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }

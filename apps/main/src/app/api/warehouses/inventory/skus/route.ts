@@ -2,69 +2,51 @@ import { NextResponse } from 'next/server'
 
 import { Prisma } from '@prisma/client'
 
-import {
-    PERM,
-    withPermission,
-    writeTransactionLog
-} from '@gaso/shared'
+import { PERM, withPermission, writeTransactionLog } from '@gaso/shared'
 
 import {
-    getInventoryItemStateById,
-    getInventorySkuById,
-    normalizeInventorySkuFromRow
+  getInventoryItemStateById,
+  getInventorySkuById,
+  normalizeInventorySkuFromRow
 } from '@/lib/inventory/maintenance'
-import {
-    parseInventorySkuListFilters,
-    parseInventorySkuPayload
-} from '@/lib/inventory/validation'
+import { parseInventorySkuListFilters, parseInventorySkuPayload } from '@/lib/inventory/validation'
 import { withTenantContext } from '@/lib/tenant-context'
 
-import type {
-    InventorySkuRow
-} from '@/types/inventory-maintenance'
+import type { InventorySkuRow } from '@/types/inventory-maintenance'
 
 export const runtime = 'nodejs'
 
 export const GET = withPermission(
-    'inventory',
-    async (req, { tenantId }) => {
-        let filters: ReturnType<
-            typeof parseInventorySkuListFilters
-        >
+  'inventory',
+  async (req, { tenantId }) => {
+    let filters: ReturnType<typeof parseInventorySkuListFilters>
 
-        try {
-            filters = parseInventorySkuListFilters(
-                new URL(req.url).searchParams
-            )
-        } catch (error) {
-            return NextResponse.json(
-                {
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : 'Filtros inválidos.'
-                },
-                { status: 400 }
-            )
-        }
+    try {
+      filters = parseInventorySkuListFilters(new URL(req.url).searchParams)
+    } catch (error) {
+      return NextResponse.json(
+        {
+          message: error instanceof Error ? error.message : 'Filtros inválidos.'
+        },
+        { status: 400 }
+      )
+    }
 
-        try {
-            return await withTenantContext(
-                tenantId,
-                async tx => {
-                    const conditions: Prisma.Sql[] = [
-                        Prisma.sql`
+    try {
+      return await withTenantContext(tenantId, async tx => {
+        const conditions: Prisma.Sql[] = [
+          Prisma.sql`
                             sku.TenantID =
                             CAST(
                                 ${tenantId}
                                 AS uniqueidentifier
                             )
                         `
-                    ]
+        ]
 
-                    if (filters.searchPattern) {
-                        conditions.push(
-                            Prisma.sql`
+        if (filters.searchPattern) {
+          conditions.push(
+            Prisma.sql`
                                 (
                                     sku.SkuCode LIKE
                                         ${filters.searchPattern}
@@ -80,38 +62,33 @@ export const GET = withPermission(
                                         ESCAPE '|'
                                 )
                             `
-                        )
-                    }
+          )
+        }
 
-                    if (filters.active !== null) {
-                        conditions.push(
-                            Prisma.sql`
+        if (filters.active !== null) {
+          conditions.push(
+            Prisma.sql`
                                 sku.IsActive =
                                 ${filters.active ? 1 : 0}
                             `
-                        )
-                    }
+          )
+        }
 
-                    if (filters.itemId !== null) {
-                        conditions.push(
-                            Prisma.sql`
+        if (filters.itemId !== null) {
+          conditions.push(
+            Prisma.sql`
                                 sku.ItemID =
                                 ${filters.itemId}
                             `
-                        )
-                    }
+          )
+        }
 
-                    const whereClause = Prisma.sql`
-                        WHERE ${Prisma.join(
-                        conditions,
-                        ' AND '
-                    )}
+        const whereClause = Prisma.sql`
+                        WHERE ${Prisma.join(conditions, ' AND ')}
                     `
 
-                    const countRows = await tx.$queryRaw<
-                        Array<{ Total: bigint }>
-                    >(
-                        Prisma.sql`
+        const countRows = await tx.$queryRaw<Array<{ Total: bigint }>>(
+          Prisma.sql`
                             SELECT
                                 COUNT_BIG(1) AS Total
                             FROM Inventory.SKUs sku
@@ -122,13 +99,10 @@ export const GET = withPermission(
                                     sku.ItemID
                             ${whereClause}
                         `
-                    )
+        )
 
-                    const rows =
-                        await tx.$queryRaw<
-                            InventorySkuRow[]
-                        >(
-                            Prisma.sql`
+        const rows = await tx.$queryRaw<InventorySkuRow[]>(
+          Prisma.sql`
                                 SELECT
                                     sku.SkuID,
                                     sku.TenantID,
@@ -201,97 +175,66 @@ export const GET = withPermission(
                                     ${filters.pageSize}
                                     ROWS ONLY
                             `
-                        )
+        )
 
-                    return NextResponse.json({
-                        data: rows.map(
-                            normalizeInventorySkuFromRow
-                        ),
-                        total: Number(
-                            countRows[0]?.Total ?? 0
-                        ),
-                        page: filters.page,
-                        pageSize: filters.pageSize
-                    })
-                }
-            )
-        } catch (error) {
-            const message =
-                error instanceof Error
-                    ? error.message
-                    : 'UNKNOWN_ERROR'
+        return NextResponse.json({
+          data: rows.map(normalizeInventorySkuFromRow),
+          total: Number(countRows[0]?.Total ?? 0),
+          page: filters.page,
+          pageSize: filters.pageSize
+        })
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR'
 
-            console.error(
-                '[INVENTORY_SKUS_LIST_ERROR]',
-                { message }
-            )
+      console.error('[INVENTORY_SKUS_LIST_ERROR]', { message })
 
-            return NextResponse.json(
-                {
-                    message:
-                        'Error al consultar los SKUs.'
-                },
-                { status: 500 }
-            )
-        }
-    },
-    { bit: PERM.R }
+      return NextResponse.json(
+        {
+          message: 'Error al consultar los SKUs.'
+        },
+        { status: 500 }
+      )
+    }
+  },
+  { bit: PERM.R }
 )
 
 export const POST = withPermission(
-    'inventory',
-    async (req, { auth, tenantId }) => {
-        let payload: ReturnType<
-            typeof parseInventorySkuPayload
-        >
+  'inventory',
+  async (req, { auth, tenantId }) => {
+    let payload: ReturnType<typeof parseInventorySkuPayload>
 
-        try {
-            payload = parseInventorySkuPayload(
-                await req.json()
-            )
-        } catch (error) {
-            return NextResponse.json(
-                {
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : 'Body inválido.'
-                },
-                { status: 400 }
-            )
+    try {
+      payload = parseInventorySkuPayload(await req.json())
+    } catch (error) {
+      return NextResponse.json(
+        {
+          message: error instanceof Error ? error.message : 'Body inválido.'
+        },
+        { status: 400 }
+      )
+    }
+
+    try {
+      const result = await withTenantContext(tenantId, async tx => {
+        const item = await getInventoryItemStateById(tx, tenantId, payload.itemId)
+
+        if (!item) {
+          return {
+            status: 'ITEM_NOT_FOUND' as const
+          }
         }
 
-        try {
-            const result = await withTenantContext(
-                tenantId,
-                async tx => {
-                    const item =
-                        await getInventoryItemStateById(
-                            tx,
-                            tenantId,
-                            payload.itemId
-                        )
+        if (!Boolean(item.IsActive)) {
+          return {
+            status: 'ITEM_INACTIVE' as const,
+            itemName: item.Name
+          }
+        }
 
-                    if (!item) {
-                        return {
-                            status:
-                                'ITEM_NOT_FOUND' as const
-                        }
-                    }
-
-                    if (!Boolean(item.IsActive)) {
-                        return {
-                            status:
-                                'ITEM_INACTIVE' as const,
-                            itemName: item.Name
-                        }
-                    }
-
-                    const insertedRows =
-                        await tx.$queryRaw<
-                            Array<{ SkuID: number }>
-                        >(
-                            Prisma.sql`
+        const insertedRows = await tx.$queryRaw<Array<{ SkuID: number }>>(
+          Prisma.sql`
                                 INSERT INTO Inventory.SKUs (
                                     TenantID,
                                     ItemID,
@@ -325,108 +268,76 @@ export const POST = withPermission(
                                     ${auth.userId}
                                 )
                             `
-                        )
+        )
 
-                    const skuId =
-                        insertedRows[0]?.SkuID
+        const skuId = insertedRows[0]?.SkuID
 
-                    if (!skuId) {
-                        throw new Error(
-                            'INVENTORY_SKU_INSERT_FAILED'
-                        )
-                    }
-
-                    const sku =
-                        await getInventorySkuById(
-                            tx,
-                            tenantId,
-                            skuId
-                        )
-
-                    if (!sku) {
-                        throw new Error(
-                            'INVENTORY_SKU_READ_AFTER_CREATE_FAILED'
-                        )
-                    }
-
-                    return {
-                        status: 'CREATED' as const,
-                        sku
-                    }
-                }
-            )
-
-            if (
-                result.status === 'ITEM_NOT_FOUND'
-            ) {
-                return NextResponse.json(
-                    {
-                        message:
-                            'El artículo seleccionado no existe.'
-                    },
-                    { status: 404 }
-                )
-            }
-
-            if (
-                result.status === 'ITEM_INACTIVE'
-            ) {
-                return NextResponse.json(
-                    {
-                        message:
-                            `El artículo "${result.itemName}" está inactivo.`
-                    },
-                    { status: 409 }
-                )
-            }
-
-            writeTransactionLog({
-                tenantId,
-                tableName: 'Inventory.SKUs',
-                action: 'CREATE',
-                userId: auth.userId,
-                appUser: auth.email ?? null,
-                oldData: null,
-                newData: result.sku
-            }).catch(() => { })
-
-            return NextResponse.json(
-                { data: result.sku },
-                { status: 201 }
-            )
-        } catch (error) {
-            const message =
-                error instanceof Error
-                    ? error.message
-                    : 'UNKNOWN_ERROR'
-
-            if (
-                message.includes(
-                    'UX_Inventory_SKUs_Tenant_Code'
-                )
-            ) {
-                return NextResponse.json(
-                    {
-                        message:
-                            'Ya existe un SKU con ese código.'
-                    },
-                    { status: 409 }
-                )
-            }
-
-            console.error(
-                '[INVENTORY_SKU_CREATE_ERROR]',
-                { message }
-            )
-
-            return NextResponse.json(
-                {
-                    message:
-                        'Error al crear el SKU.'
-                },
-                { status: 500 }
-            )
+        if (!skuId) {
+          throw new Error('INVENTORY_SKU_INSERT_FAILED')
         }
-    },
-    { bit: PERM.W }
+
+        const sku = await getInventorySkuById(tx, tenantId, skuId)
+
+        if (!sku) {
+          throw new Error('INVENTORY_SKU_READ_AFTER_CREATE_FAILED')
+        }
+
+        return {
+          status: 'CREATED' as const,
+          sku
+        }
+      })
+
+      if (result.status === 'ITEM_NOT_FOUND') {
+        return NextResponse.json(
+          {
+            message: 'El artículo seleccionado no existe.'
+          },
+          { status: 404 }
+        )
+      }
+
+      if (result.status === 'ITEM_INACTIVE') {
+        return NextResponse.json(
+          {
+            message: `El artículo "${result.itemName}" está inactivo.`
+          },
+          { status: 409 }
+        )
+      }
+
+      writeTransactionLog({
+        tenantId,
+        tableName: 'Inventory.SKUs',
+        action: 'CREATE',
+        userId: auth.userId,
+        appUser: auth.email ?? null,
+        oldData: null,
+        newData: result.sku
+      }).catch(() => {})
+
+      return NextResponse.json({ data: result.sku }, { status: 201 })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR'
+
+      if (message.includes('UX_Inventory_SKUs_Tenant_Code')) {
+        return NextResponse.json(
+          {
+            message: 'Ya existe un SKU con ese código.'
+          },
+          { status: 409 }
+        )
+      }
+
+      console.error('[INVENTORY_SKU_CREATE_ERROR]', { message })
+
+      return NextResponse.json(
+        {
+          message: 'Error al crear el SKU.'
+        },
+        { status: 500 }
+      )
+    }
+  },
+  { bit: PERM.W }
 )

@@ -1,65 +1,65 @@
-'use client';
+'use client'
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react'
 
-import Alert from '@mui/material/Alert';
-import Autocomplete from '@mui/material/Autocomplete';
-import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import FormControl from '@mui/material/FormControl';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Grid from '@mui/material/Grid2';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
-import Stack from '@mui/material/Stack';
-import Switch from '@mui/material/Switch';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
-import { REGION_OPTIONS, SEXO_OPTIONS, TIPO_SANGRE_OPTIONS } from '@gaso/shared';
+import Alert from '@mui/material/Alert'
+import Autocomplete from '@mui/material/Autocomplete'
+import Button from '@mui/material/Button'
+import CircularProgress from '@mui/material/CircularProgress'
+import FormControl from '@mui/material/FormControl'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import Grid from '@mui/material/Grid2'
+import InputLabel from '@mui/material/InputLabel'
+import MenuItem from '@mui/material/MenuItem'
+import Select from '@mui/material/Select'
+import Stack from '@mui/material/Stack'
+import Switch from '@mui/material/Switch'
+import TextField from '@mui/material/TextField'
+import Typography from '@mui/material/Typography'
+import { REGION_OPTIONS, SEXO_OPTIONS, TIPO_SANGRE_OPTIONS } from '@gaso/shared'
 
 type EmployeeData = {
-  curp: string | null;
-  rfc: string | null;
-  nss: string | null;
-  fechaNacimiento: string | null;
-  sueldo: number | null;
-  tieneLicencia: boolean | null;
-  fechaCaducidadLicencia: string | null;
-  fechaDC3: string | null;
-  sexo: string | null;
-  tipoSangre: string | null;
-  regionId: number | null;
-  areaId: number | null;
-  areaName: string | null;
-  supervisorEmployeeId: number | null;
-  supervisorName: string | null;
-};
+  curp: string | null
+  rfc: string | null
+  nss: string | null
+  fechaNacimiento: string | null
+  sueldo: number | null
+  tieneLicencia: boolean | null
+  fechaCaducidadLicencia: string | null
+  fechaDC3: string | null
+  sexo: string | null
+  tipoSangre: string | null
+  regionId: number | null
+  areaId: number | null
+  areaName: string | null
+  supervisorEmployeeId: number | null
+  supervisorName: string | null
+}
 
-type AreaOption = { id: number; name: string };
-type SupervisorOption = { id: number; label: string };
+type AreaOption = { id: number; name: string }
+type SupervisorOption = { id: number; label: string }
 
 type FormState = {
-  curp: string;
-  rfc: string;
-  nss: string;
-  fechaNacimiento: string;
-  sueldo: string;
-  tieneLicencia: boolean;
-  fechaCaducidadLicencia: string;
-  fechaDC3: string;
-  sexo: string;
-  tipoSangre: string;
-  regionId: string;
-  areaId: string;
-};
+  curp: string
+  rfc: string
+  nss: string
+  fechaNacimiento: string
+  sueldo: string
+  tieneLicencia: boolean
+  fechaCaducidadLicencia: string
+  fechaDC3: string
+  sexo: string
+  tipoSangre: string
+  regionId: string
+  areaId: string
+}
 
-type FeedbackState = { type: 'success' | 'error'; message: string } | null;
+type FeedbackState = { type: 'success' | 'error'; message: string } | null
 
 type DatosExtraTabProps = {
-  employeeId: number;
-  canEdit?: boolean;
-};
+  employeeId: number
+  canEdit?: boolean
+}
 
 const emptyForm: FormState = {
   curp: '',
@@ -74,42 +74,42 @@ const emptyForm: FormState = {
   tipoSangre: '',
   regionId: '',
   areaId: ''
-};
+}
 
 const DatosExtraTab = ({ employeeId, canEdit = false }: DatosExtraTabProps) => {
-  const [form, setForm] = useState<FormState>(emptyForm);
-  const [areas, setAreas] = useState<AreaOption[]>([]);
-  const [supervisor, setSupervisor] = useState<SupervisorOption | null>(null);
-  const [supOptions, setSupOptions] = useState<SupervisorOption[]>([]);
-  const [supInput, setSupInput] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [feedback, setFeedback] = useState<FeedbackState>(null);
+  const [form, setForm] = useState<FormState>(emptyForm)
+  const [areas, setAreas] = useState<AreaOption[]>([])
+  const [supervisor, setSupervisor] = useState<SupervisorOption | null>(null)
+  const [supOptions, setSupOptions] = useState<SupervisorOption[]>([])
+  const [supInput, setSupInput] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [feedback, setFeedback] = useState<FeedbackState>(null)
 
   const setField = <K extends keyof FormState>(field: K, value: FormState[K]) =>
-    setForm(prev => ({ ...prev, [field]: value }));
+    setForm(prev => ({ ...prev, [field]: value }))
 
   const loadData = useCallback(async () => {
-    setLoading(true);
-    setFeedback(null);
+    setLoading(true)
+    setFeedback(null)
 
     try {
       const [dataRes, areasRes] = await Promise.all([
         fetch(`/api/human-capital/employees/${employeeId}/data`),
         fetch('/api/human-capital/catalogs/areas')
-      ]);
+      ])
 
-      const dataJson = (await dataRes.json().catch(() => null)) as { data?: EmployeeData | null } | null;
+      const dataJson = (await dataRes.json().catch(() => null)) as { data?: EmployeeData | null } | null
 
       const areasJson = (await areasRes.json().catch(() => null)) as {
-        rows?: Array<{ Id: number; Nombre: string; Activo: boolean }>;
-      } | null;
+        rows?: Array<{ Id: number; Nombre: string; Activo: boolean }>
+      } | null
 
       if (areasJson?.rows) {
-        setAreas(areasJson.rows.filter(r => r.Activo).map(r => ({ id: r.Id, name: r.Nombre })));
+        setAreas(areasJson.rows.filter(r => r.Activo).map(r => ({ id: r.Id, name: r.Nombre })))
       }
 
-      const d = dataJson?.data ?? null;
+      const d = dataJson?.data ?? null
 
       if (d) {
         setForm({
@@ -125,63 +125,69 @@ const DatosExtraTab = ({ employeeId, canEdit = false }: DatosExtraTabProps) => {
           tipoSangre: d.tipoSangre ?? '',
           regionId: d.regionId === null ? '' : String(d.regionId),
           areaId: d.areaId === null ? '' : String(d.areaId)
-        });
+        })
 
         if (d.supervisorEmployeeId) {
-          setSupervisor({ id: d.supervisorEmployeeId, label: d.supervisorName ?? `#${d.supervisorEmployeeId}` });
+          setSupervisor({ id: d.supervisorEmployeeId, label: d.supervisorName ?? `#${d.supervisorEmployeeId}` })
         }
       } else {
-        setForm(emptyForm);
-        setSupervisor(null);
+        setForm(emptyForm)
+        setSupervisor(null)
       }
     } catch {
-      setFeedback({ type: 'error', message: 'No se pudieron cargar los datos.' });
+      setFeedback({ type: 'error', message: 'No se pudieron cargar los datos.' })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [employeeId]);
+  }, [employeeId])
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    loadData()
+  }, [loadData])
 
   // Autocomplete de supervisor: búsqueda server-side con debounce.
   useEffect(() => {
-    const query = supInput.trim();
+    const query = supInput.trim()
 
     if (!query) {
-      setSupOptions([]);
+      setSupOptions([])
 
-      return;
+      return
     }
 
     const handle = setTimeout(async () => {
       try {
-        const response = await fetch(`/api/human-capital/employees?search=${encodeURIComponent(query)}&pageSize=20`);
+        const response = await fetch(`/api/human-capital/employees?search=${encodeURIComponent(query)}&pageSize=20`)
 
         const data = (await response.json().catch(() => null)) as {
-          data?: Array<{ id: number; employeeNumber?: string | null; fullName?: string; firstName?: string; lastName?: string }>;
-        } | null;
+          data?: Array<{
+            id: number
+            employeeNumber?: string | null
+            fullName?: string
+            firstName?: string
+            lastName?: string
+          }>
+        } | null
 
         const items = (data?.data ?? [])
           .filter(e => e.id !== employeeId)
           .map(e => ({
             id: e.id,
             label: `${e.employeeNumber ? `${e.employeeNumber} - ` : ''}${e.fullName ?? `${e.firstName ?? ''} ${e.lastName ?? ''}`.trim()}`
-          }));
+          }))
 
-        setSupOptions(items);
+        setSupOptions(items)
       } catch {
-        setSupOptions([]);
+        setSupOptions([])
       }
-    }, 400);
+    }, 400)
 
-    return () => clearTimeout(handle);
-  }, [supInput, employeeId]);
+    return () => clearTimeout(handle)
+  }, [supInput, employeeId])
 
   const submit = async () => {
-    setSaving(true);
-    setFeedback(null);
+    setSaving(true)
+    setFeedback(null)
 
     const body = {
       curp: form.curp.trim() || null,
@@ -197,38 +203,38 @@ const DatosExtraTab = ({ employeeId, canEdit = false }: DatosExtraTabProps) => {
       regionId: form.regionId === '' ? null : Number(form.regionId),
       areaId: form.areaId === '' ? null : Number(form.areaId),
       supervisorEmployeeId: supervisor ? supervisor.id : null
-    };
+    }
 
     try {
       const response = await fetch(`/api/human-capital/employees/${employeeId}/data`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
-      });
+      })
 
-      const data = (await response.json().catch(() => null)) as { message?: string } | null;
+      const data = (await response.json().catch(() => null)) as { message?: string } | null
 
       if (!response.ok) {
-        throw new Error(data && data.message ? data.message : 'No se pudieron guardar los datos.');
+        throw new Error(data && data.message ? data.message : 'No se pudieron guardar los datos.')
       }
 
-      setFeedback({ type: 'success', message: 'Datos guardados.' });
+      setFeedback({ type: 'success', message: 'Datos guardados.' })
     } catch (error) {
-      setFeedback({ type: 'error', message: error instanceof Error ? error.message : 'Error al guardar.' });
+      setFeedback({ type: 'error', message: error instanceof Error ? error.message : 'Error al guardar.' })
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
   if (loading) {
     return (
       <Stack alignItems='center' sx={{ py: 4 }}>
         <CircularProgress />
       </Stack>
-    );
+    )
   }
 
-  const disabled = !canEdit || saving;
+  const disabled = !canEdit || saving
 
   return (
     <Stack spacing={3}>
@@ -240,13 +246,31 @@ const DatosExtraTab = ({ employeeId, canEdit = false }: DatosExtraTabProps) => {
 
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField label='CURP' value={form.curp} onChange={e => setField('curp', e.target.value)} fullWidth disabled={disabled} />
+          <TextField
+            label='CURP'
+            value={form.curp}
+            onChange={e => setField('curp', e.target.value)}
+            fullWidth
+            disabled={disabled}
+          />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField label='RFC' value={form.rfc} onChange={e => setField('rfc', e.target.value)} fullWidth disabled={disabled} />
+          <TextField
+            label='RFC'
+            value={form.rfc}
+            onChange={e => setField('rfc', e.target.value)}
+            fullWidth
+            disabled={disabled}
+          />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField label='NSS' value={form.nss} onChange={e => setField('nss', e.target.value)} fullWidth disabled={disabled} />
+          <TextField
+            label='NSS'
+            value={form.nss}
+            onChange={e => setField('nss', e.target.value)}
+            fullWidth
+            disabled={disabled}
+          />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 4 }}>
@@ -285,7 +309,12 @@ const DatosExtraTab = ({ employeeId, canEdit = false }: DatosExtraTabProps) => {
         <Grid size={{ xs: 12, sm: 4 }}>
           <FormControl fullWidth disabled={disabled}>
             <InputLabel id='sexo-label'>Sexo</InputLabel>
-            <Select labelId='sexo-label' label='Sexo' value={form.sexo} onChange={e => setField('sexo', String(e.target.value))}>
+            <Select
+              labelId='sexo-label'
+              label='Sexo'
+              value={form.sexo}
+              onChange={e => setField('sexo', String(e.target.value))}
+            >
               <MenuItem value=''>Sin especificar</MenuItem>
               {SEXO_OPTIONS.map(opt => (
                 <MenuItem key={opt.value} value={opt.value}>
@@ -298,7 +327,12 @@ const DatosExtraTab = ({ employeeId, canEdit = false }: DatosExtraTabProps) => {
         <Grid size={{ xs: 12, sm: 4 }}>
           <FormControl fullWidth disabled={disabled}>
             <InputLabel id='sangre-label'>Tipo de sangre</InputLabel>
-            <Select labelId='sangre-label' label='Tipo de sangre' value={form.tipoSangre} onChange={e => setField('tipoSangre', String(e.target.value))}>
+            <Select
+              labelId='sangre-label'
+              label='Tipo de sangre'
+              value={form.tipoSangre}
+              onChange={e => setField('tipoSangre', String(e.target.value))}
+            >
               <MenuItem value=''>Sin especificar</MenuItem>
               {TIPO_SANGRE_OPTIONS.map(opt => (
                 <MenuItem key={opt} value={opt}>
@@ -311,7 +345,12 @@ const DatosExtraTab = ({ employeeId, canEdit = false }: DatosExtraTabProps) => {
         <Grid size={{ xs: 12, sm: 4 }}>
           <FormControl fullWidth disabled={disabled}>
             <InputLabel id='region-label'>Región</InputLabel>
-            <Select labelId='region-label' label='Región' value={form.regionId} onChange={e => setField('regionId', String(e.target.value))}>
+            <Select
+              labelId='region-label'
+              label='Región'
+              value={form.regionId}
+              onChange={e => setField('regionId', String(e.target.value))}
+            >
               <MenuItem value=''>Sin región</MenuItem>
               {REGION_OPTIONS.map(opt => (
                 <MenuItem key={opt} value={String(opt)}>
@@ -325,7 +364,12 @@ const DatosExtraTab = ({ employeeId, canEdit = false }: DatosExtraTabProps) => {
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormControl fullWidth disabled={disabled}>
             <InputLabel id='area-label'>Área</InputLabel>
-            <Select labelId='area-label' label='Área' value={form.areaId} onChange={e => setField('areaId', String(e.target.value))}>
+            <Select
+              labelId='area-label'
+              label='Área'
+              value={form.areaId}
+              onChange={e => setField('areaId', String(e.target.value))}
+            >
               <MenuItem value=''>Sin área</MenuItem>
               {areas.map(area => (
                 <MenuItem key={area.id} value={String(area.id)}>
@@ -392,7 +436,7 @@ const DatosExtraTab = ({ employeeId, canEdit = false }: DatosExtraTabProps) => {
         </Typography>
       )}
     </Stack>
-  );
-};
+  )
+}
 
-export default DatosExtraTab;
+export default DatosExtraTab

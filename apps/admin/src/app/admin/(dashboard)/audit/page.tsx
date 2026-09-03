@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 
 import Box from '@mui/material/Box'
 import { requirePlatformRole } from '@gaso/shared'
+
 import { getGlobalAuditLog } from '@/services/audit-service'
 import { getAdminTenantId } from '@/services/admin-tenant'
 import AuditFilters from '@/components/audit/AuditFilters'
@@ -36,8 +37,10 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
 
   if (needsRedirect) {
     const url = new URLSearchParams()
+
     if (!params.tenantId) {
       const adminTenantId = await getAdminTenantId()
+
       url.set('tenantId', adminTenantId)
     } else {
       url.set('tenantId', params.tenantId)
@@ -50,10 +53,12 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
       const dd = String(now.getDate()).padStart(2, '0')
       const today = `${yyyy}-${mm}-${dd}`
       const thirtyDaysAgo = new Date(now)
+
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
       const agoYyyy = thirtyDaysAgo.getFullYear()
       const agoMm = String(thirtyDaysAgo.getMonth() + 1).padStart(2, '0')
       const agoDd = String(thirtyDaysAgo.getDate()).padStart(2, '0')
+
       url.set('startDate', `${agoYyyy}-${agoMm}-${agoDd}`)
       url.set('endDate', today)
     } else {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { getTenantBillingRecords, createBillingRecord, markBillingRecordPaid, refundBillingRecord } from '@/services/billing-service'
+import { getTenantBillingRecords, createBillingRecord, } from '@/services/billing-service'
 
 export async function GET(
   req: Request,
@@ -12,10 +12,13 @@ export async function GET(
     const limit = Number(searchParams.get('limit') ?? '50')
 
     const records = await getTenantBillingRecords(tenantId, limit)
-    return NextResponse.json({ billingRecords: records })
+
+    
+return NextResponse.json({ billingRecords: records })
   } catch (error) {
     console.error('[GET_BILLING_RECORDS_ERROR]', error)
-    return NextResponse.json({ message: 'Error loading billing records' }, { status: 500 })
+    
+return NextResponse.json({ message: 'Error loading billing records' }, { status: 500 })
   }
 }
 
@@ -56,6 +59,7 @@ export async function POST(
     return NextResponse.json({ billingRecordId: result.billingRecordId }, { status: 201 })
   } catch (error) {
     console.error('[CREATE_BILLING_RECORD_ERROR]', error)
-    return NextResponse.json({ message: 'Error creating billing record' }, { status: 500 })
+    
+return NextResponse.json({ message: 'Error creating billing record' }, { status: 500 })
   }
 }

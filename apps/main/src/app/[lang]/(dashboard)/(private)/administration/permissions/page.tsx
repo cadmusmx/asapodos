@@ -1,12 +1,12 @@
-import { redirect } from 'next/navigation';
+import { redirect } from 'next/navigation'
 
-import { PERM } from '@gaso/shared';
+import { PERM } from '@gaso/shared'
 
-import type { Locale } from '@configs/i18n';
+import type { Locale } from '@configs/i18n'
 
-import { getTargetByReason, requireViewAccess } from '@/lib/auth/require-view-access';
-import { getLocalizedUrl } from '@/utils/i18n';
-import PermissionsManager from '@views/permissions/PermissionsManager';
+import { getTargetByReason, requireViewAccess } from '@/lib/auth/require-view-access'
+import { getLocalizedUrl } from '@/utils/i18n'
+import PermissionsManager from '@views/permissions/PermissionsManager'
 
 /**
  * Administración de permisos.
@@ -17,19 +17,19 @@ import PermissionsManager from '@views/permissions/PermissionsManager';
  * para mostrar la UI en modo lectura o edición — y el servidor la vuelve a exigir en cada escritura.
  */
 const PermissionsPage = async (props: { params: Promise<{ lang: Locale }> }) => {
-  const { lang } = await props.params;
+  const { lang } = await props.params
 
-  const access = await requireViewAccess('permissions_access', PERM.R);
+  const access = await requireViewAccess('permissions_access', PERM.R)
 
   if (!access.ok) {
-    redirect(getLocalizedUrl(getTargetByReason(access.reason), lang));
+    redirect(getLocalizedUrl(getTargetByReason(access.reason), lang))
   }
 
   // canEdit: ¿tiene el bit U sobre permissions_access? La UI mostrará edición o solo-lectura según esto.
   // NO es la autoridad (el servidor revalida en cada POST), es solo para pintar la UI correcta.
-  const canEdit = (access.mask & PERM.U) === PERM.U;
+  const canEdit = (access.mask & PERM.U) === PERM.U
 
-  return <PermissionsManager canEdit={canEdit} />;
-};
+  return <PermissionsManager canEdit={canEdit} />
+}
 
-export default PermissionsPage;
+export default PermissionsPage

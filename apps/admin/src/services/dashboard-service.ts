@@ -19,6 +19,7 @@ export async function getTenantStats(): Promise<TenantStats> {
     if (Array.isArray(stats)) {
       for (const row of stats) {
         const count = typeof row.count === 'bigint' ? Number(row.count) : (Number(row.count) || 0)
+
         result.total += count
         if (row.Status === 'ACTIVE') result.active = count
         else if (row.Status === 'SUSPENDED') result.suspended = count
@@ -30,7 +31,8 @@ export async function getTenantStats(): Promise<TenantStats> {
     return result
   } catch (error) {
     console.error('[getTenantStats] Error:', error)
-    return { total: 0, active: 0, suspended: 0, inactive: 0, trial: 0 }
+    
+return { total: 0, active: 0, suspended: 0, inactive: 0, trial: 0 }
   }
 }
 
@@ -51,9 +53,12 @@ export async function getRecentTenants(limit = 8): Promise<RecentTenant[]> {
       LEFT JOIN Security.Plans p ON p.PlanId = s.PlanId
       ORDER BY t.CreatedAt DESC
     `)
-    return Array.isArray(tenants) ? tenants : []
+
+    
+return Array.isArray(tenants) ? tenants : []
   } catch (error) {
     console.error('[getRecentTenants] Error:', error)
-    return []
+    
+return []
   }
 }

@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+
 import { useRouter } from 'next/navigation'
+
 import { useTheme } from '@mui/material/styles'
 
 import Button from '@mui/material/Button'
@@ -18,6 +20,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
+
 import type { TenantRow } from '@/services/tenant-service'
 
 interface TenantActionsMenuProps {
@@ -28,14 +31,16 @@ interface TenantActionsMenuProps {
 export default function TenantActionsMenu({ tenant, adminTenantDomain }: TenantActionsMenuProps) {
   const theme = useTheme()
   const router = useRouter()
-  if (!tenant?.Dominio) return null
-  const isLocked = adminTenantDomain ? tenant.Dominio === adminTenantDomain : false
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false)
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false)
   const [suspendReason, setSuspendReason] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  if (!tenant?.Dominio) return null
+
+  const isLocked = adminTenantDomain ? tenant.Dominio === adminTenantDomain : false
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
@@ -60,6 +65,7 @@ export default function TenantActionsMenu({ tenant, adminTenantDomain }: TenantA
 
       if (!res.ok) {
         const data = await res.json()
+
         throw new Error(data.message?.[0] || 'Action failed')
       }
 

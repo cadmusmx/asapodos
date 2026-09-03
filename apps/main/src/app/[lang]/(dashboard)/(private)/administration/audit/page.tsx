@@ -14,7 +14,7 @@ const AuditPage = async (props: { params: Promise<{ lang: Locale }> }) => {
   const access = await requireViewAccess('audit')
 
   if (!access.ok) {
-    redirect(getLocalizedUrl(getTargetByReason(access.reason), lang));
+    redirect(getLocalizedUrl(getTargetByReason(access.reason), lang))
   }
 
   // El cross-tenant (isSaasAdmin / input de tenant) se retiró de apps/main.

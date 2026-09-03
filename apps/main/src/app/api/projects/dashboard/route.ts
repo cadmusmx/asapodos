@@ -48,7 +48,9 @@ export const GET = withPermission(
         const conditions: Prisma.Sql[] = [tenantCondition]
 
         if (fechaInicio && fechaFin) {
-          conditions.push(Prisma.sql`p.ProyectoFechaCreacion BETWEEN CAST(${fechaInicio} AS date) AND CAST(${fechaFin} AS date)`)
+          conditions.push(
+            Prisma.sql`p.ProyectoFechaCreacion BETWEEN CAST(${fechaInicio} AS date) AND CAST(${fechaFin} AS date)`
+          )
         }
         if (cliente) conditions.push(Prisma.sql`p.ClienteId = ${Number(cliente)}`)
         if (estatus) conditions.push(Prisma.sql`p.ProyectoEstatus = ${Number(estatus)}`)
@@ -63,11 +65,25 @@ export const GET = withPermission(
         )
         const counters = countersResult[0]
 
-        const proyectosResult = await prisma.$queryRaw<Array<{ id: number; nombre: string; cliente: string; presupuesto: number; gasto: number; margen: number | null; responsable: string; estatus: number }>>(
+        const proyectosResult = await prisma.$queryRaw<
+          Array<{
+            id: number
+            nombre: string
+            cliente: string
+            presupuesto: number
+            gasto: number
+            margen: number | null
+            responsable: string
+            estatus: number
+          }>
+        >(
           Prisma.sql`SELECT TOP 20 p.Id as id, p.ProyectoNombre as nombre, p.ClienteNombre as cliente, ISNULL(p.ProyectoPresupuesto, 0) as presupuesto, ISNULL((SELECT SUM(s.MontoGastado) FROM GASOSOL_SolGastos s WHERE s.IdProyecto = p.Id AND s.TenantID = CAST(${tenantId} AS uniqueidentifier)), 0) as gasto, p.ProyectoMargenPorcentual as margen, p.ProyectoResponsableGaso as responsable, p.ProyectoEstatus as estatus FROM GASOCO_Cat_Proyectos p ${whereClause} ORDER BY gasto DESC`
         )
 
-        const topEmpleadosConditions: Prisma.Sql[] = [tenantCondition, Prisma.sql`p.ProyectoResponsableGaso IS NOT NULL`]
+        const topEmpleadosConditions: Prisma.Sql[] = [
+          tenantCondition,
+          Prisma.sql`p.ProyectoResponsableGaso IS NOT NULL`
+        ]
         if (estatus) topEmpleadosConditions.push(Prisma.sql`p.ProyectoEstatus = ${Number(estatus)}`)
         if (region) topEmpleadosConditions.push(Prisma.sql`p.IdRegion = ${Number(region)}`)
         if (departamento) topEmpleadosConditions.push(Prisma.sql`p.ProyectoDepartamento = ${departamento}`)

@@ -6,14 +6,15 @@ import dynamic from 'next/dynamic'
 import { redirect } from 'next/navigation'
 
 // Component Imports
+import { PERM } from '@gaso/shared'
+
 import Settings from '@views/pages/settings'
 
 // RBAC Imports
 import { requireViewAccess, getTargetByReason } from '@/lib/auth/require-view-access'
-import { PERM } from '@gaso/shared'
 
-// i18n Imports
 import { getDictionary } from '@/utils/getDictionary'
+import { getLocalizedUrl } from '@/utils/i18n'
 import type { Locale } from '@configs/i18n'
 
 const TenantSettingsTab = dynamic(() => import('@views/tenant-settings/TenantSettingsView'))
@@ -30,7 +31,7 @@ const SettingsPage = async ({ params }: { params: Promise<{ lang: Locale }> }) =
   const access = await requireViewAccess('tenant_settings', PERM.R)
 
   if (!access.ok) {
-    redirect(getTargetByReason(access.reason))
+    redirect(getLocalizedUrl(getTargetByReason(access.reason), lang))
   }
 
   const dictionary = await getDictionary(lang)

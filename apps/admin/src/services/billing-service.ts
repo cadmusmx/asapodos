@@ -1,4 +1,5 @@
 import { revalidateTag } from 'next/cache'
+
 import { prisma, writeTransactionLog } from '@gaso/shared'
 import type { BillingRecord, BillingRecordStatus } from '@gaso/shared/types/plan'
 
@@ -99,7 +100,8 @@ export async function createBillingRecord(
     return { ok: true, billingRecordId: result.BillingRecordId }
   } catch (error) {
     console.error('[CREATE_BILLING_RECORD_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 
@@ -133,10 +135,12 @@ export async function markBillingRecordPaid(
     })
 
     revalidateTag('billing')
-    return { ok: true }
+    
+return { ok: true }
   } catch (error) {
     console.error('[MARK_BILLING_PAID_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 
@@ -170,10 +174,12 @@ export async function refundBillingRecord(
     })
 
     revalidateTag('billing')
-    return { ok: true }
+    
+return { ok: true }
   } catch (error) {
     console.error('[REFUND_BILLING_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 

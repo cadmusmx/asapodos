@@ -1,188 +1,188 @@
-'use client';
+'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react'
 
-import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import FormControl from '@mui/material/FormControl';
-import IconButton from '@mui/material/IconButton';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import Paper from '@mui/material/Paper';
-import Select from '@mui/material/Select';
-import Stack from '@mui/material/Stack';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert'
+import Button from '@mui/material/Button'
+import CircularProgress from '@mui/material/CircularProgress'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogTitle from '@mui/material/DialogTitle'
+import FormControl from '@mui/material/FormControl'
+import IconButton from '@mui/material/IconButton'
+import InputLabel from '@mui/material/InputLabel'
+import MenuItem from '@mui/material/MenuItem'
+import Paper from '@mui/material/Paper'
+import Select from '@mui/material/Select'
+import Stack from '@mui/material/Stack'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableContainer from '@mui/material/TableContainer'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
+import Tooltip from '@mui/material/Tooltip'
+import Typography from '@mui/material/Typography'
 
 type EmployeeFile = {
-  fileId: number;
-  documentTypeId: number | null;
-  documentTypeName: string | null;
-  url: string;
-  isUrl: boolean;
-};
+  fileId: number
+  documentTypeId: number | null
+  documentTypeName: string | null
+  url: string
+  isUrl: boolean
+}
 
-type DocumentType = { id: number; name: string };
+type DocumentType = { id: number; name: string }
 
-type FeedbackState = { type: 'success' | 'error'; message: string } | null;
+type FeedbackState = { type: 'success' | 'error'; message: string } | null
 
 type DocumentsTabProps = {
-  employeeId: number;
-  canCreate?: boolean;
-  canDelete?: boolean;
-};
+  employeeId: number
+  canCreate?: boolean
+  canDelete?: boolean
+}
 
 const DocumentsTab = ({ employeeId, canCreate = false, canDelete = false }: DocumentsTabProps) => {
-  const [files, setFiles] = useState<EmployeeFile[]>([]);
-  const [docTypes, setDocTypes] = useState<DocumentType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<FeedbackState>(null);
+  const [files, setFiles] = useState<EmployeeFile[]>([])
+  const [docTypes, setDocTypes] = useState<DocumentType[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [feedback, setFeedback] = useState<FeedbackState>(null)
 
   // Subida
-  const [uploadOpen, setUploadOpen] = useState(false);
-  const [typeId, setTypeId] = useState('');
-  const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [uploadOpen, setUploadOpen] = useState(false)
+  const [typeId, setTypeId] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   // Borrado
-  const [deleteTarget, setDeleteTarget] = useState<EmployeeFile | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<EmployeeFile | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const loadFiles = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
 
     try {
-      const response = await fetch(`/api/human-capital/employees/${employeeId}/documents`);
-      const data = (await response.json().catch(() => null)) as { data?: EmployeeFile[]; message?: string } | null;
+      const response = await fetch(`/api/human-capital/employees/${employeeId}/documents`)
+      const data = (await response.json().catch(() => null)) as { data?: EmployeeFile[]; message?: string } | null
 
       if (!response.ok || !data?.data) {
-        throw new Error(data && data.message ? data.message : 'No se pudieron cargar los documentos.');
+        throw new Error(data && data.message ? data.message : 'No se pudieron cargar los documentos.')
       }
 
-      setFiles(data.data);
+      setFiles(data.data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar documentos.');
+      setError(err instanceof Error ? err.message : 'Error al cargar documentos.')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [employeeId]);
+  }, [employeeId])
 
   const loadDocTypes = useCallback(async () => {
     try {
-      const response = await fetch('/api/human-capital/catalogs/document-types');
-      const data = (await response.json().catch(() => null)) as { data?: DocumentType[] } | null;
+      const response = await fetch('/api/human-capital/catalogs/document-types')
+      const data = (await response.json().catch(() => null)) as { data?: DocumentType[] } | null
 
-      if (response.ok && data?.data) setDocTypes(data.data);
+      if (response.ok && data?.data) setDocTypes(data.data)
     } catch {
       // El Select quedará vacío; el submit lo bloquea igualmente.
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
-    loadFiles();
-    loadDocTypes();
-  }, [loadFiles, loadDocTypes]);
+    loadFiles()
+    loadDocTypes()
+  }, [loadFiles, loadDocTypes])
 
   const openUpload = () => {
-    setTypeId('');
-    setFile(null);
-    setUploadError(null);
-    setUploadOpen(true);
-  };
+    setTypeId('')
+    setFile(null)
+    setUploadError(null)
+    setUploadOpen(true)
+  }
 
   const closeUpload = () => {
-    if (uploading) return;
-    setUploadOpen(false);
-    setTypeId('');
-    setFile(null);
-    setUploadError(null);
-  };
+    if (uploading) return
+    setUploadOpen(false)
+    setTypeId('')
+    setFile(null)
+    setUploadError(null)
+  }
 
   const submitUpload = async () => {
     if (!typeId) {
-      setUploadError('Selecciona el tipo de documento.');
+      setUploadError('Selecciona el tipo de documento.')
 
-      return;
+      return
     }
 
     if (!file) {
-      setUploadError('Selecciona un archivo.');
+      setUploadError('Selecciona un archivo.')
 
-      return;
+      return
     }
 
-    setUploading(true);
-    setUploadError(null);
+    setUploading(true)
+    setUploadError(null)
 
     try {
-      const fd = new FormData();
+      const fd = new FormData()
 
-      fd.append('file', file);
-      fd.append('documentTypeId', typeId);
+      fd.append('file', file)
+      fd.append('documentTypeId', typeId)
 
-      const response = await fetch(`/api/human-capital/employees/${employeeId}/documents`, { method: 'POST', body: fd });
-      const data = (await response.json().catch(() => null)) as { message?: string } | null;
+      const response = await fetch(`/api/human-capital/employees/${employeeId}/documents`, { method: 'POST', body: fd })
+      const data = (await response.json().catch(() => null)) as { message?: string } | null
 
       if (!response.ok) {
-        throw new Error(data && data.message ? data.message : 'No se pudo subir el documento.');
+        throw new Error(data && data.message ? data.message : 'No se pudo subir el documento.')
       }
 
-      setUploadOpen(false);
-      setTypeId('');
-      setFile(null);
-      setFeedback({ type: 'success', message: 'Documento subido.' });
+      setUploadOpen(false)
+      setTypeId('')
+      setFile(null)
+      setFeedback({ type: 'success', message: 'Documento subido.' })
 
-      await loadFiles();
+      await loadFiles()
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'Error al subir el documento.');
+      setUploadError(err instanceof Error ? err.message : 'Error al subir el documento.')
     } finally {
-      setUploading(false);
+      setUploading(false)
     }
-  };
+  }
 
   const submitDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget) return
 
-    const target = deleteTarget;
+    const target = deleteTarget
 
-    setDeleting(true);
+    setDeleting(true)
 
     try {
       const response = await fetch(`/api/human-capital/employees/${employeeId}/documents/${target.fileId}`, {
         method: 'DELETE'
-      });
+      })
 
-      const data = (await response.json().catch(() => null)) as { message?: string } | null;
+      const data = (await response.json().catch(() => null)) as { message?: string } | null
 
       if (!response.ok) {
-        throw new Error(data && data.message ? data.message : 'No se pudo eliminar el documento.');
+        throw new Error(data && data.message ? data.message : 'No se pudo eliminar el documento.')
       }
 
-      setDeleteTarget(null);
-      setFeedback({ type: 'success', message: 'Documento eliminado.' });
+      setDeleteTarget(null)
+      setFeedback({ type: 'success', message: 'Documento eliminado.' })
 
-      await loadFiles();
+      await loadFiles()
     } catch (err) {
-      setFeedback({ type: 'error', message: err instanceof Error ? err.message : 'Error al eliminar el documento.' });
+      setFeedback({ type: 'error', message: err instanceof Error ? err.message : 'Error al eliminar el documento.' })
     } finally {
-      setDeleting(false);
+      setDeleting(false)
     }
-  };
+  }
 
   return (
     <Stack spacing={3}>
@@ -310,7 +310,12 @@ const DocumentsTab = ({ employeeId, canCreate = false, canDelete = false }: Docu
         </DialogActions>
       </Dialog>
 
-      <Dialog open={Boolean(deleteTarget)} onClose={() => (deleting ? null : setDeleteTarget(null))} maxWidth='xs' fullWidth>
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onClose={() => (deleting ? null : setDeleteTarget(null))}
+        maxWidth='xs'
+        fullWidth
+      >
         <DialogTitle>Eliminar documento</DialogTitle>
 
         <DialogContent>
@@ -335,7 +340,7 @@ const DocumentsTab = ({ employeeId, canCreate = false, canDelete = false }: Docu
         </DialogActions>
       </Dialog>
     </Stack>
-  );
-};
+  )
+}
 
-export default DocumentsTab;
+export default DocumentsTab

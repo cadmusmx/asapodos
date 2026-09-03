@@ -111,7 +111,7 @@ export async function GET(req: Request) {
           ORDER BY s.CreatedAt DESC
         `,
         resolveUserViews(tx, { tenantId, idUsuario: userId }),
-        getEnabledMenuGroups(tx, tenantId),
+        getEnabledMenuGroups(tx, tenantId)
       ])
 
       const user = userRows[0]
@@ -162,7 +162,7 @@ export async function GET(req: Request) {
         settings,
         views,
         menuGroups,
-        planMenuGroups: Array.from(planModules),
+        planMenuGroups: Array.from(planModules)
       }
 
       return body
@@ -176,7 +176,7 @@ export async function GET(req: Request) {
       appUser: result.user.email ?? null,
       idOrigin,
       newData: { hasTenantSettings: true }
-    }).catch(() => { })
+    }).catch(() => {})
 
     return NextResponse.json(result)
   } catch (e) {

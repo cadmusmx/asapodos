@@ -1,11 +1,6 @@
 'use client'
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState
-} from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
@@ -21,30 +16,15 @@ import InventorySummaryCards from '@/components/warehouses/inventory/InventorySu
 import InventoryTable from '@/components/warehouses/inventory/InventoryTable'
 
 import type { InventoryActiveFilter } from '@/components/warehouses/inventory/InventoryFilters'
-import type {
-  InventoryCatalogsData,
-  InventoryCatalogsResponse
-} from '@/types/inventory-catalogs'
-import type {
-  InventoryListResponse,
-  InventoryListSummary,
-  InventoryStockListItem
-} from '@/types/inventory'
+import type { InventoryCatalogsData, InventoryCatalogsResponse } from '@/types/inventory-catalogs'
+import type { InventoryListResponse, InventoryListSummary, InventoryStockListItem } from '@/types/inventory'
 
 type ApiErrorResponse = {
   message?: string
 }
 
-const getApiErrorMessage = (
-  payload: unknown,
-  fallback: string
-): string => {
-  if (
-    typeof payload === 'object' &&
-    payload !== null &&
-    'message' in payload &&
-    typeof payload.message === 'string'
-  ) {
+const getApiErrorMessage = (payload: unknown, fallback: string): string => {
+  if (typeof payload === 'object' && payload !== null && 'message' in payload && typeof payload.message === 'string') {
     return payload.message
   }
 
@@ -69,11 +49,9 @@ const EMPTY_CATALOGS: InventoryCatalogsData = {
 const InventoryView = () => {
   const [rows, setRows] = useState<InventoryStockListItem[]>([])
 
-  const [summary, setSummary] =
-    useState<InventoryListSummary>(EMPTY_SUMMARY)
+  const [summary, setSummary] = useState<InventoryListSummary>(EMPTY_SUMMARY)
 
-  const [catalogs, setCatalogs] =
-    useState<InventoryCatalogsData>(EMPTY_CATALOGS)
+  const [catalogs, setCatalogs] = useState<InventoryCatalogsData>(EMPTY_CATALOGS)
 
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -81,8 +59,7 @@ const InventoryView = () => {
   const [stockStatus, setStockStatus] = useState('all')
   const [category, setCategory] = useState('all')
 
-  const [active, setActive] =
-    useState<InventoryActiveFilter>('true')
+  const [active, setActive] = useState<InventoryActiveFilter>('true')
 
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(25)
@@ -109,35 +86,17 @@ const InventoryView = () => {
     setLoadingCatalogs(true)
 
     try {
-      const response = await fetch(
-        '/api/warehouses/inventory/catalogs'
-      )
+      const response = await fetch('/api/warehouses/inventory/catalogs')
 
-      const payload = (await response.json().catch(() => null)) as
-        | InventoryCatalogsResponse
-        | ApiErrorResponse
-        | null
+      const payload = (await response.json().catch(() => null)) as InventoryCatalogsResponse | ApiErrorResponse | null
 
-      if (
-        !response.ok ||
-        !payload ||
-        !('data' in payload)
-      ) {
-        throw new Error(
-          getApiErrorMessage(
-            payload,
-            'No se pudieron cargar los catálogos del inventario.'
-          )
-        )
+      if (!response.ok || !payload || !('data' in payload)) {
+        throw new Error(getApiErrorMessage(payload, 'No se pudieron cargar los catálogos del inventario.'))
       }
 
       setCatalogs(payload.data)
     } catch (loadError) {
-      setError(
-        loadError instanceof Error
-          ? loadError.message
-          : 'Error al cargar los catálogos.'
-      )
+      setError(loadError instanceof Error ? loadError.message : 'Error al cargar los catálogos.')
     } finally {
       setLoadingCatalogs(false)
     }
@@ -176,28 +135,12 @@ const InventoryView = () => {
         params.set('active', active)
       }
 
-      const response = await fetch(
-        `/api/warehouses/inventory?${params.toString()}`
-      )
+      const response = await fetch(`/api/warehouses/inventory?${params.toString()}`)
 
-      const payload = (await response.json().catch(() => null)) as
-        | InventoryListResponse
-        | ApiErrorResponse
-        | null
+      const payload = (await response.json().catch(() => null)) as InventoryListResponse | ApiErrorResponse | null
 
-      if (
-        !response.ok ||
-        !payload ||
-        !('data' in payload) ||
-        !('summary' in payload) ||
-        !('pagination' in payload)
-      ) {
-        throw new Error(
-          getApiErrorMessage(
-            payload,
-            'No se pudo consultar el inventario.'
-          )
-        )
+      if (!response.ok || !payload || !('data' in payload) || !('summary' in payload) || !('pagination' in payload)) {
+        throw new Error(getApiErrorMessage(payload, 'No se pudo consultar el inventario.'))
       }
 
       if (currentRequest !== requestSequence.current) {
@@ -215,25 +158,13 @@ const InventoryView = () => {
       setRows([])
       setSummary(EMPTY_SUMMARY)
       setTotal(0)
-      setError(
-        loadError instanceof Error
-          ? loadError.message
-          : 'Error al consultar el inventario.'
-      )
+      setError(loadError instanceof Error ? loadError.message : 'Error al consultar el inventario.')
     } finally {
       if (currentRequest === requestSequence.current) {
         setLoading(false)
       }
     }
-  }, [
-    active,
-    category,
-    debouncedSearch,
-    page,
-    pageSize,
-    stockStatus,
-    warehouseId
-  ])
+  }, [active, category, debouncedSearch, page, pageSize, stockStatus, warehouseId])
 
   useEffect(() => {
     loadCatalogs()
@@ -254,36 +185,23 @@ const InventoryView = () => {
   }
 
   const refreshData = () => {
-    void Promise.all([
-      loadCatalogs(),
-      loadInventory()
-    ])
+    void Promise.all([loadCatalogs(), loadInventory()])
   }
 
   return (
     <Box sx={{ p: 5 }}>
       <Stack spacing={4}>
         <Box>
-          <Typography variant='h4'>
-            Inventario
-          </Typography>
+          <Typography variant='h4'>Inventario</Typography>
 
           <Typography variant='body2' color='text.secondary'>
-            Consulta de artículos, SKUs y existencias por almacén,
-            estado y tenant.
+            Consulta de artículos, SKUs y existencias por almacén, estado y tenant.
           </Typography>
         </Box>
 
-        <InventorySummaryCards
-          summary={summary}
-          loading={loading}
-        />
+        <InventorySummaryCards summary={summary} loading={loading} />
 
-        {error && (
-          <Alert severity='error'>
-            {error}
-          </Alert>
-        )}
+        {error && <Alert severity='error'>{error}</Alert>}
 
         <Card>
           <CardContent>
@@ -319,10 +237,7 @@ const InventoryView = () => {
 
               <Divider />
 
-              <InventoryTable
-                rows={rows}
-                loading={loading}
-              />
+              <InventoryTable rows={rows} loading={loading} />
 
               <TablePagination
                 component='div'

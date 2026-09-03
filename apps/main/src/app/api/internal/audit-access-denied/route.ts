@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import {
-  writeTransactionLog,
-  ID_ORIGIN_WEB,
-  withTenantContext
-} from '@gaso/shared'
+import { writeTransactionLog, ID_ORIGIN_WEB, withTenantContext } from '@gaso/shared'
 
 export const runtime = 'nodejs' // Prisma no corre en edge
 

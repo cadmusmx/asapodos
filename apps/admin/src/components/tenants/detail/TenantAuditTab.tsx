@@ -7,6 +7,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
 import Typography from '@mui/material/Typography'
 import type { TransactionLogEntry } from '@gaso/shared'
+
 import TenantAuditTimeline from '@/components/tenants/TenantAuditTimeline'
 
 interface TenantAuditTabProps {
@@ -34,6 +35,7 @@ export default function TenantAuditTab({ tenantId }: TenantAuditTabProps) {
         if (!res.ok) throw new Error('Error loading audit log')
 
         const data = await res.json()
+
         setEntries(data.entries ?? [])
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {

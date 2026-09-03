@@ -1,23 +1,23 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client'
 
-import { withPermission, PERM, getEnabledMenuGroups } from '@gaso/shared';
+import { withPermission, PERM, getEnabledMenuGroups } from '@gaso/shared'
 
-import { withTenantContext } from '@/lib/tenant-context';
-import { resolveAssignmentScope } from '@/lib/permissions/assignment-scope';
+import { withTenantContext } from '@/lib/tenant-context'
+import { resolveAssignmentScope } from '@/lib/permissions/assignment-scope'
 
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'
 
-type TargetRow = { IdDepartamento: number | null };
+type TargetRow = { IdDepartamento: number | null }
 
 type AssignableViewRow = {
-  ViewCode: string;
-  Label: string;
-  MenuGroup: string | null;
-  CurrentMask: number | null;
-  PublicMask: number | null;
-};
+  ViewCode: string
+  Label: string
+  MenuGroup: string | null
+  CurrentMask: number | null
+  PublicMask: number | null
+}
 
 /**
  * GET /api/permissions/user/[id] — vistas asignables + estado, para UN usuario.
@@ -34,19 +34,19 @@ type AssignableViewRow = {
 export const GET = withPermission(
   'permissions_access',
   async (_req, { auth, tenantId }, routeCtx: { params: Promise<{ id: string }> }) => {
-    const { id } = await routeCtx.params;
-    const targetId = Number(id);
+    const { id } = await routeCtx.params
+    const targetId = Number(id)
 
     if (!Number.isInteger(targetId)) {
-      return NextResponse.json({ message: 'id de usuario inválido' }, { status: 400 });
+      return NextResponse.json({ message: 'id de usuario inválido' }, { status: 400 })
     }
 
     try {
       const result = await withTenantContext(tenantId, async tx => {
-        const scope = await resolveAssignmentScope(tx, tenantId, auth.userId);
+        const scope = await resolveAssignmentScope(tx, tenantId, auth.userId)
 
         if (scope === null) {
-          return { status: 403 as const };
+          return { status: 403 as const }
         }
 
         // Depto del TARGET: existencia + validación de alcance del actor.
@@ -55,26 +55,26 @@ export const GET = withPermission(
           FROM dbo.GASOCO_Cat_Usuarios u
           INNER JOIN HumanCapital.Employees e ON e.TenantID = u.TenantID AND e.EmployeeID = u.EmployeeID
           WHERE u.IdUsuario = ${targetId} AND u.TenantID = CAST(${tenantId} AS uniqueidentifier)
-        `;
+        `
 
         if (targetRows.length === 0) {
-          return { status: 404 as const };
+          return { status: 404 as const }
         }
 
-        const targetDept = targetRows[0]?.IdDepartamento ?? null;
+        const targetDept = targetRows[0]?.IdDepartamento ?? null
 
         if (!scope.hasFullScope && targetDept !== scope.actorDept) {
-          return { status: 403 as const };
+          return { status: 403 as const }
         }
 
         // Vistas asignables = las del PLAN (no del depto). currentMask del target.
-        const enabled = await getEnabledMenuGroups(tx, tenantId);
+        const enabled = await getEnabledMenuGroups(tx, tenantId)
 
         if (enabled.size === 0) {
-          return { status: 200 as const, rows: [] as AssignableViewRow[] };
+          return { status: 200 as const, rows: [] as AssignableViewRow[] }
         }
 
-        const menuGroups = Array.from(enabled);
+        const menuGroups = Array.from(enabled)
 
         const rows = await tx.$queryRaw<AssignableViewRow[]>(
           Prisma.sql`
@@ -90,18 +90,18 @@ export const GET = withPermission(
             WHERE v.MenuGroup IN (${Prisma.join(menuGroups)})
               AND (15 & ~ISNULL(v.PublicMask, 0)) <> 0
             ORDER BY v.MenuGroup, v.ViewCode
-          `,
-        );
+          `
+        )
 
-        return { status: 200 as const, rows };
-      });
+        return { status: 200 as const, rows }
+      })
 
       if (result.status === 403) {
-        return NextResponse.json({ message: 'Permiso denegado' }, { status: 403 });
+        return NextResponse.json({ message: 'Permiso denegado' }, { status: 403 })
       }
 
       if (result.status === 404) {
-        return NextResponse.json({ message: 'Usuario no encontrado' }, { status: 404 });
+        return NextResponse.json({ message: 'Usuario no encontrado' }, { status: 404 })
       }
 
       const data = result.rows.map(r => ({
@@ -109,16 +109,16 @@ export const GET = withPermission(
         label: r.Label,
         menuGroup: r.MenuGroup,
         currentMask: r.CurrentMask ?? 0,
-        ceilingMask: 15,             // full CRUD asignable (sin techo; deprecado, compat mask-ui)
-        publicMask: r.PublicMask ?? 0,
-      }));
+        ceilingMask: 15, // full CRUD asignable (sin techo; deprecado, compat mask-ui)
+        publicMask: r.PublicMask ?? 0
+      }))
 
-      return NextResponse.json({ idUsuario: targetId, views: data }, { status: 200 });
+      return NextResponse.json({ idUsuario: targetId, views: data }, { status: 200 })
     } catch (e) {
-      console.error('[PERMISSIONS_USER_ERROR]', e instanceof Error ? { message: e.message } : e);
+      console.error('[PERMISSIONS_USER_ERROR]', e instanceof Error ? { message: e.message } : e)
 
-      return NextResponse.json({ message: 'Error al consultar permisos del usuario' }, { status: 500 });
+      return NextResponse.json({ message: 'Error al consultar permisos del usuario' }, { status: 500 })
     }
   },
-  { bit: PERM.R },
-);
+  { bit: PERM.R }
+)

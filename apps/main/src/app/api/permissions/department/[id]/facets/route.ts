@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 
-import { withPermission, PERM } from '@gaso/shared';
+import { withPermission, PERM } from '@gaso/shared'
 
-import { withTenantContext } from '@/lib/tenant-context';
-import { resolveAssignmentScope } from '@/lib/permissions/assignment-scope';
+import { withTenantContext } from '@/lib/tenant-context'
+import { resolveAssignmentScope } from '@/lib/permissions/assignment-scope'
 
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'
 
 /**
  * GET /api/permissions/department/[id]/facets
@@ -23,23 +23,23 @@ export const runtime = 'nodejs';
 export const GET = withPermission(
   'permissions_access',
   async (_req, { auth, tenantId }, routeCtx: { params: Promise<{ id: string }> }) => {
-    const { id } = await routeCtx.params;
-    const deptId = Number(id);
+    const { id } = await routeCtx.params
+    const deptId = Number(id)
 
     if (!Number.isInteger(deptId)) {
-      return NextResponse.json({ message: 'id de departamento inválido' }, { status: 400 });
+      return NextResponse.json({ message: 'id de departamento inválido' }, { status: 400 })
     }
 
     try {
       const result = await withTenantContext(tenantId, async tx => {
-        const scope = await resolveAssignmentScope(tx, tenantId, auth.userId);
+        const scope = await resolveAssignmentScope(tx, tenantId, auth.userId)
 
         if (scope === null) {
-          return { status: 403 as const };
+          return { status: 403 as const }
         }
 
         if (!scope.hasFullScope && deptId !== scope.actorDept) {
-          return { status: 403 as const };
+          return { status: 403 as const }
         }
 
         // Puestos distintos entre activos del depto.
@@ -55,13 +55,13 @@ export const GET = withPermission(
             AND e.DepartmentID = ${deptId}
             AND e.PositionID IS NOT NULL
           ORDER BY p.Name
-        `;
+        `
 
-        return { status: 200 as const, puestos };
-      });
+        return { status: 200 as const, puestos }
+      })
 
       if (result.status === 403) {
-        return NextResponse.json({ message: 'Permiso denegado' }, { status: 403 });
+        return NextResponse.json({ message: 'Permiso denegado' }, { status: 403 })
       }
 
       return NextResponse.json(
@@ -69,16 +69,16 @@ export const GET = withPermission(
           idDepartamento: deptId,
           puestos: result.puestos.map(p => ({
             idPuesto: p.IdPuesto,
-            nombre: p.NombrePuesto ?? String(p.IdPuesto),
+            nombre: p.NombrePuesto ?? String(p.IdPuesto)
           }))
         },
-        { status: 200 },
-      );
+        { status: 200 }
+      )
     } catch (e) {
-      console.error('[PERMISSIONS_DEPT_FACETS_ERROR]', e instanceof Error ? { message: e.message } : e);
+      console.error('[PERMISSIONS_DEPT_FACETS_ERROR]', e instanceof Error ? { message: e.message } : e)
 
-      return NextResponse.json({ message: 'Error al consultar facetas del departamento' }, { status: 500 });
+      return NextResponse.json({ message: 'Error al consultar facetas del departamento' }, { status: 500 })
     }
   },
-  { bit: PERM.R },
-);
+  { bit: PERM.R }
+)

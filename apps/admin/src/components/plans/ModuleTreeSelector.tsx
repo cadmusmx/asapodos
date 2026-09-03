@@ -62,15 +62,20 @@ export default function ModuleTreeSelector({
   const fetchCatalog = useCallback(async () => {
     setLoading(true)
     setError(null)
+
     try {
       const res = await fetch('/api/admin/modules/catalog')
+
       if (!res.ok) throw new Error('Error loading module catalog')
       const data = await res.json()
+
       setCatalog(data.modules)
       const allExpanded: Record<number, boolean> = {}
+
       for (const mod of data.modules) {
         allExpanded[mod.idModulo] = false
       }
+
       setExpanded(allExpanded)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error loading module catalog')
@@ -89,11 +94,13 @@ export default function ModuleTreeSelector({
 
     if (newModuleIds.has(modId)) {
       newModuleIds.delete(modId)
+
       for (const smId of submodIds) {
         newSubmoduleIds.delete(smId)
       }
     } else {
       newModuleIds.add(modId)
+
       for (const smId of submodIds) {
         newSubmoduleIds.add(smId)
       }
@@ -114,6 +121,7 @@ export default function ModuleTreeSelector({
     } else {
       newSubmoduleIds.add(smId)
       const allSelected = submodIds.every(id => newSubmoduleIds.has(id))
+
       if (allSelected) {
         newModuleIds.add(modId)
       }
@@ -128,11 +136,14 @@ export default function ModuleTreeSelector({
     if (submodIds.length === 0) {
       return localModuleIds.has(modId) ? 'checked' : 'unchecked'
     }
+
     const allSelected = submodIds.every(id => localSubmoduleIds.has(id))
     const someSelected = submodIds.some(id => localSubmoduleIds.has(id))
+
     if (allSelected) return 'checked'
     if (someSelected) return 'indeterminate'
-    return 'unchecked'
+    
+return 'unchecked'
   }
 
   const getEnabledSubmoduleCount = (modId: number, submodIds: number[]) => {
@@ -147,12 +158,15 @@ export default function ModuleTreeSelector({
     if (!catalog) return
     const allModuleIds: number[] = []
     const allSubmodIds: number[] = []
+
     for (const mod of catalog) {
       allModuleIds.push(mod.idModulo)
+
       for (const sm of mod.submodules) {
         allSubmodIds.push(sm.idSubModulo)
       }
     }
+
     setLocalModuleIds(new Set(allModuleIds))
     setLocalSubmoduleIds(new Set(allSubmodIds))
     onChange({ moduleIds: allModuleIds, submoduleIds: allSubmodIds })
@@ -317,7 +331,9 @@ export default function ModuleTreeSelector({
                   <Stack spacing={0.5}>
                     {mod.submodules.map(sm => {
                       const isSmEnabled = localSubmoduleIds.has(sm.idSubModulo)
-                      return (
+
+                      
+return (
                         <Box
                           key={sm.idSubModulo}
                           sx={{

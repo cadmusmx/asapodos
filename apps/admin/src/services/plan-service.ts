@@ -1,4 +1,5 @@
 import { revalidateTag } from 'next/cache'
+
 import { prisma } from '@gaso/shared'
 import type { PlanDefinition, PlanTier, SupportLevel, PlanFeature, PlanFeaturesById } from '@gaso/shared/types/plan'
 
@@ -41,7 +42,9 @@ export async function listPlans(
       WHERE IsActive = 1
       ORDER BY SortOrder ASC
     `
-    return rows.map(mapPlanRow)
+
+    
+return rows.map(mapPlanRow)
   }
 
   if (status === 'active' && !search) {
@@ -53,7 +56,9 @@ export async function listPlans(
       WHERE IsActive = 1
       ORDER BY SortOrder ASC
     `
-    return rows.map(mapPlanRow)
+
+    
+return rows.map(mapPlanRow)
   }
 
   if (status === 'inactive' && !search) {
@@ -65,7 +70,9 @@ export async function listPlans(
       WHERE IsActive = 0
       ORDER BY SortOrder ASC
     `
-    return rows.map(mapPlanRow)
+
+    
+return rows.map(mapPlanRow)
   }
 
   if (search && !status) {
@@ -77,7 +84,9 @@ export async function listPlans(
       WHERE (Name LIKE ${`%${search}%`} OR DisplayName LIKE ${`%${search}%`})
       ORDER BY SortOrder ASC
     `
-    return rows.map(mapPlanRow)
+
+    
+return rows.map(mapPlanRow)
   }
 
   if (search && status === 'active') {
@@ -89,7 +98,9 @@ export async function listPlans(
       WHERE IsActive = 1 AND (Name LIKE ${`%${search}%`} OR DisplayName LIKE ${`%${search}%`})
       ORDER BY SortOrder ASC
     `
-    return rows.map(mapPlanRow)
+
+    
+return rows.map(mapPlanRow)
   }
 
   if (search && status === 'inactive') {
@@ -101,7 +112,9 @@ export async function listPlans(
       WHERE IsActive = 0 AND (Name LIKE ${`%${search}%`} OR DisplayName LIKE ${`%${search}%`})
       ORDER BY SortOrder ASC
     `
-    return rows.map(mapPlanRow)
+
+    
+return rows.map(mapPlanRow)
   }
 
   const rows = await prisma.$queryRaw<PlanRow[]>`
@@ -111,7 +124,9 @@ export async function listPlans(
     FROM Security.Plans
     ORDER BY SortOrder ASC
   `
-  return rows.map(mapPlanRow)
+
+  
+return rows.map(mapPlanRow)
 }
 
 export async function getPlanById(planId: number): Promise<PlanDefinition | null> {
@@ -150,6 +165,7 @@ export function computeFeaturesById(features: FeatureRow[]): PlanFeaturesById {
     if (f.IdSubModulo != null) {
       submodules[f.IdSubModulo] = true
     }
+
     if (f.IdModulo != null) {
       modules[f.IdModulo] = true
     }
@@ -216,10 +232,12 @@ export async function createPlan(data: {
     }
 
     revalidateTag('plans')
-    return { ok: true, planId: planId.PlanId }
+    
+return { ok: true, planId: planId.PlanId }
   } catch (error) {
     console.error('[CREATE_PLAN_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 
@@ -246,34 +264,42 @@ export async function updatePlan(
       params.push(data.displayName)
       updates.push(`DisplayName = @p${i++}`)
     }
+
     if (data.description !== undefined) {
       params.push(data.description)
       updates.push(`Description = @p${i++}`)
     }
+
     if (data.monthlyPrice !== undefined) {
       params.push(data.monthlyPrice)
       updates.push(`MonthlyPrice = @p${i++}`)
     }
+
     if (data.maxUsers !== undefined) {
       params.push(data.maxUsers)
       updates.push(`MaxUsers = @p${i++}`)
     }
+
     if (data.maxBranches !== undefined) {
       params.push(data.maxBranches)
       updates.push(`MaxBranches = @p${i++}`)
     }
+
     if (data.storageMb !== undefined) {
       params.push(data.storageMb)
       updates.push(`StorageMb = @p${i++}`)
     }
+
     if (data.supportLevel !== undefined) {
       params.push(data.supportLevel)
       updates.push(`SupportLevel = @p${i++}`)
     }
+
     if (data.hasAdvancedReports !== undefined) {
       params.push(data.hasAdvancedReports ? 1 : 0)
       updates.push(`HasAdvancedReports = @p${i++}`)
     }
+
     if (data.hasBranding !== undefined) {
       params.push(data.hasBranding ? 1 : 0)
       updates.push(`HasBranding = @p${i++}`)
@@ -292,10 +318,12 @@ export async function updatePlan(
     )
 
     revalidateTag('plans')
-    return { ok: true }
+    
+return { ok: true }
   } catch (error) {
     console.error('[UPDATE_PLAN_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 
@@ -339,15 +367,18 @@ export async function updatePlanFeatures(
     }
 
     revalidateTag('plans')
-    return { ok: true }
+    
+return { ok: true }
   } catch (error) {
     console.error('[UPDATE_PLAN_FEATURES_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 
 export async function getPlanWithFeatures(planId: number) {
   const plan = await getPlanById(planId)
+
   if (!plan) return null
 
   const features = await getPlanFeatures(planId)
@@ -364,10 +395,12 @@ export async function deactivatePlan(planId: number): Promise<{ ok: boolean; err
       WHERE PlanId = ${planId}
     `
     revalidateTag('plans')
-    return { ok: true }
+    
+return { ok: true }
   } catch (error) {
     console.error('[DEACTIVATE_PLAN_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 
@@ -378,10 +411,12 @@ export async function activatePlan(planId: number): Promise<{ ok: boolean; error
       WHERE PlanId = ${planId}
     `
     revalidateTag('plans')
-    return { ok: true }
+    
+return { ok: true }
   } catch (error) {
     console.error('[ACTIVATE_PLAN_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 

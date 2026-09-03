@@ -25,6 +25,6 @@ export async function withTenantTitle(title: string, description?: string): Prom
 
   return {
     title: name ? `${title} | ${name}` : title,
-    ...(description ? { description } : {}),
+    ...(description ? { description } : {})
   }
 }

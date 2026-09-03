@@ -9,6 +9,7 @@ export async function GET() {
     return NextResponse.json({ modules: catalog })
   } catch (error) {
     console.error('[GET_MODULE_CATALOG_ERROR]', error)
-    return NextResponse.json({ message: 'Error loading module catalog' }, { status: 500 })
+    
+return NextResponse.json({ message: 'Error loading module catalog' }, { status: 500 })
   }
 }

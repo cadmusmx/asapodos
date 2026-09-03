@@ -2,12 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { Prisma } from '@prisma/client'
 
-import {
-  resolveSession,
-  getTenantFromHeaders,
-  withTenantContext,
-  getProfilePhoto
-} from '@gaso/shared'
+import { resolveSession, getTenantFromHeaders, withTenantContext, getProfilePhoto } from '@gaso/shared'
 
 import type { ProfileBasicRow, ProfileEmployeeRow, ProfileOrgNamesRow } from '@/types/profile'
 import { normalizeProfileFromRow } from '@/lib/profile/normalize'
@@ -38,7 +33,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const result = await withTenantContext(tenantId, async (tx) => {
+    const result = await withTenantContext(tenantId, async tx => {
       const [basicRows, employeeRows, orgNameRows] = await Promise.all([
         tx.$queryRaw<ProfileBasicRow[]>(
           Prisma.sql`

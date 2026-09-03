@@ -1,11 +1,7 @@
 'use client'
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable padding-line-between-statements */
-/* eslint-disable newline-before-return */
-/* eslint-disable import/order */
+import { useCallback, useEffect, useState } from 'react'
 
-import { useEffect, useState } from 'react'
 import Grid from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
@@ -61,13 +57,14 @@ type Props = {
 const ProjectsDashboard = ({ dictionary }: Props) => {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
+  const [, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchKey, setSearchKey] = useState(0)
   const [modalTotalExpenseOpen, setModalTotalExpenseOpen] = useState(false)
   const [modalBudgetVsActualOpen, setModalBudgetVsActualOpen] = useState(false)
   const [modalTopEmployeesOpen, setModalTopEmployeesOpen] = useState(false)
   const defaultDates = getCurrentYearRange()
+
   const [filters, setFilters] = useState({
     fechaInicio: defaultDates.fechaInicio,
     fechaFin: defaultDates.fechaFin,
@@ -77,10 +74,11 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
     departamento: '',
     responsable: ''
   })
+
   const [catalogs, setCatalogs] = useState<CatalogData>({ clients: [], regions: [], departments: [], employees: [] })
 
   const t = (key: string) => {
-    return key.split('.').reduce((obj, k) => obj?.[k], dictionary) as unknown as string ?? key
+    return (key.split('.').reduce((obj, k) => obj?.[k], dictionary) as unknown as string) ?? key
   }
 
   const fetchCatalogs = async () => {
@@ -91,12 +89,14 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
         fetch('/api/catalogs?type=departments'),
         fetch('/api/catalogs?type=employees')
       ])
+
       const [clients, regions, departments, employees] = await Promise.all([
         clientsRes.json(),
         regionsRes.json(),
         deptsRes.json(),
         employeesRes.json()
       ])
+
       setCatalogs({
         clients: clients.data || [],
         regions: regions.data || [],
@@ -108,39 +108,48 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
     }
   }
 
-  const fetchData = async (currentFilters?: typeof filters, signal?: AbortSignal) => {
-    const activeFilters = currentFilters ?? filters
-    try {
-      if (data !== null) setRefreshing(true)
-      setLoading(true)
-      const params = new URLSearchParams()
-      if (activeFilters.fechaInicio) params.set('fechaInicio', activeFilters.fechaInicio)
-      if (activeFilters.fechaFin) params.set('fechaFin', activeFilters.fechaFin)
-      if (activeFilters.cliente) params.set('cliente', activeFilters.cliente)
-      if (activeFilters.estatus) params.set('estatus', activeFilters.estatus)
-      if (activeFilters.region) params.set('region', activeFilters.region)
-      if (activeFilters.departamento) params.set('departamento', activeFilters.departamento)
-      if (activeFilters.responsable) params.set('responsable', activeFilters.responsable)
+  const fetchData = useCallback(
+    async (currentFilters?: typeof filters, signal?: AbortSignal) => {
+      const activeFilters = currentFilters ?? filters
 
-      const response = await fetch(`/api/projects/dashboard?${params.toString()}`, { signal })
-      if (!response.ok) throw new Error('Failed to fetch dashboard data')
-      const result = await response.json()
-      setData(result.data)
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') return
-      setError(err instanceof Error ? err.message : 'Unknown error')
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }
+      try {
+        setRefreshing(true)
+        setLoading(true)
+        const params = new URLSearchParams()
+
+        if (activeFilters.fechaInicio) params.set('fechaInicio', activeFilters.fechaInicio)
+        if (activeFilters.fechaFin) params.set('fechaFin', activeFilters.fechaFin)
+        if (activeFilters.cliente) params.set('cliente', activeFilters.cliente)
+        if (activeFilters.estatus) params.set('estatus', activeFilters.estatus)
+        if (activeFilters.region) params.set('region', activeFilters.region)
+        if (activeFilters.departamento) params.set('departamento', activeFilters.departamento)
+        if (activeFilters.responsable) params.set('responsable', activeFilters.responsable)
+
+        const response = await fetch(`/api/projects/dashboard?${params.toString()}`, { signal })
+
+        if (!response.ok) throw new Error('Failed to fetch dashboard data')
+        const result = await response.json()
+
+        setData(result.data)
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return
+        setError(err instanceof Error ? err.message : 'Unknown error')
+      } finally {
+        setLoading(false)
+        setRefreshing(false)
+      }
+    },
+    [filters]
+  )
 
   useEffect(() => {
     const controller = new AbortController()
+
     fetchCatalogs()
     fetchData(undefined, controller.signal)
+
     return () => controller.abort()
-  }, [searchKey])
+  }, [searchKey, fetchData])
 
   const handleFilterChange = (field: string, value: string) => {
     setFilters(prev => ({ ...prev, [field]: value }))
@@ -224,7 +233,11 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
           iconColor='#0d6efd'
           iconClass='fa-solid fa-circle-dollar-to-slot'
           action={
-            <IconButton size='small' onClick={() => setModalTotalExpenseOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
+            <IconButton
+              size='small'
+              onClick={() => setModalTotalExpenseOpen(true)}
+              sx={{ color: 'var(--mui-palette-text-secondary)' }}
+            >
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }
@@ -242,7 +255,11 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
           iconColor='#198754'
           iconClass='fa-solid fa-scale-balanced'
           action={
-            <IconButton size='small' onClick={() => setModalBudgetVsActualOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
+            <IconButton
+              size='small'
+              onClick={() => setModalBudgetVsActualOpen(true)}
+              sx={{ color: 'var(--mui-palette-text-secondary)' }}
+            >
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }
@@ -260,7 +277,11 @@ const ProjectsDashboard = ({ dictionary }: Props) => {
           iconColor='#b45309'
           iconClass='fa-solid fa-user-tie'
           action={
-            <IconButton size='small' onClick={() => setModalTopEmployeesOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
+            <IconButton
+              size='small'
+              onClick={() => setModalTopEmployeesOpen(true)}
+              sx={{ color: 'var(--mui-palette-text-secondary)' }}
+            >
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }

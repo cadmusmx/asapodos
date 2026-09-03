@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Dialog from '@mui/material/Dialog'
@@ -16,13 +17,16 @@ import Stack from '@mui/material/Stack'
 import CircularProgress from '@mui/material/CircularProgress'
 import Divider from '@mui/material/Divider'
 import Typography from '@mui/material/Typography'
-import type { TenantRow } from '@/services/tenant-service'
+
 import { toast } from 'react-toastify'
+
+import type { TenantRow } from '@/services/tenant-service'
 
 const DOMAIN_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]*/
 
 function validateDomain(value: string): boolean {
   const trimmed = value.trim()
+
   if (!trimmed) return false
 
   return DOMAIN_REGEX.test(trimmed)
@@ -49,6 +53,7 @@ export default function TenantEditModal({ open, onClose, tenant, onSuccess }: Te
   const [currentSubscriptionId, setCurrentSubscriptionId] = useState<string | null>(null)
   const [currentPlanId, setCurrentPlanId] = useState<number | null>(null)
   const [dominioError, setDominioError] = useState<string | null>(null)
+
   const [form, setForm] = useState({
     companyName: '',
     dominio: '',
@@ -68,6 +73,7 @@ export default function TenantEditModal({ open, onClose, tenant, onSuccess }: Te
           .then(r => r.json())
           .then(data => {
             const sub = data.subscription
+
             setCurrentSubscriptionId(sub?.subscriptionId ?? null)
             setCurrentPlanId(sub?.planId ?? null)
             setForm(prev => ({ ...prev, planId: sub?.planId ? String(sub.planId) : '' }))
@@ -101,10 +107,12 @@ export default function TenantEditModal({ open, onClose, tenant, onSuccess }: Te
     setDominioError(null)
 
     const dominio = form.dominio.trim()
+
     if (!validateDomain(dominio)) {
       setDominioError('Ingresa un dominio válido (ej. empresa.com)')
       setLoading(false)
-      return
+      
+return
     }
 
     const tenantData = {
@@ -122,11 +130,13 @@ export default function TenantEditModal({ open, onClose, tenant, onSuccess }: Te
 
       if (!res.ok) {
         const result = await res.json()
+
         throw new Error(result.message?.[0] || 'Failed to update tenant')
       }
 
       if (form.planId && Number(form.planId) !== currentPlanId) {
         const method = currentSubscriptionId ? 'PUT' : 'POST'
+
         const body = currentSubscriptionId
           ? { subscriptionId: currentSubscriptionId, planId: Number(form.planId), adminUserId: 0, adminEmail: 'admin@gaso.com' }
           : { planId: Number(form.planId), adminUserId: 0, adminEmail: 'admin@gaso.com' }
@@ -139,6 +149,7 @@ export default function TenantEditModal({ open, onClose, tenant, onSuccess }: Te
 
         if (!subRes.ok) {
           const subResult = await subRes.json()
+
           throw new Error(subResult.message || 'Failed to update plan')
         }
       }

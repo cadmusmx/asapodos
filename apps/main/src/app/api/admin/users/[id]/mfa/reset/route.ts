@@ -19,7 +19,7 @@ export const POST = withPermission(
       const body = await req.json().catch(() => ({}))
       const reason = String(body.reason ?? 'Admin MFA reset').trim()
 
-      const result = await withTenantContext(tenantId, async (tx) => {
+      const result = await withTenantContext(tenantId, async tx => {
         const targetRows = await tx.$queryRaw<Array<{ IdUsuario: number; Usuario: string }>>`
           SELECT IdUsuario, Usuario
           FROM dbo.GASOCO_Cat_Usuarios
@@ -38,7 +38,6 @@ export const POST = withPermission(
             AND IdUsuario = ${targetUser.IdUsuario} AND FactorType = 'TOTP' AND IsEnabled = 1
         `
 
-
         return { targetUser, updatedRows }
       })
 
@@ -47,11 +46,19 @@ export const POST = withPermission(
       }
 
       await writeAuthAudit({
-        eventType: 'MFA_RESET', eventStatus: 'SUCCESS', tenantId,
-        username: result.targetUser.Usuario, userId: result.targetUser.IdUsuario, email: null, reason,
+        eventType: 'MFA_RESET',
+        eventStatus: 'SUCCESS',
+        tenantId,
+        username: result.targetUser.Usuario,
+        userId: result.targetUser.IdUsuario,
+        email: null,
+        reason,
         metadata: {
-          targetUserId: result.targetUser.IdUsuario, targetUsername: result.targetUser.Usuario,
-          factorType: 'TOTP', performedBy: auth.email ?? String(auth.userId), updatedRows: result.updatedRows
+          targetUserId: result.targetUser.IdUsuario,
+          targetUsername: result.targetUser.Usuario,
+          factorType: 'TOTP',
+          performedBy: auth.email ?? String(auth.userId),
+          updatedRows: result.updatedRows
         }
       })
 

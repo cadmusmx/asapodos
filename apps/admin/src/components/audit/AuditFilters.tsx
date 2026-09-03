@@ -1,7 +1,8 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useCallback, useEffect, useRef } from 'react'
+
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
@@ -12,8 +13,10 @@ import Chip from '@mui/material/Chip'
 import Select from '@mui/material/Select'
 import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
-import type { TenantRow } from '@/services/tenant-service'
+
 import { AUDIT_ACTIONS, AUDIT_ACTION_LABELS } from '@gaso/shared'
+
+import type { TenantRow } from '@/services/tenant-service'
 
 const actionOptions = [
   { value: '', label: 'Todas las acciones' },
@@ -30,20 +33,30 @@ function getDateRange(preset: DatePreset): { start: string; end: string } | null
   switch (preset) {
     case 'today':
       return { start: today, end: today }
+
     case '7days': {
       const d = new Date(now)
+
       d.setDate(d.getDate() - 7)
-      return { start: d.toISOString().split('T')[0], end: today }
+      
+return { start: d.toISOString().split('T')[0], end: today }
     }
+
     case '30days': {
       const d = new Date(now)
+
       d.setDate(d.getDate() - 30)
-      return { start: d.toISOString().split('T')[0], end: today }
+      
+return { start: d.toISOString().split('T')[0], end: today }
     }
+
     case 'thisMonth': {
       const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
-      return { start, end: today }
+
+      
+return { start, end: today }
     }
+
     default:
       return null
   }
@@ -71,6 +84,7 @@ export default function AuditFilters() {
     setAppUser(searchParams.get('appUser') || '')
     const urlStart = searchParams.get('startDate') || ''
     const urlEnd = searchParams.get('endDate') || ''
+
     setStartDate(urlStart)
     setEndDate(urlEnd)
     setTenantId(searchParams.get('tenantId') || null)
@@ -78,6 +92,7 @@ export default function AuditFilters() {
     const now = new Date()
     const today = now.toISOString().split('T')[0]
     const thirtyDaysAgo = new Date(now)
+
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
     const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0]
 
@@ -94,12 +109,14 @@ export default function AuditFilters() {
 
   const applyFilters = useCallback((overrides?: { start?: string; end?: string }) => {
     const params = new URLSearchParams()
+
     if (tenantId) params.set('tenantId', tenantId)
     if (tableName) params.set('tableName', tableName)
     if (action) params.set('action', action)
     if (appUser) params.set('appUser', appUser)
     const s = overrides?.start ?? startDate
     const e = overrides?.end ?? endDate
+
     if (s) params.set('startDate', s)
     if (e) params.set('endDate', e)
     params.set('page', '1')
@@ -112,19 +129,22 @@ export default function AuditFilters() {
     timeoutRef.current = setTimeout(() => {
       applyFilters()
     }, 500)
+
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
-  }, [tenantId, tableName, action, appUser, startDate, endDate, mounted])
+  }, [tenantId, tableName, action, appUser, startDate, endDate, mounted, applyFilters])
 
   const handlePreset = useCallback((preset: DatePreset) => {
     setActivePreset(preset)
+
     if (preset === null) {
       setStartDate('')
       setEndDate('')
       applyFilters({ start: '', end: '' })
     } else {
       const range = getDateRange(preset)
+
       if (range) {
         setStartDate(range.start)
         setEndDate(range.end)
@@ -140,12 +160,15 @@ export default function AuditFilters() {
     setStartDate('')
     setEndDate('')
     setActivePreset(null)
+
     if (tenantId) {
       const now = new Date()
       const today = now.toISOString().split('T')[0]
       const thirtyDaysAgo = new Date(now)
+
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
       const startStr = thirtyDaysAgo.toISOString().split('T')[0]
+
       router.push(`/admin/audit?tenantId=${tenantId}&startDate=${startStr}&endDate=${today}`)
     }
   }, [router, tenantId])
@@ -154,19 +177,25 @@ export default function AuditFilters() {
     async function fetchTenants() {
       try {
         const res = await fetch('/api/admin/audit/tenants')
+
         if (!res.ok) {
           const err = await res.json().catch(() => ({}))
+
           console.error('[AuditFilters] Failed to load tenants:', res.status, err)
           setTenantOptions([])
-          return
+          
+return
         }
+
         const data = await res.json()
+
         setTenantOptions(data.tenants || [])
       } catch (err) {
         console.error('[AuditFilters] Network error loading tenants:', err)
         setTenantOptions([])
       }
     }
+
     fetchTenants()
   }, [])
 
@@ -182,7 +211,9 @@ export default function AuditFilters() {
             '30days': 'Últimos 30 días',
             thisMonth: 'Este mes'
           }
-          return (
+
+          
+return (
             <Chip
               key={preset}
               label={labels[preset]}

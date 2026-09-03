@@ -4,7 +4,7 @@
 import { useTheme } from '@mui/material/styles'
 
 // Third-party Imports
-import PerfectScrollbar from 'react-perfect-scrollbar'
+import _PerfectScrollbar from 'react-perfect-scrollbar'
 import { useSession } from 'next-auth/react'
 
 // Type Imports
@@ -42,14 +42,14 @@ const RenderExpandIcon = ({ open, transitionDuration }: RenderExpandIconProps) =
   </StyledVerticalNavExpandIcon>
 )
 
-const VerticalMenu = ({ scrollMenu }: Props) => {
+const VerticalMenu = ({ scrollMenu: _scrollMenu }: Props) => {
   const theme = useTheme()
   const verticalNavOptions = useVerticalNav()
   const { data: session } = useSession()
 
-  const { isBreakpointReached, transitionDuration } = verticalNavOptions
+  const { isBreakpointReached: _isBreakpointReached, transitionDuration } = verticalNavOptions
 
-  const ScrollWrapper = isBreakpointReached ? 'div' : PerfectScrollbar
+  const _ScrollWrapper = _isBreakpointReached ? 'div' : _PerfectScrollbar
 
   const platformRole = session?.user?.platformRole
 
@@ -58,6 +58,7 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
   )
 
   return (
+
     // <ScrollWrapper
     //   {...(isBreakpointReached
     //     ? {
@@ -86,6 +87,7 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         </MenuItem>
       ))}
     </Menu>
+
     // </ScrollWrapper>
   )
 }

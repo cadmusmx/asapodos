@@ -5,33 +5,28 @@ import { Prisma } from '@prisma/client'
 import { PERM, withPermission } from '@gaso/shared'
 
 import {
-    normalizeInventoryCatalogOptionRow,
-    normalizeInventoryStockStatusCatalogRow,
-    normalizeInventoryWarehouseCatalogRow
+  normalizeInventoryCatalogOptionRow,
+  normalizeInventoryStockStatusCatalogRow,
+  normalizeInventoryWarehouseCatalogRow
 } from '@/lib/inventory/catalogs'
 import { withTenantContext } from '@/lib/tenant-context'
 
 import type {
-    InventoryCatalogOptionRow,
-    InventoryCatalogsResponse,
-    InventoryStockStatusCatalogRow,
-    InventoryWarehouseCatalogRow
+  InventoryCatalogOptionRow,
+  InventoryCatalogsResponse,
+  InventoryStockStatusCatalogRow,
+  InventoryWarehouseCatalogRow
 } from '@/types/inventory-catalogs'
 
 export const runtime = 'nodejs'
 
 export const GET = withPermission(
-    'inventory',
-    async (_req, { tenantId }) => {
-        try {
-            const data = await withTenantContext(
-                tenantId,
-                async tx => {
-                    const warehouseRows =
-                        await tx.$queryRaw<
-                            InventoryWarehouseCatalogRow[]
-                        >(
-                            Prisma.sql`
+  'inventory',
+  async (_req, { tenantId }) => {
+    try {
+      const data = await withTenantContext(tenantId, async tx => {
+        const warehouseRows = await tx.$queryRaw<InventoryWarehouseCatalogRow[]>(
+          Prisma.sql`
                                 SELECT
                                     warehouse.WarehouseID,
                                     warehouse.Code,
@@ -49,17 +44,14 @@ export const GET = withPermission(
                                     warehouse.Name ASC,
                                     warehouse.WarehouseID ASC
                             `
-                        )
+        )
 
-                    /*
-                     *  que no se me olvide que las categorías se obtienen únicamente de artículos
-                     * que actualmente tienen alguna existencia registrada.
-                     */
-                    const categoryRows =
-                        await tx.$queryRaw<
-                            InventoryCatalogOptionRow[]
-                        >(
-                            Prisma.sql`
+        /*
+         *  que no se me olvide que las categorías se obtienen únicamente de artículos
+         * que actualmente tienen alguna existencia registrada.
+         */
+        const categoryRows = await tx.$queryRaw<InventoryCatalogOptionRow[]>(
+          Prisma.sql`
                                 SELECT DISTINCT
                                     LTRIM(RTRIM(item.Category)) AS Value
                                 FROM Inventory.Items AS item
@@ -81,13 +73,10 @@ export const GET = withPermission(
                                   ) > 0
                                 ORDER BY Value ASC
                             `
-                        )
+        )
 
-                    const stockStatusRows =
-                        await tx.$queryRaw<
-                            InventoryStockStatusCatalogRow[]
-                        >(
-                            Prisma.sql`
+        const stockStatusRows = await tx.$queryRaw<InventoryStockStatusCatalogRow[]>(
+          Prisma.sql`
                                 SELECT
                                     stock.StockStatus,
                                     COUNT_BIG(1) AS RecordCount,
@@ -106,13 +95,10 @@ export const GET = withPermission(
                                 GROUP BY stock.StockStatus
                                 ORDER BY stock.StockStatus ASC
                             `
-                        )
+        )
 
-                    const unitOfMeasureRows =
-                        await tx.$queryRaw<
-                            InventoryCatalogOptionRow[]
-                        >(
-                            Prisma.sql`
+        const unitOfMeasureRows = await tx.$queryRaw<InventoryCatalogOptionRow[]>(
+          Prisma.sql`
                                 SELECT DISTINCT
                                     LTRIM(
                                         RTRIM(sku.UnitOfMeasure)
@@ -136,53 +122,40 @@ export const GET = withPermission(
                                   ) > 0
                                 ORDER BY Value ASC
                             `
-                        )
+        )
 
-                    return {
-                        warehouses: warehouseRows.map(
-                            normalizeInventoryWarehouseCatalogRow
-                        ),
-                        categories: categoryRows.map(
-                            normalizeInventoryCatalogOptionRow
-                        ),
-                        stockStatuses: stockStatusRows.map(
-                            normalizeInventoryStockStatusCatalogRow
-                        ),
-                        unitsOfMeasure: unitOfMeasureRows.map(
-                            normalizeInventoryCatalogOptionRow
-                        )
-                    }
-                }
-            )
-
-            const response: InventoryCatalogsResponse = {
-                data
-            }
-
-            return NextResponse.json(response)
-        } catch (error) {
-            const message =
-                error instanceof Error
-                    ? error.message
-                    : 'UNKNOWN_ERROR'
-
-            console.error('[INVENTORY_CATALOGS_ERROR]', {
-                tenantId,
-                message
-            })
-
-            return NextResponse.json(
-                {
-                    message:
-                        'No fue posible consultar los catálogos del inventario.'
-                },
-                {
-                    status: 500
-                }
-            )
+        return {
+          warehouses: warehouseRows.map(normalizeInventoryWarehouseCatalogRow),
+          categories: categoryRows.map(normalizeInventoryCatalogOptionRow),
+          stockStatuses: stockStatusRows.map(normalizeInventoryStockStatusCatalogRow),
+          unitsOfMeasure: unitOfMeasureRows.map(normalizeInventoryCatalogOptionRow)
         }
-    },
-    {
-        bit: PERM.R
+      })
+
+      const response: InventoryCatalogsResponse = {
+        data
+      }
+
+      return NextResponse.json(response)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR'
+
+      console.error('[INVENTORY_CATALOGS_ERROR]', {
+        tenantId,
+        message
+      })
+
+      return NextResponse.json(
+        {
+          message: 'No fue posible consultar los catálogos del inventario.'
+        },
+        {
+          status: 500
+        }
+      )
     }
+  },
+  {
+    bit: PERM.R
+  }
 )

@@ -15,7 +15,7 @@ const Page = async (props: { params: Promise<{ lang: Locale }> }) => {
   const access = await requireViewAccess('employees')
 
   if (!access.ok) {
-    redirect(getLocalizedUrl(getTargetByReason(access.reason), lang));
+    redirect(getLocalizedUrl(getTargetByReason(access.reason), lang))
   }
 
   // Launcher a Gestión de Usuarios: gateado por su viewCode, sin redirigir esta página.

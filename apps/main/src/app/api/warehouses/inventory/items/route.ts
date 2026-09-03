@@ -2,63 +2,44 @@ import { NextResponse } from 'next/server'
 
 import { Prisma } from '@prisma/client'
 
-import {
-    PERM,
-    withPermission,
-    writeTransactionLog
-} from '@gaso/shared'
+import { PERM, withPermission, writeTransactionLog } from '@gaso/shared'
 
-import {
-    getInventoryItemById,
-    normalizeInventoryItemFromRow
-} from '@/lib/inventory/maintenance'
-import {
-    parseInventoryItemPayload,
-    parseInventoryMaintenanceListFilters
-} from '@/lib/inventory/validation'
+import { getInventoryItemById, normalizeInventoryItemFromRow } from '@/lib/inventory/maintenance'
+import { parseInventoryItemPayload, parseInventoryMaintenanceListFilters } from '@/lib/inventory/validation'
 import { withTenantContext } from '@/lib/tenant-context'
 
-import type {
-    InventoryItemRow
-} from '@/types/inventory-maintenance'
+import type { InventoryItemRow } from '@/types/inventory-maintenance'
 
 export const runtime = 'nodejs'
 
 export const GET = withPermission(
-    'inventory',
-    async (req, { tenantId }) => {
-        let filters
+  'inventory',
+  async (req, { tenantId }) => {
+    let filters
 
-        try {
-            filters = parseInventoryMaintenanceListFilters(
-                new URL(req.url).searchParams
-            )
-        } catch (error) {
-            return NextResponse.json(
-                {
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : 'Filtros inválidos.'
-                },
-                { status: 400 }
-            )
-        }
+    try {
+      filters = parseInventoryMaintenanceListFilters(new URL(req.url).searchParams)
+    } catch (error) {
+      return NextResponse.json(
+        {
+          message: error instanceof Error ? error.message : 'Filtros inválidos.'
+        },
+        { status: 400 }
+      )
+    }
 
-        try {
-            return await withTenantContext(
-                tenantId,
-                async tx => {
-                    const conditions: Prisma.Sql[] = [
-                        Prisma.sql`
+    try {
+      return await withTenantContext(tenantId, async tx => {
+        const conditions: Prisma.Sql[] = [
+          Prisma.sql`
                             i.TenantID =
                             CAST(${tenantId} AS uniqueidentifier)
                         `
-                    ]
+        ]
 
-                    if (filters.searchPattern) {
-                        conditions.push(
-                            Prisma.sql`
+        if (filters.searchPattern) {
+          conditions.push(
+            Prisma.sql`
                                 (
                                     i.Name LIKE
                                         ${filters.searchPattern}
@@ -74,39 +55,32 @@ export const GET = withPermission(
                                         ESCAPE '|'
                                 )
                             `
-                        )
-                    }
+          )
+        }
 
-                    if (filters.active !== null) {
-                        conditions.push(
-                            Prisma.sql`
+        if (filters.active !== null) {
+          conditions.push(
+            Prisma.sql`
                                 i.IsActive =
                                 ${filters.active ? 1 : 0}
                             `
-                        )
-                    }
+          )
+        }
 
-                    const whereClause = Prisma.sql`
-                        WHERE ${Prisma.join(
-                        conditions,
-                        ' AND '
-                    )}
+        const whereClause = Prisma.sql`
+                        WHERE ${Prisma.join(conditions, ' AND ')}
                     `
 
-                    const countRows = await tx.$queryRaw<
-                        Array<{ Total: bigint }>
-                    >(
-                        Prisma.sql`
+        const countRows = await tx.$queryRaw<Array<{ Total: bigint }>>(
+          Prisma.sql`
                             SELECT COUNT_BIG(1) AS Total
                             FROM Inventory.Items i
                             ${whereClause}
                         `
-                    )
+        )
 
-                    const rows = await tx.$queryRaw<
-                        InventoryItemRow[]
-                    >(
-                        Prisma.sql`
+        const rows = await tx.$queryRaw<InventoryItemRow[]>(
+          Prisma.sql`
                             SELECT
                                 i.ItemID,
                                 i.TenantID,
@@ -154,72 +128,48 @@ export const GET = withPermission(
                             FETCH NEXT ${filters.pageSize}
                                 ROWS ONLY
                         `
-                    )
+        )
 
-                    return NextResponse.json({
-                        data: rows.map(
-                            normalizeInventoryItemFromRow
-                        ),
-                        total: Number(
-                            countRows[0]?.Total ?? 0
-                        ),
-                        page: filters.page,
-                        pageSize: filters.pageSize
-                    })
-                }
-            )
-        } catch (error) {
-            const message =
-                error instanceof Error
-                    ? error.message
-                    : 'UNKNOWN_ERROR'
+        return NextResponse.json({
+          data: rows.map(normalizeInventoryItemFromRow),
+          total: Number(countRows[0]?.Total ?? 0),
+          page: filters.page,
+          pageSize: filters.pageSize
+        })
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR'
 
-            console.error(
-                '[INVENTORY_ITEMS_LIST_ERROR]',
-                { message }
-            )
+      console.error('[INVENTORY_ITEMS_LIST_ERROR]', { message })
 
-            return NextResponse.json(
-                {
-                    message:
-                        'Error al consultar los artículos.'
-                },
-                { status: 500 }
-            )
-        }
-    },
-    { bit: PERM.R }
+      return NextResponse.json(
+        {
+          message: 'Error al consultar los artículos.'
+        },
+        { status: 500 }
+      )
+    }
+  },
+  { bit: PERM.R }
 )
 
 export const POST = withPermission(
-    'inventory',
-    async (req, { auth, tenantId }) => {
-        let payload
+  'inventory',
+  async (req, { auth, tenantId }) => {
+    let payload
 
-        try {
-            payload = parseInventoryItemPayload(
-                await req.json()
-            )
-        } catch (error) {
-            const message =
-                error instanceof Error
-                    ? error.message
-                    : 'Body inválido.'
+    try {
+      payload = parseInventoryItemPayload(await req.json())
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Body inválido.'
 
-            return NextResponse.json(
-                { message },
-                { status: 400 }
-            )
-        }
+      return NextResponse.json({ message }, { status: 400 })
+    }
 
-        try {
-            const item = await withTenantContext(
-                tenantId,
-                async tx => {
-                    const insertedRows = await tx.$queryRaw<
-                        Array<{ ItemID: number }>
-                    >(
-                        Prisma.sql`
+    try {
+      const item = await withTenantContext(tenantId, async tx => {
+        const insertedRows = await tx.$queryRaw<Array<{ ItemID: number }>>(
+          Prisma.sql`
                             INSERT INTO Inventory.Items (
                                 TenantID,
                                 Name,
@@ -245,67 +195,46 @@ export const POST = withPermission(
                                 ${auth.userId}
                             )
                         `
-                    )
+        )
 
-                    const itemId =
-                        insertedRows[0]?.ItemID
+        const itemId = insertedRows[0]?.ItemID
 
-                    if (!itemId) {
-                        throw new Error(
-                            'INVENTORY_ITEM_INSERT_FAILED'
-                        )
-                    }
-
-                    const created =
-                        await getInventoryItemById(
-                            tx,
-                            tenantId,
-                            itemId
-                        )
-
-                    if (!created) {
-                        throw new Error(
-                            'INVENTORY_ITEM_READ_AFTER_CREATE_FAILED'
-                        )
-                    }
-
-                    return created
-                }
-            )
-
-            writeTransactionLog({
-                tenantId,
-                tableName: 'Inventory.Items',
-                action: 'CREATE',
-                userId: auth.userId,
-                appUser: auth.email ?? null,
-                oldData: null,
-                newData: item
-            }).catch(() => { })
-
-            return NextResponse.json(
-                { data: item },
-                { status: 201 }
-            )
-        } catch (error) {
-            const message =
-                error instanceof Error
-                    ? error.message
-                    : 'UNKNOWN_ERROR'
-
-            console.error(
-                '[INVENTORY_ITEM_CREATE_ERROR]',
-                { message }
-            )
-
-            return NextResponse.json(
-                {
-                    message:
-                        'Error al crear el artículo.'
-                },
-                { status: 500 }
-            )
+        if (!itemId) {
+          throw new Error('INVENTORY_ITEM_INSERT_FAILED')
         }
-    },
-    { bit: PERM.W }
+
+        const created = await getInventoryItemById(tx, tenantId, itemId)
+
+        if (!created) {
+          throw new Error('INVENTORY_ITEM_READ_AFTER_CREATE_FAILED')
+        }
+
+        return created
+      })
+
+      writeTransactionLog({
+        tenantId,
+        tableName: 'Inventory.Items',
+        action: 'CREATE',
+        userId: auth.userId,
+        appUser: auth.email ?? null,
+        oldData: null,
+        newData: item
+      }).catch(() => {})
+
+      return NextResponse.json({ data: item }, { status: 201 })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR'
+
+      console.error('[INVENTORY_ITEM_CREATE_ERROR]', { message })
+
+      return NextResponse.json(
+        {
+          message: 'Error al crear el artículo.'
+        },
+        { status: 500 }
+      )
+    }
+  },
+  { bit: PERM.W }
 )

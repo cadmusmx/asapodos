@@ -8,5 +8,7 @@ const SUPPORT_CONFIG: Record<string, { color: 'default' | 'info' | 'success'; la
 
 export default function SupportChip({ level }: { level: string }) {
   const c = SUPPORT_CONFIG[level] ?? { color: 'default', label: level }
-  return <Chip label={c.label} color={c.color} size='small' variant='outlined' />
+
+  
+return <Chip label={c.label} color={c.color} size='small' variant='outlined' />
 }

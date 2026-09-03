@@ -1,21 +1,21 @@
-import { redirect } from 'next/navigation';
+import { redirect } from 'next/navigation'
 
-import { PERM } from '@gaso/shared';
+import { PERM } from '@gaso/shared'
 
-import MaterialValidationDetail from '@views/warehouses/material-validation/MaterialValidationDetail';
+import MaterialValidationDetail from '@views/warehouses/material-validation/MaterialValidationDetail'
 
-import type { Locale } from '@configs/i18n';
+import type { Locale } from '@configs/i18n'
 
-import { getTargetByReason, requireViewAccess } from '@/lib/auth/require-view-access';
-import { getLocalizedUrl } from '@/utils/i18n';
+import { getTargetByReason, requireViewAccess } from '@/lib/auth/require-view-access'
+import { getLocalizedUrl } from '@/utils/i18n'
 
 const MaterialValidationDetailPage = async (props: { params: Promise<{ lang: Locale; folio: string }> }) => {
-  const { lang, folio } = await props.params;
+  const { lang, folio } = await props.params
 
-  const access = await requireViewAccess('material_validation', PERM.R);
+  const access = await requireViewAccess('material_validation', PERM.R)
 
   if (!access.ok) {
-    redirect(getLocalizedUrl(getTargetByReason(access.reason), lang));
+    redirect(getLocalizedUrl(getTargetByReason(access.reason), lang))
   }
 
   const canEdit = (access.mask & PERM.U) === PERM.U

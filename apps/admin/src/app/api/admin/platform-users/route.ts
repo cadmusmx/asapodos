@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requirePlatformRole } from '@gaso/shared'
 import type { PlatformRole } from '@gaso/shared'
+
 import { listPlatformUsers, createPlatformUser, addPlatformRole } from '@/services/platform-user-service'
 
 export async function GET(req: NextRequest) {
@@ -59,7 +61,9 @@ export async function POST(req: NextRequest) {
         if (result.error === 'USER_ALREADY_HAS_ROLE') {
           return NextResponse.json({ message: ['El usuario ya tiene un rol de plataforma'] }, { status: 409 })
         }
-        return NextResponse.json({ message: ['Failed to assign role'] }, { status: 500 })
+
+        
+return NextResponse.json({ message: ['Failed to assign role'] }, { status: 500 })
       }
 
       return NextResponse.json({ ok: true }, { status: 201 })
@@ -95,6 +99,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, userId: result.UserID }, { status: 201 })
   } catch (error) {
     console.error('[ADMIN_PLATFORM_USER_ERROR]', error)
-    return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
+    
+return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
   }
 }

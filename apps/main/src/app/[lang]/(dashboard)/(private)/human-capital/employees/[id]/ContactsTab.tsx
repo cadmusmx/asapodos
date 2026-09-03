@@ -1,236 +1,236 @@
-'use client';
+'use client'
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react'
 
-import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import CircularProgress from '@mui/material/CircularProgress';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import FormControl from '@mui/material/FormControl';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import IconButton from '@mui/material/IconButton';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import Paper from '@mui/material/Paper';
-import Select from '@mui/material/Select';
-import Stack from '@mui/material/Stack';
-import Switch from '@mui/material/Switch';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import TextField from '@mui/material/TextField';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert'
+import Button from '@mui/material/Button'
+import Chip from '@mui/material/Chip'
+import CircularProgress from '@mui/material/CircularProgress'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogTitle from '@mui/material/DialogTitle'
+import FormControl from '@mui/material/FormControl'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import IconButton from '@mui/material/IconButton'
+import InputLabel from '@mui/material/InputLabel'
+import MenuItem from '@mui/material/MenuItem'
+import Paper from '@mui/material/Paper'
+import Select from '@mui/material/Select'
+import Stack from '@mui/material/Stack'
+import Switch from '@mui/material/Switch'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableContainer from '@mui/material/TableContainer'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
+import TextField from '@mui/material/TextField'
+import Tooltip from '@mui/material/Tooltip'
+import Typography from '@mui/material/Typography'
 
 type Contact = {
-  contactId: number;
-  name: string;
-  phone: string | null;
-  relationshipId: number | null;
-  relationshipName: string | null;
-  esPrioritario: boolean;
-};
+  contactId: number
+  name: string
+  phone: string | null
+  relationshipId: number | null
+  relationshipName: string | null
+  esPrioritario: boolean
+}
 
 type Relationship = {
-  id: number;
-  name: string;
-};
+  id: number
+  name: string
+}
 
 type FeedbackState = {
-  type: 'success' | 'error';
-  message: string;
-} | null;
+  type: 'success' | 'error'
+  message: string
+} | null
 
 type FormState = {
-  name: string;
-  phone: string;
-  relationshipId: string;
-  esPrioritario: boolean;
-};
+  name: string
+  phone: string
+  relationshipId: string
+  esPrioritario: boolean
+}
 
 type ContactsTabProps = {
-  employeeId: number;
-  canCreate?: boolean;
-  canEdit?: boolean;
-  canDelete?: boolean;
-};
+  employeeId: number
+  canCreate?: boolean
+  canEdit?: boolean
+  canDelete?: boolean
+}
 
 const emptyForm: FormState = {
   name: '',
   phone: '',
   relationshipId: '',
   esPrioritario: false
-};
+}
 
 const ContactsTab = ({ employeeId, canCreate = false, canEdit = false, canDelete = false }: ContactsTabProps) => {
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [relationships, setRelationships] = useState<Relationship[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<FeedbackState>(null);
+  const [contacts, setContacts] = useState<Contact[]>([])
+  const [relationships, setRelationships] = useState<Relationship[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [feedback, setFeedback] = useState<FeedbackState>(null)
 
   // Alta / edición
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState<FormState>(emptyForm);
-  const [saving, setSaving] = useState(false);
-  const [dialogError, setDialogError] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [form, setForm] = useState<FormState>(emptyForm)
+  const [saving, setSaving] = useState(false)
+  const [dialogError, setDialogError] = useState<string | null>(null)
 
   // Baja
-  const [deleteTarget, setDeleteTarget] = useState<Contact | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Contact | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const loadContacts = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
 
     try {
-      const response = await fetch(`/api/human-capital/employees/${employeeId}/contacts`);
-      const data = (await response.json().catch(() => null)) as { data?: Contact[]; message?: string } | null;
+      const response = await fetch(`/api/human-capital/employees/${employeeId}/contacts`)
+      const data = (await response.json().catch(() => null)) as { data?: Contact[]; message?: string } | null
 
       if (!response.ok || !data?.data) {
-        throw new Error(data && data.message ? data.message : 'No se pudieron cargar los contactos.');
+        throw new Error(data && data.message ? data.message : 'No se pudieron cargar los contactos.')
       }
 
-      setContacts(data.data);
+      setContacts(data.data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar contactos.');
+      setError(err instanceof Error ? err.message : 'Error al cargar contactos.')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [employeeId]);
+  }, [employeeId])
 
   const loadRelationships = useCallback(async () => {
     try {
-      const response = await fetch('/api/human-capital/catalogs/contact-relationships');
-      const data = (await response.json().catch(() => null)) as { data?: Relationship[] } | null;
+      const response = await fetch('/api/human-capital/catalogs/contact-relationships')
+      const data = (await response.json().catch(() => null)) as { data?: Relationship[] } | null
 
-      if (response.ok && data?.data) setRelationships(data.data);
+      if (response.ok && data?.data) setRelationships(data.data)
     } catch {
       // El Select quedará vacío; el form lo bloquea igualmente.
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
-    loadContacts();
-    loadRelationships();
-  }, [loadContacts, loadRelationships]);
+    loadContacts()
+    loadRelationships()
+  }, [loadContacts, loadRelationships])
 
   const openCreate = () => {
-    setEditingId(null);
-    setForm(emptyForm);
-    setDialogError(null);
-    setDialogOpen(true);
-  };
+    setEditingId(null)
+    setForm(emptyForm)
+    setDialogError(null)
+    setDialogOpen(true)
+  }
 
   const openEdit = (contact: Contact) => {
-    setEditingId(contact.contactId);
+    setEditingId(contact.contactId)
     setForm({
       name: contact.name,
       phone: contact.phone ?? '',
       relationshipId: contact.relationshipId ? String(contact.relationshipId) : '',
       esPrioritario: contact.esPrioritario
-    });
-    setDialogError(null);
-    setDialogOpen(true);
-  };
+    })
+    setDialogError(null)
+    setDialogOpen(true)
+  }
 
   const closeDialog = () => {
-    if (saving) return;
-    setDialogOpen(false);
-    setEditingId(null);
-    setForm(emptyForm);
-    setDialogError(null);
-  };
+    if (saving) return
+    setDialogOpen(false)
+    setEditingId(null)
+    setForm(emptyForm)
+    setDialogError(null)
+  }
 
   const submitDialog = async () => {
     if (!form.name.trim()) {
-      setDialogError('El nombre es obligatorio.');
+      setDialogError('El nombre es obligatorio.')
 
-      return;
+      return
     }
 
     if (!form.relationshipId) {
-      setDialogError('El parentesco es obligatorio.');
+      setDialogError('El parentesco es obligatorio.')
 
-      return;
+      return
     }
 
-    setSaving(true);
-    setDialogError(null);
+    setSaving(true)
+    setDialogError(null)
 
     const body = {
       name: form.name.trim(),
       phone: form.phone.trim() || null,
       relationshipId: Number(form.relationshipId),
       esPrioritario: form.esPrioritario
-    };
+    }
 
     try {
       const url = editingId
         ? `/api/human-capital/employees/${employeeId}/contacts/${editingId}`
-        : `/api/human-capital/employees/${employeeId}/contacts`;
+        : `/api/human-capital/employees/${employeeId}/contacts`
 
       const response = await fetch(url, {
         method: editingId ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
-      });
+      })
 
-      const data = (await response.json().catch(() => null)) as { message?: string } | null;
+      const data = (await response.json().catch(() => null)) as { message?: string } | null
 
       if (!response.ok) {
-        throw new Error(data && data.message ? data.message : 'No se pudo guardar el contacto.');
+        throw new Error(data && data.message ? data.message : 'No se pudo guardar el contacto.')
       }
 
-      setDialogOpen(false);
-      setEditingId(null);
-      setForm(emptyForm);
-      setFeedback({ type: 'success', message: editingId ? 'Contacto actualizado.' : 'Contacto agregado.' });
+      setDialogOpen(false)
+      setEditingId(null)
+      setForm(emptyForm)
+      setFeedback({ type: 'success', message: editingId ? 'Contacto actualizado.' : 'Contacto agregado.' })
 
-      await loadContacts();
+      await loadContacts()
     } catch (err) {
-      setDialogError(err instanceof Error ? err.message : 'Error al guardar el contacto.');
+      setDialogError(err instanceof Error ? err.message : 'Error al guardar el contacto.')
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
   const submitDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget) return
 
-    const target = deleteTarget;
+    const target = deleteTarget
 
-    setDeleting(true);
+    setDeleting(true)
 
     try {
       const response = await fetch(`/api/human-capital/employees/${employeeId}/contacts/${target.contactId}`, {
         method: 'DELETE'
-      });
+      })
 
-      const data = (await response.json().catch(() => null)) as { message?: string } | null;
+      const data = (await response.json().catch(() => null)) as { message?: string } | null
 
       if (!response.ok) {
-        throw new Error(data && data.message ? data.message : 'No se pudo eliminar el contacto.');
+        throw new Error(data && data.message ? data.message : 'No se pudo eliminar el contacto.')
       }
 
-      setDeleteTarget(null);
-      setFeedback({ type: 'success', message: `Contacto "${target.name}" eliminado.` });
+      setDeleteTarget(null)
+      setFeedback({ type: 'success', message: `Contacto "${target.name}" eliminado.` })
 
-      await loadContacts();
+      await loadContacts()
     } catch (err) {
-      setFeedback({ type: 'error', message: err instanceof Error ? err.message : 'Error al eliminar el contacto.' });
+      setFeedback({ type: 'error', message: err instanceof Error ? err.message : 'Error al eliminar el contacto.' })
     } finally {
-      setDeleting(false);
+      setDeleting(false)
     }
-  };
+  }
 
   return (
     <Stack spacing={3}>
@@ -373,7 +373,12 @@ const ContactsTab = ({ employeeId, canCreate = false, canEdit = false, canDelete
         </DialogActions>
       </Dialog>
 
-      <Dialog open={Boolean(deleteTarget)} onClose={() => (deleting ? null : setDeleteTarget(null))} maxWidth='xs' fullWidth>
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onClose={() => (deleting ? null : setDeleteTarget(null))}
+        maxWidth='xs'
+        fullWidth
+      >
         <DialogTitle>Eliminar contacto</DialogTitle>
 
         <DialogContent>
@@ -398,7 +403,7 @@ const ContactsTab = ({ employeeId, canCreate = false, canEdit = false, canDelete
         </DialogActions>
       </Dialog>
     </Stack>
-  );
-};
+  )
+}
 
-export default ContactsTab;
+export default ContactsTab

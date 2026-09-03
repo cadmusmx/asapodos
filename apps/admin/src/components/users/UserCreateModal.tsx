@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Dialog from '@mui/material/Dialog'
@@ -15,8 +16,10 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
-import type { PlatformRole } from '@/types/apps/platformUserTypes'
+
 import { toast } from 'react-toastify'
+
+import type { PlatformRole } from '@/types/apps/platformUserTypes'
 
 interface UserCreateModalProps {
   open: boolean
@@ -58,6 +61,7 @@ export default function UserCreateModal({ open, onClose, onSuccess }: UserCreate
 
   const handleCreateChange = (field: keyof CreateFormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setCreateForm(prev => ({ ...prev, [field]: e.target.value }))
+
     if (fieldErrors[field]) {
       setFieldErrors(prev => ({ ...prev, [field]: undefined }))
     }
@@ -97,7 +101,8 @@ export default function UserCreateModal({ open, onClose, onSuccess }: UserCreate
     }
 
     setFieldErrors(errors)
-    return Object.keys(errors).length === 0
+    
+return Object.keys(errors).length === 0
   }
 
   const handleCreateSubmit = async () => {
@@ -121,6 +126,7 @@ export default function UserCreateModal({ open, onClose, onSuccess }: UserCreate
 
       if (!res.ok) {
         const result = await res.json()
+
         throw new Error(result.message?.[0] || 'Failed to create user')
       }
 

@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client'
 
-import { PERM, withPermission } from '@gaso/shared';
+import { PERM, withPermission } from '@gaso/shared'
 
-import { withTenantContext } from '@/lib/tenant-context';
+import { withTenantContext } from '@/lib/tenant-context'
 
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'
 
 // Catálogo GLOBAL (sin TenantID / sin RLS); wrap de tx sólo por consistencia.
 export const GET = withPermission(
@@ -20,10 +20,10 @@ export const GET = withPermission(
           WHERE IsActive = 1
           ORDER BY Name
         `
-      );
+      )
 
-      return NextResponse.json({ data: rows.map(r => ({ id: r.DocumentTypeID, name: r.Name })) });
-    });
+      return NextResponse.json({ data: rows.map(r => ({ id: r.DocumentTypeID, name: r.Name })) })
+    })
   },
   { bit: PERM.R }
-);
+)

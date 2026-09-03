@@ -37,6 +37,7 @@ export default function PlanFeaturesEditor({ features, onChange, error }: PlanFe
 
   const handleToggle = (key: PlanFeatureKey) => {
     const updated = { ...localFeatures, [key]: !localFeatures[key] }
+
     setLocalFeatures(updated)
     onChange(updated)
   }

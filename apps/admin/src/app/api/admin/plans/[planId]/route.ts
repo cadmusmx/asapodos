@@ -22,7 +22,8 @@ export async function GET(
     return NextResponse.json({ plan: { ...plan, features: planFeatures, featuresById } })
   } catch (error) {
     console.error('[GET_PLAN_ERROR]', error)
-    return NextResponse.json({ message: 'Error loading plan' }, { status: 500 })
+    
+return NextResponse.json({ message: 'Error loading plan' }, { status: 500 })
   }
 }
 
@@ -34,7 +35,6 @@ export async function PUT(
     const { planId } = await params
     const body = await req.json()
 
-    const { updatePlan } = await import('@/services/plan-service')
     const result = await updatePlan(Number(planId), body)
 
     if (!result.ok) {
@@ -42,6 +42,7 @@ export async function PUT(
     }
 
     const { moduleIds, submoduleIds } = body
+
     if (Array.isArray(moduleIds) || Array.isArray(submoduleIds)) {
       await updatePlanFeatures(Number(planId), moduleIds ?? [], submoduleIds ?? [])
     }
@@ -49,7 +50,8 @@ export async function PUT(
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('[UPDATE_PLAN_ERROR]', error)
-    return NextResponse.json({ message: 'Error updating plan' }, { status: 500 })
+    
+return NextResponse.json({ message: 'Error updating plan' }, { status: 500 })
   }
 }
 
@@ -69,6 +71,7 @@ export async function DELETE(
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('[DEACTIVATE_PLAN_ERROR]', error)
-    return NextResponse.json({ message: 'Error deactivating plan' }, { status: 500 })
+    
+return NextResponse.json({ message: 'Error deactivating plan' }, { status: 500 })
   }
 }

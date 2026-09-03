@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext } from 'react'
+
 import { getDictionaryValue } from '@/lib/erp-navigation'
 
 const DEFAULT_LABELS: Record<string, string> = {

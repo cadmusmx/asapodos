@@ -217,7 +217,12 @@ const NotificationDropdown = ({ notifications }: { notifications: NotificationsT
                       {t('notifications.title')}
                     </Typography>
                     {notificationCount > 0 && (
-                      <Chip size='small' variant='tonal' color='primary' label={`${notificationCount} ${t('notifications.new')}`} />
+                      <Chip
+                        size='small'
+                        variant='tonal'
+                        color='primary'
+                        label={`${notificationCount} ${t('notifications.new')}`}
+                      />
                     )}
                     <Tooltip
                       title={readAll ? t('notifications.markAllUnread') : t('notifications.markAllRead')}

@@ -93,7 +93,7 @@ const GeneralDashboard = ({ dictionary }: Props) => {
   const [modalProjRespOpen, setModalProjRespOpen] = useState(false)
 
   const t = (key: string) => {
-    return key.split('.').reduce((obj, k) => obj?.[k], dictionary) as unknown as string ?? key
+    return (key.split('.').reduce((obj, k) => obj?.[k], dictionary) as unknown as string) ?? key
   }
 
   useEffect(() => {
@@ -104,6 +104,7 @@ const GeneralDashboard = ({ dictionary }: Props) => {
 
       try {
         const params = new URLSearchParams()
+
         if (filters.year) params.set('year', filters.year)
         if (filters.region) params.set('region', filters.region)
 
@@ -127,7 +128,7 @@ const GeneralDashboard = ({ dictionary }: Props) => {
     fetchData()
 
     return () => controller.abort()
-  }, [searchKey])
+  }, [searchKey, filters.region, filters.year])
 
   useEffect(() => {
     const fetchCatalogs = async () => {
@@ -170,7 +171,9 @@ const GeneralDashboard = ({ dictionary }: Props) => {
     return <DashboardError message={error || 'No data available'} />
   }
 
-  const renderMetricBadges = (badges: Array<{ label: string; value: number | string; color: string; bg: string; icon: string }>) => (
+  const renderMetricBadges = (
+    badges: Array<{ label: string; value: number | string; color: string; bg: string; icon: string }>
+  ) => (
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, justifyContent: 'center' }}>
       {badges.map((badge, idx) => (
         <Box
@@ -188,10 +191,19 @@ const GeneralDashboard = ({ dictionary }: Props) => {
         >
           <i className={badge.icon} style={{ fontSize: '1rem', color: badge.color }} />
           <Box>
-            <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1 }}>
+            <Typography
+              sx={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1 }}
+            >
               {typeof badge.value === 'number' ? badge.value.toLocaleString() : badge.value}
             </Typography>
-            <Typography sx={{ fontSize: '0.65rem', color: 'var(--mui-palette-text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <Typography
+              sx={{
+                fontSize: '0.65rem',
+                color: 'var(--mui-palette-text-secondary)',
+                textTransform: 'uppercase',
+                letterSpacing: 0.5
+              }}
+            >
               {badge.label}
             </Typography>
           </Box>
@@ -216,7 +228,19 @@ const GeneralDashboard = ({ dictionary }: Props) => {
     <Card sx={{ borderRadius: '16px', border: '1px solid var(--mui-palette-divider)', height: '100%' }}>
       <CardContent sx={{ p: '1rem !important' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-          <Box sx={{ width: 40, height: 40, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', background: iconBg, color: iconColor }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.2rem',
+              background: iconBg,
+              color: iconColor
+            }}
+          >
             <i className={icon} />
           </Box>
           <Typography variant='h6' sx={{ fontSize: '1rem', fontWeight: 700, color: 'var(--mui-palette-text-primary)' }}>
@@ -229,18 +253,29 @@ const GeneralDashboard = ({ dictionary }: Props) => {
         {charts.map((chart, idx) => (
           <Box key={idx} sx={{ mb: idx < charts.length - 1 ? 2 : 0 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-              <Typography variant='caption' sx={{ color: 'var(--mui-palette-text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.65rem' }}>
+              <Typography
+                variant='caption'
+                sx={{
+                  color: 'var(--mui-palette-text-secondary)',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  fontSize: '0.65rem'
+                }}
+              >
                 {chart.label}
               </Typography>
               {chart.modalTitle && chart.onModalOpen && (
-                <IconButton size='small' onClick={chart.onModalOpen} sx={{ color: 'var(--mui-palette-text-secondary)', p: 0.25 }}>
+                <IconButton
+                  size='small'
+                  onClick={chart.onModalOpen}
+                  sx={{ color: 'var(--mui-palette-text-secondary)', p: 0.25 }}
+                >
                   <i className='ri-eye-line' style={{ fontSize: '1rem' }} />
                 </IconButton>
               )}
             </Box>
-            <Box sx={{ position: 'relative', width: '100%', height: 180 }}>
-              {chart.component}
-            </Box>
+            <Box sx={{ position: 'relative', width: '100%', height: 180 }}>{chart.component}</Box>
           </Box>
         ))}
       </CardContent>
@@ -270,17 +305,42 @@ const GeneralDashboard = ({ dictionary }: Props) => {
             background: 'linear-gradient(135deg, rgba(15, 23, 42, .7) 0%, rgba(13, 110, 253, .45) 100%)'
           }}
         />
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#fff', textAlign: 'center', zIndex: 10, width: '100%' }}>
-          <h1 style={{ fontSize: 42, fontWeight: 800, textShadow: '2px 2px 8px rgba(0,0,0,.5)', fontFamily: '"Carter One", system-ui', margin: 0 }}>
+        <div
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: '#fff',
+            textAlign: 'center',
+            zIndex: 10,
+            width: '100%'
+          }}
+        >
+          <h1
+            style={{
+              fontSize: 42,
+              fontWeight: 800,
+              textShadow: '2px 2px 8px rgba(0,0,0,.5)',
+              fontFamily: '"Carter One", system-ui',
+              margin: 0
+            }}
+          >
             {t('start.heroTitle')}
           </h1>
-          <p style={{ fontSize: 18, opacity: 0.9, margin: '4px 0 0' }}>
-            {t('start.heroSubtitle')}
-          </p>
+          <p style={{ fontSize: 18, opacity: 0.9, margin: '4px 0 0' }}>{t('start.heroSubtitle')}</p>
         </div>
       </div>
 
-      <GeneralFilters t={t} values={filters} onChange={handleFilterChange} onSearch={handleSearch} onClear={handleClear} onReload={handleReload} regions={catalogs.regions} />
+      <GeneralFilters
+        t={t}
+        values={filters}
+        onChange={handleFilterChange}
+        onSearch={handleSearch}
+        onClear={handleClear}
+        onReload={handleReload}
+        regions={catalogs.regions}
+      />
 
       {/* ROW 1 */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
@@ -292,8 +352,20 @@ const GeneralDashboard = ({ dictionary }: Props) => {
             '#0d6efd',
             'rgba(13,110,253,.12)',
             [
-              { label: t('dashboard.general.active'), value: data.humanCapital.activos, color: '#0d6efd', bg: 'rgba(13,110,253,.08)', icon: 'ri-user-follow-line' },
-              { label: t('dashboard.general.inactive'), value: data.humanCapital.inactivos, color: '#6c757d', bg: 'rgba(108,117,125,.08)', icon: 'ri-user-forbidden-line' }
+              {
+                label: t('dashboard.general.active'),
+                value: data.humanCapital.activos,
+                color: '#0d6efd',
+                bg: 'rgba(13,110,253,.08)',
+                icon: 'ri-user-follow-line'
+              },
+              {
+                label: t('dashboard.general.inactive'),
+                value: data.humanCapital.inactivos,
+                color: '#6c757d',
+                bg: 'rgba(108,117,125,.08)',
+                icon: 'ri-user-forbidden-line'
+              }
             ],
             [
               {
@@ -320,10 +392,34 @@ const GeneralDashboard = ({ dictionary }: Props) => {
             '#17a2b8',
             'rgba(23,162,184,.12)',
             [
-              { label: t('dashboard.general.totalSites'), value: data.inventario.total, color: '#17a2b8', bg: 'rgba(23,162,184,.08)', icon: 'ri-global-line' },
-              { label: t('dashboard.general.totalPallets'), value: data.inventario.palets, color: '#20c997', bg: 'rgba(32,201,151,.08)', icon: 'ri-file-list-3-line' },
-              { label: t('dashboard.warehouses.arrivals'), value: data.inventario.arribos, color: '#198754', bg: 'rgba(25,135,84,.08)', icon: 'ri-arrow-down-circle-line' },
-              { label: t('dashboard.warehouses.outputs'), value: data.inventario.salidas, color: '#ffc107', bg: 'rgba(255,193,7,.08)', icon: 'ri-arrow-up-circle-line' }
+              {
+                label: t('dashboard.general.totalSites'),
+                value: data.inventario.total,
+                color: '#17a2b8',
+                bg: 'rgba(23,162,184,.08)',
+                icon: 'ri-global-line'
+              },
+              {
+                label: t('dashboard.general.totalPallets'),
+                value: data.inventario.palets,
+                color: '#20c997',
+                bg: 'rgba(32,201,151,.08)',
+                icon: 'ri-file-list-3-line'
+              },
+              {
+                label: t('dashboard.warehouses.arrivals'),
+                value: data.inventario.arribos,
+                color: '#198754',
+                bg: 'rgba(25,135,84,.08)',
+                icon: 'ri-arrow-down-circle-line'
+              },
+              {
+                label: t('dashboard.warehouses.outputs'),
+                value: data.inventario.salidas,
+                color: '#ffc107',
+                bg: 'rgba(255,193,7,.08)',
+                icon: 'ri-arrow-up-circle-line'
+              }
             ],
             [
               {
@@ -342,10 +438,34 @@ const GeneralDashboard = ({ dictionary }: Props) => {
             '#198754',
             'rgba(25,135,84,.12)',
             [
-              { label: t('dashboard.general.total'), value: data.gastos.total, color: '#198754', bg: 'rgba(25,135,84,.08)', icon: 'ri-file-list-line' },
-              { label: t('dashboard.general.pending'), value: data.gastos.pendientes, color: '#ffc107', bg: 'rgba(255,193,7,.08)', icon: 'ri-time-line' },
-              { label: t('dashboard.general.approved'), value: data.gastos.aceptadas, color: '#0d6efd', bg: 'rgba(13,110,253,.08)', icon: 'ri-checkbox-circle-line' },
-              { label: t('dashboard.general.rejected'), value: data.gastos.rechazadas, color: '#dc3545', bg: 'rgba(220,53,69,.08)', icon: 'ri-close-circle-line' }
+              {
+                label: t('dashboard.general.total'),
+                value: data.gastos.total,
+                color: '#198754',
+                bg: 'rgba(25,135,84,.08)',
+                icon: 'ri-file-list-line'
+              },
+              {
+                label: t('dashboard.general.pending'),
+                value: data.gastos.pendientes,
+                color: '#ffc107',
+                bg: 'rgba(255,193,7,.08)',
+                icon: 'ri-time-line'
+              },
+              {
+                label: t('dashboard.general.approved'),
+                value: data.gastos.aceptadas,
+                color: '#0d6efd',
+                bg: 'rgba(13,110,253,.08)',
+                icon: 'ri-checkbox-circle-line'
+              },
+              {
+                label: t('dashboard.general.rejected'),
+                value: data.gastos.rechazadas,
+                color: '#dc3545',
+                bg: 'rgba(220,53,69,.08)',
+                icon: 'ri-close-circle-line'
+              }
             ],
             [
               {
@@ -375,10 +495,34 @@ const GeneralDashboard = ({ dictionary }: Props) => {
             '#6f42c1',
             'rgba(111,66,193,.12)',
             [
-              { label: t('dashboard.general.total'), value: data.flotillas.total, color: '#6f42c1', bg: 'rgba(111,66,193,.08)', icon: 'ri-truck-line' },
-              { label: t('dashboard.general.pending'), value: data.flotillas.pendientes, color: '#ffc107', bg: 'rgba(255,193,7,.08)', icon: 'ri-time-line' },
-              { label: t('dashboard.general.approved'), value: data.flotillas.aceptadas, color: '#198754', bg: 'rgba(25,135,84,.08)', icon: 'ri-checkbox-circle-line' },
-              { label: t('dashboard.general.rejected'), value: data.flotillas.rechazadas, color: '#dc3545', bg: 'rgba(220,53,69,.08)', icon: 'ri-close-circle-line' }
+              {
+                label: t('dashboard.general.total'),
+                value: data.flotillas.total,
+                color: '#6f42c1',
+                bg: 'rgba(111,66,193,.08)',
+                icon: 'ri-truck-line'
+              },
+              {
+                label: t('dashboard.general.pending'),
+                value: data.flotillas.pendientes,
+                color: '#ffc107',
+                bg: 'rgba(255,193,7,.08)',
+                icon: 'ri-time-line'
+              },
+              {
+                label: t('dashboard.general.approved'),
+                value: data.flotillas.aceptadas,
+                color: '#198754',
+                bg: 'rgba(25,135,84,.08)',
+                icon: 'ri-checkbox-circle-line'
+              },
+              {
+                label: t('dashboard.general.rejected'),
+                value: data.flotillas.rechazadas,
+                color: '#dc3545',
+                bg: 'rgba(220,53,69,.08)',
+                icon: 'ri-close-circle-line'
+              }
             ],
             [
               {
@@ -399,10 +543,34 @@ const GeneralDashboard = ({ dictionary }: Props) => {
             '#b45309',
             'rgba(255,193,7,.15)',
             [
-              { label: t('dashboard.general.total'), value: data.cotizaciones.total, color: '#b45309', bg: 'rgba(255,193,7,.08)', icon: 'ri-file-text-line' },
-              { label: t('dashboard.general.pending'), value: data.cotizaciones.pendientes, color: '#ffc107', bg: 'rgba(255,193,7,.08)', icon: 'ri-time-line' },
-              { label: t('dashboard.general.approved'), value: data.cotizaciones.aceptadas, color: '#198754', bg: 'rgba(25,135,84,.08)', icon: 'ri-checkbox-circle-line' },
-              { label: t('dashboard.general.rejected'), value: data.cotizaciones.rechazadas, color: '#dc3545', bg: 'rgba(220,53,69,.08)', icon: 'ri-close-circle-line' }
+              {
+                label: t('dashboard.general.total'),
+                value: data.cotizaciones.total,
+                color: '#b45309',
+                bg: 'rgba(255,193,7,.08)',
+                icon: 'ri-file-text-line'
+              },
+              {
+                label: t('dashboard.general.pending'),
+                value: data.cotizaciones.pendientes,
+                color: '#ffc107',
+                bg: 'rgba(255,193,7,.08)',
+                icon: 'ri-time-line'
+              },
+              {
+                label: t('dashboard.general.approved'),
+                value: data.cotizaciones.aceptadas,
+                color: '#198754',
+                bg: 'rgba(25,135,84,.08)',
+                icon: 'ri-checkbox-circle-line'
+              },
+              {
+                label: t('dashboard.general.rejected'),
+                value: data.cotizaciones.rechazadas,
+                color: '#dc3545',
+                bg: 'rgba(220,53,69,.08)',
+                icon: 'ri-close-circle-line'
+              }
             ],
             [
               {
@@ -421,8 +589,20 @@ const GeneralDashboard = ({ dictionary }: Props) => {
             '#0d6efd',
             'rgba(13,110,253,.12)',
             [
-              { label: t('dashboard.projects.active'), value: data.proyectos.activos, color: '#198754', bg: 'rgba(25,135,84,.08)', icon: 'ri-briefcase-line' },
-              { label: t('dashboard.projects.inactive'), value: data.proyectos.inactivos, color: '#6c757d', bg: 'rgba(108,117,125,.08)', icon: 'ri-close-line' }
+              {
+                label: t('dashboard.projects.active'),
+                value: data.proyectos.activos,
+                color: '#198754',
+                bg: 'rgba(25,135,84,.08)',
+                icon: 'ri-briefcase-line'
+              },
+              {
+                label: t('dashboard.projects.inactive'),
+                value: data.proyectos.inactivos,
+                color: '#6c757d',
+                bg: 'rgba(108,117,125,.08)',
+                icon: 'ri-close-line'
+              }
             ],
             [
               {
@@ -441,27 +621,57 @@ const GeneralDashboard = ({ dictionary }: Props) => {
       </Grid>
 
       {/* Ver Más Modals */}
-      <ChartModal open={modalHCDeptOpen} onClose={() => setModalHCDeptOpen(false)} title={t('dashboard.general.byDepartment')} t={t}>
+      <ChartModal
+        open={modalHCDeptOpen}
+        onClose={() => setModalHCDeptOpen(false)}
+        title={t('dashboard.general.byDepartment')}
+        t={t}
+      >
         <HumanCapitalDeptChart t={t} data={data.humanCapital.porDepto} height={450} />
       </ChartModal>
 
-      <ChartModal open={modalHCHiresOpen} onClose={() => setModalHCHiresOpen(false)} title={t('dashboard.general.hiresTerminations')} t={t}>
+      <ChartModal
+        open={modalHCHiresOpen}
+        onClose={() => setModalHCHiresOpen(false)}
+        title={t('dashboard.general.hiresTerminations')}
+        t={t}
+      >
         <HumanCapitalHiresChart t={t} data={data.humanCapital.altasBajas} height={450} />
       </ChartModal>
 
-      <ChartModal open={modalGasMesOpen} onClose={() => setModalGasMesOpen(false)} title={t('dashboard.general.requestsByMonth')} t={t}>
+      <ChartModal
+        open={modalGasMesOpen}
+        onClose={() => setModalGasMesOpen(false)}
+        title={t('dashboard.general.requestsByMonth')}
+        t={t}
+      >
         <OperatingExpensesChart t={t} data={data.gastosPorMes} height={450} />
       </ChartModal>
 
-      <ChartModal open={modalGasProjOpen} onClose={() => setModalGasProjOpen(false)} title={t('dashboard.general.expensesByProject')} t={t}>
+      <ChartModal
+        open={modalGasProjOpen}
+        onClose={() => setModalGasProjOpen(false)}
+        title={t('dashboard.general.expensesByProject')}
+        t={t}
+      >
         <ExpensesByProjectChart t={t} data={data.gastosPorProyecto} height={450} />
       </ChartModal>
 
-      <ChartModal open={modalFlotillasOpen} onClose={() => setModalFlotillasOpen(false)} title={t('dashboard.general.fleets')} t={t}>
+      <ChartModal
+        open={modalFlotillasOpen}
+        onClose={() => setModalFlotillasOpen(false)}
+        title={t('dashboard.general.fleets')}
+        t={t}
+      >
         <FleetsChart t={t} data={data.flotillas.porMes} height={450} />
       </ChartModal>
 
-      <ChartModal open={modalProjRespOpen} onClose={() => setModalProjRespOpen(false)} title={t('dashboard.general.byResponsible')} t={t}>
+      <ChartModal
+        open={modalProjRespOpen}
+        onClose={() => setModalProjRespOpen(false)}
+        title={t('dashboard.general.byResponsible')}
+        t={t}
+      >
         <ProjectsResponsibleChart t={t} data={data.proyectos.porResponsable} height={450} />
       </ChartModal>
     </div>

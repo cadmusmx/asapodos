@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requirePlatformRole } from '@gaso/shared'
+
 import {
   deletePlatformUser,
   updatePlatformUser,
@@ -47,16 +49,20 @@ export async function PUT(
       if (result.error === 'USER_NOT_FOUND') {
         return NextResponse.json({ message: ['User not found'] }, { status: 404 })
       }
+
       if (result.error === 'CANNOT_EDIT_OLDEST_USER') {
         return NextResponse.json({ message: ['No se puede editar al usuario más antiguo'] }, { status: 403 })
       }
-      return NextResponse.json({ message: ['Failed to update user'] }, { status: 500 })
+
+      
+return NextResponse.json({ message: ['Failed to update user'] }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('[ADMIN_UPDATE_PLATFORM_USER_ERROR]', error)
-    return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
+    
+return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
   }
 }
 
@@ -91,10 +97,13 @@ export async function DELETE(
         if (result.error === 'USER_NOT_FOUND') {
           return NextResponse.json({ message: ['User not found'] }, { status: 404 })
         }
+
         if (result.error === 'CANNOT_REMOVE_OLDEST_USER') {
           return NextResponse.json({ message: ['No se puede remover el rol del usuario más antiguo'] }, { status: 403 })
         }
-        return NextResponse.json({ message: ['Failed to remove platform role'] }, { status: 500 })
+
+        
+return NextResponse.json({ message: ['Failed to remove platform role'] }, { status: 500 })
       }
 
       return NextResponse.json({ ok: true })
@@ -111,22 +120,27 @@ export async function DELETE(
       if (result.error === 'USER_NOT_FOUND') {
         return NextResponse.json({ message: ['User not found'] }, { status: 404 })
       }
+
       if (result.error === 'CANNOT_DELETE_OLDEST_USER') {
         return NextResponse.json({ message: ['No se puede eliminar al usuario más antiguo'] }, { status: 403 })
       }
+
       if (result.error === 'EMPLOYEE_HAS_DEPENDENCIES') {
         return NextResponse.json(
           { message: ['El empleado tiene registros asociados. Elimina solo la cuenta o reasigna su historial.'] },
           { status: 409 }
         )
       }
-      return NextResponse.json({ message: ['Failed to delete user'] }, { status: 500 })
+
+      
+return NextResponse.json({ message: ['Failed to delete user'] }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('[ADMIN_DELETE_PLATFORM_USER_ERROR]', error)
-    return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
+    
+return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
   }
 }
 
@@ -161,10 +175,13 @@ export async function POST(
         if (result.error === 'USER_NOT_FOUND') {
           return NextResponse.json({ message: ['User not found'] }, { status: 404 })
         }
+
         if (result.error === 'CANNOT_DEACTIVATE_OLDEST_USER') {
           return NextResponse.json({ message: ['No se puede desactivar al usuario más antiguo'] }, { status: 403 })
         }
-        return NextResponse.json({ message: ['Failed to deactivate user'] }, { status: 500 })
+
+        
+return NextResponse.json({ message: ['Failed to deactivate user'] }, { status: 500 })
       }
 
       return NextResponse.json({ ok: true })
@@ -181,7 +198,9 @@ export async function POST(
         if (result.error === 'USER_NOT_FOUND') {
           return NextResponse.json({ message: ['User not found'] }, { status: 404 })
         }
-        return NextResponse.json({ message: ['Failed to activate user'] }, { status: 500 })
+
+        
+return NextResponse.json({ message: ['Failed to activate user'] }, { status: 500 })
       }
 
       return NextResponse.json({ ok: true })
@@ -190,7 +209,8 @@ export async function POST(
     return NextResponse.json({ message: ['Invalid action'] }, { status: 400 })
   } catch (error) {
     console.error('[ADMIN_PLATFORM_USER_ACTION_ERROR]', error)
-    return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
+    
+return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
   }
 }
 
@@ -215,6 +235,7 @@ export async function GET(
     return NextResponse.json({ user })
   } catch (error) {
     console.error('[ADMIN_GET_PLATFORM_USER_ERROR]', error)
-    return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
+    
+return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
   }
 }

@@ -106,7 +106,9 @@ export async function POST(req: Request) {
         FROM HumanCapital.Employees e
         WHERE e.TenantID = CAST(${tenantId} AS uniqueidentifier) AND e.EmployeeID = ${user.EmployeeID}
       `
-      return rows[0] ?? null
+
+      
+return rows[0] ?? null
     })
 
     if (!emp || !emp.IsActive) {

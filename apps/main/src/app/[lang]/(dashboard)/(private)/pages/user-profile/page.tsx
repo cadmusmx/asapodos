@@ -4,7 +4,6 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@gaso/shared'
 
 import { getLocalizedUrl } from '@/utils/i18n'
-import { getDictionary } from '@/utils/getDictionary'
 import type { Locale } from '@configs/i18n'
 
 import UserProfileView from './page.client'
@@ -17,9 +16,7 @@ const ProfilePage = async (props: { params: Promise<{ lang: Locale }> }) => {
     redirect(getLocalizedUrl('/login', lang))
   }
 
-  const dictionary = await getDictionary(lang)
-
-  return <UserProfileView dictionary={dictionary} />
+  return <UserProfileView />
 }
 
 export default ProfilePage

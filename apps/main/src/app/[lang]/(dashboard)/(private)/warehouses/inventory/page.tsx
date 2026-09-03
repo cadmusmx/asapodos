@@ -7,20 +7,13 @@ import { getLocalizedUrl } from '@/utils/i18n'
 
 import InventoryView from './page.client'
 
-const Page = async (
-  props: {
-    params: Promise<{ lang: Locale }>
-  }
-) => {
+const Page = async (props: { params: Promise<{ lang: Locale }> }) => {
   const { lang } = await props.params
 
   const access = await requireViewAccess('inventory')
 
   if (!access.ok) {
-    const target =
-      access.reason === 'UNAUTHENTICATED'
-        ? '/login'
-        : '/pages/misc/401-not-authorized'
+    const target = access.reason === 'UNAUTHENTICATED' ? '/login' : '/pages/misc/401-not-authorized'
 
     redirect(getLocalizedUrl(target, lang))
   }

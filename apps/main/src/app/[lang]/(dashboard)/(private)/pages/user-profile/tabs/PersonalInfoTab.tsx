@@ -37,10 +37,13 @@ const PersonalInfoTab = ({ profile }: Props) => {
                   {t('userProfile.personalInfoTab.fullName')}
                 </Typography>
                 <Box display='flex' alignItems='center' gap={1}>
-                  <Typography variant='body1'>
-                    {emp?.fullName ?? profile.nombre ?? '—'}
-                  </Typography>
-                  <Chip label={t('userProfile.personalInfoTab.readOnly')} size='small' variant='outlined' color='default' />
+                  <Typography variant='body1'>{emp?.fullName ?? profile.nombre ?? '—'}</Typography>
+                  <Chip
+                    label={t('userProfile.personalInfoTab.readOnly')}
+                    size='small'
+                    variant='outlined'
+                    color='default'
+                  />
                 </Box>
               </Box>
             </Grid>
@@ -52,7 +55,12 @@ const PersonalInfoTab = ({ profile }: Props) => {
                 </Typography>
                 <Box display='flex' alignItems='center' gap={1}>
                   <Typography variant='body1'>@{profile.usuario}</Typography>
-                  <Chip label={t('userProfile.personalInfoTab.readOnly')} size='small' variant='outlined' color='default' />
+                  <Chip
+                    label={t('userProfile.personalInfoTab.readOnly')}
+                    size='small'
+                    variant='outlined'
+                    color='default'
+                  />
                 </Box>
               </Box>
             </Grid>
@@ -64,7 +72,12 @@ const PersonalInfoTab = ({ profile }: Props) => {
                 </Typography>
                 <Box display='flex' alignItems='center' gap={1}>
                   <Typography variant='body1'>{profile.email ?? '—'}</Typography>
-                  <Chip label={t('userProfile.personalInfoTab.readOnly')} size='small' variant='outlined' color='default' />
+                  <Chip
+                    label={t('userProfile.personalInfoTab.readOnly')}
+                    size='small'
+                    variant='outlined'
+                    color='default'
+                  />
                 </Box>
               </Box>
             </Grid>
@@ -76,7 +89,12 @@ const PersonalInfoTab = ({ profile }: Props) => {
                 </Typography>
                 <Box display='flex' alignItems='center' gap={1}>
                   <Typography variant='body1'>{emp?.employeeNumber ?? '—'}</Typography>
-                  <Chip label={t('userProfile.personalInfoTab.readOnly')} size='small' variant='outlined' color='default' />
+                  <Chip
+                    label={t('userProfile.personalInfoTab.readOnly')}
+                    size='small'
+                    variant='outlined'
+                    color='default'
+                  />
                 </Box>
               </Box>
             </Grid>

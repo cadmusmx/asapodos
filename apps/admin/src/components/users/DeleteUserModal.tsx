@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Dialog from '@mui/material/Dialog'
@@ -14,9 +15,11 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
 import Alert from '@mui/material/Alert'
-import type { PlatformUserRow } from '@/types/apps/platformUserTypes'
+
 import { toast } from 'react-toastify'
 import { FormControlLabel, Radio, RadioGroup } from '@mui/material'
+
+import type { PlatformUserRow } from '@/types/apps/platformUserTypes'
 
 interface DeleteUserModalProps {
   open: boolean
@@ -44,11 +47,14 @@ export default function DeleteUserModal({ open, onClose, user, onSuccess }: Dele
 
       if (!res.ok) {
         const result = await res.json()
+
+
         // 409 = el empleado tiene historial → sugerir modo 'account'
         if (res.status === 409) {
           setDepError(true)
           throw new Error(result.message?.[0] || 'El empleado tiene registros asociados.')
         }
+
         throw new Error(result.message?.[0] || 'Failed to delete user')
       }
 

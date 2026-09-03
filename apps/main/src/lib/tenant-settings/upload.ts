@@ -50,17 +50,13 @@ export async function uploadBrandingAsset(
   if (!allowed.includes(ext)) {
     const allowedList = allowed.join(', ')
 
-    throw new InvalidBrandingAssetError(
-      `Tipo de archivo no permitido para ${kind}. Solo se permiten: ${allowedList}.`
-    )
+    throw new InvalidBrandingAssetError(`Tipo de archivo no permitido para ${kind}. Solo se permiten: ${allowedList}.`)
   }
 
   if (file.size > maxBytes) {
     const mb = maxBytes / 1024 / 1024
 
-    throw new InvalidBrandingAssetError(
-      `El archivo excede ${mb} MB para ${kind}.`
-    )
+    throw new InvalidBrandingAssetError(`El archivo excede ${mb} MB para ${kind}.`)
   }
 
   const buffer = Buffer.from(await file.arrayBuffer())

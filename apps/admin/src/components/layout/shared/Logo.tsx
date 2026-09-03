@@ -7,6 +7,8 @@ import type { CSSProperties } from 'react'
 // Third-party Imports
 import styled from '@emotion/styled'
 
+import { useColorScheme } from '@mui/material/styles'
+
 import type { VerticalNavContextProps } from '@menu/contexts/verticalNavContext'
 
 // Component Imports
@@ -18,7 +20,6 @@ import themeConfig from '@configs/themeConfig'
 // Hook Imports
 import useVerticalNav from '@menu/hooks/useVerticalNav'
 import { useSettings } from '@core/hooks/useSettings'
-import { useColorScheme } from '@mui/material/styles'
 
 type LogoTextProps = {
   isHovered?: VerticalNavContextProps['isHovered']

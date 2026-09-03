@@ -123,9 +123,7 @@ const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
           />
           <CardContent>
             <Stack spacing={2}>
-              <Alert severity='info'>
-                {t('userProfile.securityTab.passwordHint')}
-              </Alert>
+              <Alert severity='info'>{t('userProfile.securityTab.passwordHint')}</Alert>
 
               <Box>
                 <Typography variant='body2' mb={2}>
@@ -167,7 +165,11 @@ const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
                     <InputAdornment position='end'>
                       <IconButton
                         edge='end'
-                        aria-label={showPassword.current ? t('userProfile.securityTab.hideCurrentPassword') : t('userProfile.securityTab.showCurrentPassword')}
+                        aria-label={
+                          showPassword.current
+                            ? t('userProfile.securityTab.hideCurrentPassword')
+                            : t('userProfile.securityTab.showCurrentPassword')
+                        }
                         onClick={() => togglePassword('current')}
                       >
                         <i className={showPassword.current ? 'ri-eye-off-line' : 'ri-eye-line'} />
@@ -196,7 +198,11 @@ const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
                     <InputAdornment position='end'>
                       <IconButton
                         edge='end'
-                        aria-label={showPassword.new ? t('userProfile.securityTab.hideNewPassword') : t('userProfile.securityTab.showNewPassword')}
+                        aria-label={
+                          showPassword.new
+                            ? t('userProfile.securityTab.hideNewPassword')
+                            : t('userProfile.securityTab.showNewPassword')
+                        }
                         onClick={() => togglePassword('new')}
                       >
                         <i className={showPassword.new ? 'ri-eye-off-line' : 'ri-eye-line'} />
@@ -225,7 +231,11 @@ const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
                     <InputAdornment position='end'>
                       <IconButton
                         edge='end'
-                        aria-label={showPassword.confirm ? t('userProfile.securityTab.hideConfirmation') : t('userProfile.securityTab.showConfirmation')}
+                        aria-label={
+                          showPassword.confirm
+                            ? t('userProfile.securityTab.hideConfirmation')
+                            : t('userProfile.securityTab.showConfirmation')
+                        }
                         onClick={() => togglePassword('confirm')}
                       >
                         <i className={showPassword.confirm ? 'ri-eye-off-line' : 'ri-eye-line'} />
@@ -245,12 +255,7 @@ const SecurityTab = ({ onPasswordChanged, onPasswordError }: Props) => {
           <Button
             variant='contained'
             onClick={handleSubmit}
-            disabled={
-              saving ||
-              !form.currentPassword ||
-              !form.newPassword ||
-              !form.confirmPassword
-            }
+            disabled={saving || !form.currentPassword || !form.newPassword || !form.confirmPassword}
             startIcon={saving ? <CircularProgress size={16} color='inherit' /> : null}
           >
             {saving ? t('userProfile.securityTab.saving') : t('userProfile.securityTab.changePassword')}

@@ -10,13 +10,15 @@ import Stack from '@mui/material/Stack'
 import Divider from '@mui/material/Divider'
 import Button from '@mui/material/Button'
 import { requirePlatformRole } from '@gaso/shared'
+
 import { getTenantStats, getRecentTenants } from '@/services/dashboard-service'
 
 export const dynamic = 'force-dynamic'
 
 function formatDate(date: Date | string | null | undefined) {
   if (!date) return '-'
-  return new Date(date).toLocaleString('es-MX', {
+  
+return new Date(date).toLocaleString('es-MX', {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
@@ -140,13 +142,16 @@ export default async function AdminDashboardPage() {
                       SUSPENDED: 'warning',
                       INACTIVE: 'error'
                     }
+
                     const statusLabelMap: Record<string, string> = {
                       ACTIVE: 'Activo',
                       TRIAL: 'Trial',
                       SUSPENDED: 'Suspendido',
                       INACTIVE: 'Inactivo'
                     }
-                    return (
+
+                    
+return (
                       <Box
                         key={tenant.TenantID}
                         sx={{

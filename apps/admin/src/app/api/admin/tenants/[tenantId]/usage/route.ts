@@ -9,9 +9,12 @@ export async function GET(
   try {
     const { tenantId } = await params
     const usage = await getTenantUsageWithPlanLimit(tenantId)
-    return NextResponse.json({ usage })
+
+    
+return NextResponse.json({ usage })
   } catch (error) {
     console.error('[GET_USAGE_ERROR]', error)
-    return NextResponse.json({ message: 'Error loading usage' }, { status: 500 })
+    
+return NextResponse.json({ message: 'Error loading usage' }, { status: 500 })
   }
 }

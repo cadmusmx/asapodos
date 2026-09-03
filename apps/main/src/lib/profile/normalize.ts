@@ -8,16 +8,15 @@ import type {
   ChangePasswordPayload
 } from '@/types/profile'
 
-const toBoolean = (value: boolean | number): boolean =>
-  value === true || value === 1
+const toBoolean = (value: boolean | number): boolean => value === true || value === 1
 
 const toIsoDate = (value: Date | string | null): string | null => {
   if (!value) return null
   const date = value instanceof Date ? value : new Date(value)
 
   if (Number.isNaN(date.getTime())) return null
-  
-return date.toISOString().slice(0, 10)
+
+  return date.toISOString().slice(0, 10)
 }
 
 const toIsoDateTime = (value: Date | string | null): string | null => {
@@ -25,16 +24,15 @@ const toIsoDateTime = (value: Date | string | null): string | null => {
   const date = value instanceof Date ? value : new Date(value)
 
   if (Number.isNaN(date.getTime())) return null
-  
-return date.toISOString()
+
+  return date.toISOString()
 }
 
 const normalizeNullableString = (value: unknown): string | null => {
   if (typeof value !== 'string') return null
   const trimmed = value.trim()
 
-  
-return trimmed.length > 0 ? trimmed : null
+  return trimmed.length > 0 ? trimmed : null
 }
 
 export const normalizeEmployeeFromRow = (
@@ -125,13 +123,22 @@ export const normalizeActivityFromRow = (
 
   try {
     if (row.OldData) oldData = JSON.parse(row.OldData)
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
   try {
     if (row.NewData) newData = JSON.parse(row.NewData)
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
-  const auditId = typeof row.AuditID === 'bigint' ? Number(row.AuditID) : typeof row.AuditID === 'string' ? Number(row.AuditID) : row.AuditID
+  const auditId =
+    typeof row.AuditID === 'bigint'
+      ? Number(row.AuditID)
+      : typeof row.AuditID === 'string'
+        ? Number(row.AuditID)
+        : row.AuditID
 
   return {
     id: auditId,

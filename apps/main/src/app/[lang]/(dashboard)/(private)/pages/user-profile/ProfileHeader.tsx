@@ -170,13 +170,7 @@ const ProfileHeader = ({ profile, uploadingPhoto, onPhotoUpload, onPhotoError }:
             </Box>
 
             {(emp?.departmentName || emp?.positionName || emp?.regionName) && (
-              <Box
-                display='flex'
-                flexWrap='wrap'
-                gap={1}
-                mt={1.5}
-                justifyContent={{ xs: 'center', sm: 'flex-start' }}
-              >
+              <Box display='flex' flexWrap='wrap' gap={1} mt={1.5} justifyContent={{ xs: 'center', sm: 'flex-start' }}>
                 {emp.departmentName && (
                   <Box
                     px={1.5}

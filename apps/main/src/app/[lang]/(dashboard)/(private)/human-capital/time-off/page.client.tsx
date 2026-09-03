@@ -34,10 +34,7 @@ import TextField from '@mui/material/TextField'
 import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 
-import type {
-  HumanCapitalEmployee,
-  HumanCapitalEmployeesResponse
-} from '@/types/human-capital'
+import type { HumanCapitalEmployee, HumanCapitalEmployeesResponse } from '@/types/human-capital'
 import type {
   HumanCapitalVacationBalance,
   HumanCapitalVacationRequest,
@@ -200,7 +197,6 @@ const TimeOffView = () => {
     () => requests.filter(request => request.status === 'cancelled').length,
     [requests]
   )
-
 
   const isBalanceFormValid =
     Boolean(balanceForm.employeeId) &&
@@ -796,7 +792,6 @@ const TimeOffView = () => {
                 </Box>
 
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-
                   <Button
                     variant='outlined'
                     startIcon={<i className='ri-refresh-line' />}
@@ -984,8 +979,8 @@ const TimeOffView = () => {
                                     {balance.periodStart} / {balance.periodEnd}
                                   </Typography>
                                   <Typography variant='caption' color='text.secondary'>
-                                    Asignados {formatDays(balance.assignedDays)} · Usados{' '}
-                                    {formatDays(balance.usedDays)} · Pendientes {formatDays(balance.pendingDays)}
+                                    Asignados {formatDays(balance.assignedDays)} · Usados {formatDays(balance.usedDays)}{' '}
+                                    · Pendientes {formatDays(balance.pendingDays)}
                                   </Typography>
                                 </Stack>
                               </TableCell>
@@ -1207,8 +1202,8 @@ const TimeOffView = () => {
         <DialogContent>
           <Stack spacing={4} sx={{ pt: 2 }}>
             <Alert severity='info' variant='outlined'>
-              El sistema calculará el saldo con la fecha de ingreso registrada del empleado y la fecha actual.
-              Solo captura días usados si el empleado ya tomó vacaciones antes de migrar al sistema.
+              El sistema calculará el saldo con la fecha de ingreso registrada del empleado y la fecha actual. Solo
+              captura días usados si el empleado ya tomó vacaciones antes de migrar al sistema.
             </Alert>
 
             <Grid container spacing={3}>

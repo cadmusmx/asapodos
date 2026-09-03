@@ -39,20 +39,25 @@ export const GET = withPermission(
       const year = yearParam ? Number(yearParam) : new Date().getFullYear()
 
       const parseMulti = (vals: string[]): number[] =>
-        vals.flatMap(v => v.split(',')).map(Number).filter(n => !isNaN(n) && n > 0)
+        vals
+          .flatMap(v => v.split(','))
+          .map(Number)
+          .filter(n => !isNaN(n) && n > 0)
 
       const proyectoArr = parseMulti(rawProyecto)
       const tipoGastoArr = parseMulti(rawTipoGasto)
       const departamentoArr = parseMulti(rawDepartamento)
       const solicitanteArr = parseMulti(rawSolicitante)
 
-      return await withTenantContext(tenantId, async (tx) => {
+      return await withTenantContext(tenantId, async () => {
         const tenantCondition = Prisma.sql`g.TenantID = CAST(${tenantId} AS uniqueidentifier) AND g.TenantID <> '00000000-0000-0000-0000-000000000000'`
 
         const buildWhere = (extra: Prisma.Sql[] = []) => {
           const conditions: Prisma.Sql[] = [tenantCondition, ...extra]
           if (fechaInicio && fechaFin) {
-            conditions.push(Prisma.sql`g.FechaSolicitud BETWEEN CAST(${fechaInicio} AS date) AND CAST(${fechaFin} AS date)`)
+            conditions.push(
+              Prisma.sql`g.FechaSolicitud BETWEEN CAST(${fechaInicio} AS date) AND CAST(${fechaFin} AS date)`
+            )
           } else {
             conditions.push(Prisma.sql`YEAR(g.FechaSolicitud) = ${year}`)
           }
@@ -61,14 +66,16 @@ export const GET = withPermission(
 
         const baseWhere = buildWhere()
 
-        const countersResult = await prisma.$queryRaw<Array<{
-          total: bigint
-          facturada: number
-          pagada: number
-          pendiente: number
-          aceptada: number
-          rechazada: number
-        }>>(
+        const countersResult = await prisma.$queryRaw<
+          Array<{
+            total: bigint
+            facturada: number
+            pagada: number
+            pendiente: number
+            aceptada: number
+            rechazada: number
+          }>
+        >(
           Prisma.sql`
             SELECT
               COUNT_BIG(1) as total,
@@ -127,7 +134,9 @@ export const GET = withPermission(
         const buildDeptWhere = () => {
           const conditions: Prisma.Sql[] = [tenantCondition]
           if (fechaInicio && fechaFin) {
-            conditions.push(Prisma.sql`g.FechaSolicitud BETWEEN CAST(${fechaInicio} AS date) AND CAST(${fechaFin} AS date)`)
+            conditions.push(
+              Prisma.sql`g.FechaSolicitud BETWEEN CAST(${fechaInicio} AS date) AND CAST(${fechaFin} AS date)`
+            )
           } else {
             conditions.push(Prisma.sql`YEAR(g.FechaSolicitud) = ${year}`)
           }
@@ -163,7 +172,9 @@ export const GET = withPermission(
         const buildTipoWhere = () => {
           const conditions: Prisma.Sql[] = [tenantCondition]
           if (fechaInicio && fechaFin) {
-            conditions.push(Prisma.sql`g.FechaSolicitud BETWEEN CAST(${fechaInicio} AS date) AND CAST(${fechaFin} AS date)`)
+            conditions.push(
+              Prisma.sql`g.FechaSolicitud BETWEEN CAST(${fechaInicio} AS date) AND CAST(${fechaFin} AS date)`
+            )
           } else {
             conditions.push(Prisma.sql`YEAR(g.FechaSolicitud) = ${year}`)
           }
@@ -199,7 +210,9 @@ export const GET = withPermission(
         const buildSolicitanteWhere = () => {
           const conditions: Prisma.Sql[] = [tenantCondition]
           if (fechaInicio && fechaFin) {
-            conditions.push(Prisma.sql`g.FechaSolicitud BETWEEN CAST(${fechaInicio} AS date) AND CAST(${fechaFin} AS date)`)
+            conditions.push(
+              Prisma.sql`g.FechaSolicitud BETWEEN CAST(${fechaInicio} AS date) AND CAST(${fechaFin} AS date)`
+            )
           } else {
             conditions.push(Prisma.sql`YEAR(g.FechaSolicitud) = ${year}`)
           }
@@ -231,7 +244,9 @@ export const GET = withPermission(
         const buildProyectoWhere = () => {
           const conditions: Prisma.Sql[] = [tenantCondition]
           if (fechaInicio && fechaFin) {
-            conditions.push(Prisma.sql`g.FechaSolicitud BETWEEN CAST(${fechaInicio} AS date) AND CAST(${fechaFin} AS date)`)
+            conditions.push(
+              Prisma.sql`g.FechaSolicitud BETWEEN CAST(${fechaInicio} AS date) AND CAST(${fechaFin} AS date)`
+            )
           } else {
             conditions.push(Prisma.sql`YEAR(g.FechaSolicitud) = ${year}`)
           }
@@ -284,14 +299,16 @@ export const GET = withPermission(
           `
         )
 
-        const allSolicitantes = await prisma.$queryRaw<Array<{
-          Folio: number
-          NombreSolicitante: string
-          MontoSolicitado: number
-          cantidadFactura: number
-          EstatusSolicitud: number
-          ConceptoSolicitud: string
-        }>>(
+        const allSolicitantes = await prisma.$queryRaw<
+          Array<{
+            Folio: number
+            NombreSolicitante: string
+            MontoSolicitado: number
+            cantidadFactura: number
+            EstatusSolicitud: number
+            ConceptoSolicitud: string
+          }>
+        >(
           Prisma.sql`
             SELECT g.Id as Folio, u.Nombre as NombreSolicitante, g.MontoSolicitado, g.cantidadFactura, g.EstatusSolicitud, g.ConceptoSolicitud
             FROM GASOSOL_SolGastos g
@@ -359,14 +376,16 @@ export const GET = withPermission(
   { bit: PERM.R }
 )
 
-function computeInsights(rows: Array<{
-  Folio: number
-  NombreSolicitante: string
-  MontoSolicitado: number
-  cantidadFactura: number
-  EstatusSolicitud: number
-  ConceptoSolicitud: string
-}>): InsightData {
+function computeInsights(
+  rows: Array<{
+    Folio: number
+    NombreSolicitante: string
+    MontoSolicitado: number
+    cantidadFactura: number
+    EstatusSolicitud: number
+    ConceptoSolicitud: string
+  }>
+): InsightData {
   const projectMap: Record<string, number> = {}
   const typeMap: Record<string, number> = {}
   const applicantMap: Record<string, number> = {}

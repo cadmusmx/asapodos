@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useTransition, useCallback, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+
+import { useRouter } from 'next/navigation'
 
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
@@ -19,8 +20,10 @@ import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import Chip from '@mui/material/Chip'
-import EmptyState from '@/components/shared/EmptyState'
+
 import Divider from '@mui/material/Divider'
+
+import EmptyState from '@/components/shared/EmptyState'
 import type { PlatformUserRow, PlatformRole } from '@/types/apps/platformUserTypes'
 
 interface UsersTableProps {
@@ -65,8 +68,7 @@ export default function UsersTable({
   onActivate
 }: UsersTableProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const [mounted, setMounted] = useState(false)
+  const [_mounted, setMounted] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [pageNum, setPageNum] = useState(page)
   const [rowsPerPage, setRowsPerPage] = useState(pageSize)
@@ -79,11 +81,13 @@ export default function UsersTable({
 
   const buildUrl = useCallback((overrides: Record<string, string | number | null> = {}) => {
     const params = new URLSearchParams()
+
     params.set('page', String(overrides.page ?? pageNum + 1))
     params.set('pageSize', String(overrides.pageSize ?? rowsPerPage))
     if (role) params.set('role', role)
     if (search) params.set('search', search)
-    return `/admin/users?${params.toString()}`
+    
+return `/admin/users?${params.toString()}`
   }, [pageNum, rowsPerPage, role, search])
 
   const handleChangePage = (_: unknown, newPage: number) => {
@@ -95,6 +99,7 @@ export default function UsersTable({
 
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newSize = parseInt(event.target.value, 10)
+
     setRowsPerPage(newSize)
     setPageNum(0)
     startTransition(() => {
@@ -104,7 +109,8 @@ export default function UsersTable({
 
   const formatDate = (date: Date | null | undefined) => {
     if (!date) return '-'
-    return new Date(date).toLocaleDateString('es-MX', {
+    
+return new Date(date).toLocaleDateString('es-MX', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -127,7 +133,9 @@ export default function UsersTable({
 
   if (!safeUsers.length) {
     const hasFilters = Boolean(search || role)
-    return (
+
+    
+return (
       <Paper sx={{ width: '100%' }}>
         <EmptyState
           icon='ri-user-settings-line'
@@ -165,7 +173,9 @@ export default function UsersTable({
               {safeUsers.map(user => {
                 const userIsOldest = isOldest(user)
                 const isActive = user.Estatus === 'A'
-                return (
+
+                
+return (
                   <TableRow
                     key={user.UserID}
                     hover
@@ -241,7 +251,7 @@ export default function UsersTable({
             if (menuAnchor?.user) onEdit?.(menuAnchor.user)
             handleMenuClose()
           }}
-          disabled={isOldest(menuAnchor?.user!)}
+          disabled={isOldest(menuAnchor?.user)}
         >
           <ListItemIcon><i className='ri-edit-line' /></ListItemIcon>
           Editar usuario
@@ -253,7 +263,7 @@ export default function UsersTable({
               if (menuAnchor?.user) onDeactivate?.(menuAnchor.user)
               handleMenuClose()
             }}
-            disabled={isOldest(menuAnchor?.user!)}
+            disabled={isOldest(menuAnchor?.user)}
           >
             <ListItemIcon><i className='ri-forbid-line' /></ListItemIcon>
             Desactivar usuario
@@ -277,7 +287,7 @@ export default function UsersTable({
             if (menuAnchor?.user) onRemove?.(menuAnchor.user)
             handleMenuClose()
           }}
-          disabled={isOldest(menuAnchor?.user!)}
+          disabled={isOldest(menuAnchor?.user)}
           sx={{ color: 'warning.main' }}
         >
           <ListItemIcon><i className='ri-user-unfollow-line' style={{ color: 'inherit' }} /></ListItemIcon>
@@ -289,7 +299,7 @@ export default function UsersTable({
             if (menuAnchor?.user) onDelete?.(menuAnchor.user)
             handleMenuClose()
           }}
-          disabled={isOldest(menuAnchor?.user!)}
+          disabled={isOldest(menuAnchor?.user)}
           sx={{ color: 'error.main' }}
         >
           <ListItemIcon><i className='ri-delete-bin-line' style={{ color: 'inherit' }} /></ListItemIcon>

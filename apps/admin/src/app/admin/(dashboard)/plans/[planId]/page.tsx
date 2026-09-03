@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { requirePlatformRole } from '@gaso/shared'
+
 import { getPlanWithFeatures } from '@/services/plan-service'
 import PlanDetailPageClient from '@/components/plans/PlanDetailPageClient'
 import type { PlanWithFeatures } from '@/components/plans/PlansPageClient'

@@ -1,4 +1,4 @@
-import type { ErpModuleKey } from "@gaso/shared"
+import type { ErpModuleKey } from '@gaso/shared'
 
 export type ErpAccessUser = {
   id?: number | string | null
@@ -16,10 +16,10 @@ export type ErpAccessResult = {
 }
 
 type GetNavigationAccessParams = {
-  moduleKey: ErpModuleKey;
-  isLoading: boolean;
-  menuGroups?: Record<string, boolean>;
-  planMenuGroups?: ErpModuleKey[]; // antes: planFeatures?: PlanFeaturesById
+  moduleKey: ErpModuleKey
+  isLoading: boolean
+  menuGroups?: Record<string, boolean>
+  planMenuGroups?: ErpModuleKey[] // antes: planFeatures?: PlanFeaturesById
 }
 
 /**
@@ -27,14 +27,11 @@ type GetNavigationAccessParams = {
  * planMenuGroups viene de /api/me ya traducido y con el fallback aplicado en server;
  * el `!planMenuGroups` es solo seguridad de transición (mientras /api/me propaga).
  */
-export const isModuleEnabledByPlan = (
-  moduleKey: ErpModuleKey,
-  planMenuGroups?: ErpModuleKey[],
-): boolean => {
-  if (!planMenuGroups) return false;
+export const isModuleEnabledByPlan = (moduleKey: ErpModuleKey, planMenuGroups?: ErpModuleKey[]): boolean => {
+  if (!planMenuGroups) return false
 
-  return planMenuGroups.includes(moduleKey);
-};
+  return planMenuGroups.includes(moduleKey)
+}
 
 export const validateTenantMatch = (
   userTenantId?: string | null,
@@ -51,21 +48,19 @@ export const validateTenantMatch = (
   return { allowed: true }
 }
 
-export const hasRbacModuleAccess = (
-  moduleKey: ErpModuleKey,
-  menuGroups?: Record<string, boolean>
-): boolean => menuGroups?.[moduleKey] === true
+export const hasRbacModuleAccess = (moduleKey: ErpModuleKey, menuGroups?: Record<string, boolean>): boolean =>
+  menuGroups?.[moduleKey] === true
 
 export const canViewErpNavigationModule = ({
   moduleKey,
   isLoading,
   menuGroups,
-  planMenuGroups,
+  planMenuGroups
 }: GetNavigationAccessParams): boolean => {
-  if (isLoading) return false;
+  if (isLoading) return false
 
-  const planEnabled = isModuleEnabledByPlan(moduleKey, planMenuGroups);
-  const rbacAllows = hasRbacModuleAccess(moduleKey, menuGroups);
+  const planEnabled = isModuleEnabledByPlan(moduleKey, planMenuGroups)
+  const rbacAllows = hasRbacModuleAccess(moduleKey, menuGroups)
 
-  return planEnabled && rbacAllows;
-};
+  return planEnabled && rbacAllows
+}

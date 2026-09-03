@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 
-import { listPlans, getPlanFeatures, createPlan, computeFeaturesById, mapFeatureRowToPlanFeature } from '@/services/plan-service'
 import type { SupportLevel } from '@gaso/shared/types/plan'
+
+import { listPlans, getPlanFeatures, createPlan, computeFeaturesById, mapFeatureRowToPlanFeature } from '@/services/plan-service'
 
 export async function GET(req: Request) {
   try {
@@ -16,14 +17,17 @@ export async function GET(req: Request) {
         const features = await getPlanFeatures(plan.id)
         const planFeatures = features.map(mapFeatureRowToPlanFeature)
         const featuresById = computeFeaturesById(features)
-        return { ...plan, features: planFeatures, featuresById }
+
+        
+return { ...plan, features: planFeatures, featuresById }
       })
     )
 
     return NextResponse.json({ plans: plansWithFeatures })
   } catch (error) {
     console.error('[LIST_PLANS_ERROR]', error)
-    return NextResponse.json({ message: 'Error loading plans' }, { status: 500 })
+    
+return NextResponse.json({ message: 'Error loading plans' }, { status: 500 })
   }
 }
 
@@ -61,6 +65,7 @@ export async function POST(req: Request) {
     }
 
     const validSupportLevels: SupportLevel[] = ['email', 'priority', 'dedicated']
+
     if (supportLevel && !validSupportLevels.includes(supportLevel)) {
       return NextResponse.json({ message: 'Invalid supportLevel' }, { status: 400 })
     }
@@ -87,6 +92,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ planId: result.planId }, { status: 201 })
   } catch (error) {
     console.error('[CREATE_PLAN_ERROR]', error)
-    return NextResponse.json({ message: 'Error creating plan' }, { status: 500 })
+    
+return NextResponse.json({ message: 'Error creating plan' }, { status: 500 })
   }
 }

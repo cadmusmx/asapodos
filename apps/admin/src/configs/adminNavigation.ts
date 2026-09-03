@@ -1,4 +1,4 @@
-import type { PlatformRole } from '@gaso/shared'
+
 import type { VerticalMenuItemDataType } from '@/types/menuTypes'
 
 const adminNavigation: VerticalMenuItemDataType[] = [

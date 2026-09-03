@@ -1,14 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
-import type { PlanDefinition } from '@gaso/shared/types/plan'
+import type { PlanDefinition , PlanFeaturesById, PlanFeature } from '@gaso/shared/types/plan'
 import { toast } from 'react-toastify'
-import type { PlanFeaturesById, PlanFeature } from '@gaso/shared/types/plan'
+
 import PlanTable from './PlanTable'
 import PlanCreateModal from './PlanCreateModal'
 import PlanEditModal from './PlanEditModal'
@@ -39,10 +40,13 @@ export default function PlansPageClient({ plans }: PlansPageClientProps) {
   const handleDeactivate = async (plan: PlanWithFeatures) => {
     try {
       const res = await fetch(`/api/admin/plans/${plan.id}`, { method: 'DELETE' })
+
       if (!res.ok) {
         const data = await res.json()
+
         throw new Error(data.message || 'Error al desactivar el plan')
       }
+
       toast.success('Plan desactivado exitosamente')
       router.refresh()
     } catch (err) {
@@ -53,10 +57,13 @@ export default function PlansPageClient({ plans }: PlansPageClientProps) {
   const handleActivate = async (plan: PlanWithFeatures) => {
     try {
       const res = await fetch(`/api/admin/plans/${plan.id}/activate`, { method: 'POST' })
+
       if (!res.ok) {
         const data = await res.json()
+
         throw new Error(data.message || 'Error al activar el plan')
       }
+
       toast.success('Plan activado exitosamente')
       router.refresh()
     } catch (err) {

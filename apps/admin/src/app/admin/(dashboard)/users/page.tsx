@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation'
 
 import { requirePlatformRole } from '@gaso/shared'
-import { listPlatformUsers, getOldestPlatformUserId } from '@/services/platform-user-service'
+
 import type { PlatformRole } from '@gaso/shared'
+
+import { listPlatformUsers, getOldestPlatformUserId } from '@/services/platform-user-service'
 import UsersPageClient from '@/components/users/UsersPageClient'
 
 export const dynamic = 'force-dynamic'

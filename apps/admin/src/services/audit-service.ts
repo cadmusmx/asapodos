@@ -129,7 +129,9 @@ export async function getTenantAuditLog({
 }: GetTenantAuditLogOptions): Promise<AuditLogResult> {
   const page = Math.max(1, Number(rawPage) || 1)
   const pageSize = Math.max(1, Number(rawPageSize) || 50)
-  return getAuditLog({
+
+  
+return getAuditLog({
     page,
     pageSize,
     filters: { tenantId }
@@ -157,11 +159,15 @@ export async function getGlobalAuditLog(options: GetGlobalAuditLogOptions): Prom
   const tableNameParam = tableName != null ? `N'${tableName.replace(/'/g, "''")}'` : 'NULL'
   const actionParam = action != null ? `N'${action.replace(/'/g, "''")}'` : 'NULL'
   const startDateParam = startDate != null ? `N'${startDate.toISOString()}'` : 'NULL'
+
   const endDateParam = endDate != null ? (() => {
     const d = new Date(endDate)
+
     d.setHours(23, 59, 59, 999)
-    return `N'${d.toISOString()}'`
+    
+return `N'${d.toISOString()}'`
   })() : 'NULL'
+
   const appUserParam = appUser != null ? `N'%${appUser.replace(/'/g, "''")}%'` : 'NULL'
 
   const query = `EXEC Audit.sp_GetGlobalTransactionLog @TenantID=${tenantIdParam}, @TableName=${tableNameParam}, @Action=${actionParam}, @StartDate=${startDateParam}, @EndDate=${endDateParam}, @AppUser=${appUserParam}, @Page=${page}, @PageSize=${pageSize};`
@@ -185,7 +191,9 @@ export async function getGlobalAuditLog(options: GetGlobalAuditLogOptions): Prom
     if (typeof entry.changedAt === 'string' && entry.changedAt) {
       return { ...entry, changedAt: new Date(entry.changedAt + (entry.changedAt.endsWith('Z') ? '' : 'Z')) }
     }
-    return entry
+
+    
+return entry
   })
 
   return {

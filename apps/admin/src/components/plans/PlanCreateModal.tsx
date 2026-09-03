@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Dialog from '@mui/material/Dialog'
@@ -8,7 +9,6 @@ import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import IconButton from '@mui/material/IconButton'
-import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
 import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
@@ -16,10 +16,11 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Grid from '@mui/material/Grid'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Checkbox from '@mui/material/Checkbox'
-import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
-import ModuleTreeSelector from './ModuleTreeSelector'
+
 import { toast } from 'react-toastify'
+
+import ModuleTreeSelector from './ModuleTreeSelector'
 
 interface PlanCreateModalProps {
   open: boolean
@@ -31,6 +32,7 @@ export default function PlanCreateModal({ open, onClose }: PlanCreateModalProps)
   const [loading, setLoading] = useState(false)
   const [moduleIds, setModuleIds] = useState<number[]>([])
   const [submoduleIds, setSubmoduleIds] = useState<number[]>([])
+
   const [form, setForm] = useState({
     name: '',
     displayName: '',
@@ -46,6 +48,7 @@ export default function PlanCreateModal({ open, onClose }: PlanCreateModalProps)
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value
+
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
@@ -61,7 +64,8 @@ export default function PlanCreateModal({ open, onClose }: PlanCreateModalProps)
     if (!form.name || !form.displayName || !form.monthlyPrice) {
       toast.error('Los campos nombre, nombre para mostrar y precio son obligatorios')
       setLoading(false)
-      return
+      
+return
     }
 
     const data = {
@@ -88,6 +92,7 @@ export default function PlanCreateModal({ open, onClose }: PlanCreateModalProps)
 
       if (!res.ok) {
         const result = await res.json()
+
         throw new Error(result.message || 'Error al crear el plan')
       }
 

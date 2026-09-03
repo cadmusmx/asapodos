@@ -1,18 +1,18 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client'
 
-import { withPermission, PERM } from '@gaso/shared';
+import { withPermission, PERM } from '@gaso/shared'
 
-import { withTenantContext } from '@/lib/tenant-context';
-import { resolveAssignmentScope } from '@/lib/permissions/assignment-scope';
+import { withTenantContext } from '@/lib/tenant-context'
+import { resolveAssignmentScope } from '@/lib/permissions/assignment-scope'
 
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'
 
 type DeptRow = {
-  IdDepartamento: number;
-  NombreDepartamento: string | null;
-};
+  IdDepartamento: number
+  NombreDepartamento: string | null
+}
 
 /**
  * GET /api/permissions/departments — departamentos filtrables (para el select del maestro)
@@ -32,16 +32,14 @@ export const GET = withPermission(
     try {
       const result = await withTenantContext(tenantId, async tx => {
         // Alcance del actor. null => fail-closed => lista vacía.
-        const scope = await resolveAssignmentScope(tx, tenantId, auth.userId);
+        const scope = await resolveAssignmentScope(tx, tenantId, auth.userId)
 
         if (scope === null) {
-          return [] as DeptRow[];
+          return [] as DeptRow[]
         }
 
         // Deptos DISTINTOS con al menos un usuario activo, dentro del alcance.
-        const scopeCondition = scope.hasFullScope
-          ? Prisma.sql`1 = 1`
-          : Prisma.sql`e.DepartmentID = ${scope.actorDept}`;
+        const scopeCondition = scope.hasFullScope ? Prisma.sql`1 = 1` : Prisma.sql`e.DepartmentID = ${scope.actorDept}`
 
         const rows = await tx.$queryRaw<DeptRow[]>`
           SELECT DISTINCT e.DepartmentID AS IdDepartamento, d.Name AS NombreDepartamento
@@ -53,10 +51,10 @@ export const GET = withPermission(
             AND e.DepartmentID IS NOT NULL
             AND ${scopeCondition}
           ORDER BY d.Name
-        `;
+        `
 
-        return rows;
-      });
+        return rows
+      })
 
       return NextResponse.json(
         {
@@ -66,12 +64,12 @@ export const GET = withPermission(
           }))
         },
         { status: 200 }
-      );
+      )
     } catch (e) {
-      console.error('[PERMISSIONS_DEPARTMENTS_ERROR]', e instanceof Error ? { message: e.message } : e);
+      console.error('[PERMISSIONS_DEPARTMENTS_ERROR]', e instanceof Error ? { message: e.message } : e)
 
-      return NextResponse.json({ message: 'Error al listar departamentos' }, { status: 500 });
+      return NextResponse.json({ message: 'Error al listar departamentos' }, { status: 500 })
     }
   },
   { bit: PERM.R }
-);
+)

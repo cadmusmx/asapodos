@@ -1,17 +1,17 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client'
 
-import { PERM, withPermission, writeTransactionLog } from '@gaso/shared';
+import { PERM, withPermission, writeTransactionLog } from '@gaso/shared'
 
-import { withTenantContext } from '@/lib/tenant-context';
-import type { UserAccountRow } from '@/types/users';
+import { withTenantContext } from '@/lib/tenant-context'
+import type { UserAccountRow } from '@/types/users'
 
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'
 
 const normalizeRow = (row: UserAccountRow) => {
-  const firstName = row.FirstName ?? '';
-  const lastName = row.LastName ?? '';
+  const firstName = row.FirstName ?? ''
+  const lastName = row.LastName ?? ''
 
   return {
     employeeId: row.EmployeeID,
@@ -29,58 +29,58 @@ const normalizeRow = (row: UserAccountRow) => {
     userId: row.IdUsuario ?? null,
     username: row.Usuario ?? null,
     accountStatus: row.Estatus ?? null // 'A' | 'I' | 'B' | null (sin cuenta)
-  };
-};
+  }
+}
 
 const getSearchPattern = (value: string | null): string | null => {
-  if (!value) return null;
+  if (!value) return null
 
-  const trimmed = value.trim();
+  const trimmed = value.trim()
 
-  if (!trimmed) return null;
+  if (!trimmed) return null
 
-  const escaped = trimmed.replace(/[|%_[]/g, character => `|${character}`);
+  const escaped = trimmed.replace(/[|%_[]/g, character => `|${character}`)
 
-  return `%${escaped}%`;
-};
+  return `%${escaped}%`
+}
 
 type AssignUserPayload = {
-  employeeId: number;
-  username: string;
-  password: string;
-};
+  employeeId: number
+  username: string
+  password: string
+}
 
 const parseAssignUserPayload = (body: unknown): AssignUserPayload => {
   if (typeof body !== 'object' || body === null) {
-    throw new Error('Body inválido');
+    throw new Error('Body inválido')
   }
 
-  const raw = body as Record<string, unknown>;
+  const raw = body as Record<string, unknown>
 
-  const employeeId = Number(raw.employeeId);
+  const employeeId = Number(raw.employeeId)
 
   if (!Number.isInteger(employeeId) || employeeId <= 0) {
-    throw new Error('employeeId inválido');
+    throw new Error('employeeId inválido')
   }
 
-  const username = typeof raw.username === 'string' ? raw.username.trim() : '';
+  const username = typeof raw.username === 'string' ? raw.username.trim() : ''
 
   if (username.length < 3) {
-    throw new Error('El nombre de usuario debe tener al menos 3 caracteres.');
+    throw new Error('El nombre de usuario debe tener al menos 3 caracteres.')
   }
 
   if (/\s/.test(username)) {
-    throw new Error('El nombre de usuario no puede contener espacios.');
+    throw new Error('El nombre de usuario no puede contener espacios.')
   }
 
-  const password = typeof raw.password === 'string' ? raw.password : '';
+  const password = typeof raw.password === 'string' ? raw.password : ''
 
   if (password.length < 8) {
-    throw new Error('La contraseña debe tener al menos 8 caracteres.');
+    throw new Error('La contraseña debe tener al menos 8 caracteres.')
   }
 
-  return { employeeId, username, password };
-};
+  return { employeeId, username, password }
+}
 
 /**
  * Fila cruda del listado de cuentas, ANCLADO en Employees (LEFT JOIN a Users):
@@ -89,19 +89,19 @@ const parseAssignUserPayload = (body: unknown): AssignUserPayload => {
 export const GET = withPermission(
   'users',
   async (req, { tenantId }) => {
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(req.url)
 
-    const search = getSearchPattern(searchParams.get('search'));
+    const search = getSearchPattern(searchParams.get('search'))
 
-    const pageSize = Math.min(Math.max(Number(searchParams.get('pageSize') ?? '25'), 1), 100);
-    const page = Math.max(Number(searchParams.get('page') ?? '1'), 1);
-    const offset = (page - 1) * pageSize;
+    const pageSize = Math.min(Math.max(Number(searchParams.get('pageSize') ?? '25'), 1), 100)
+    const page = Math.max(Number(searchParams.get('page') ?? '1'), 1)
+    const offset = (page - 1) * pageSize
 
     return withTenantContext(tenantId, async tx => {
-      const conditions: Prisma.Sql[] = [];
+      const conditions: Prisma.Sql[] = []
 
       // TenantID explícito además de RLS (defensa en profundidad).
-      conditions.push(Prisma.sql`e.TenantID = CAST(${tenantId} AS uniqueidentifier)`);
+      conditions.push(Prisma.sql`e.TenantID = CAST(${tenantId} AS uniqueidentifier)`)
 
       if (search) {
         conditions.push(
@@ -111,10 +111,10 @@ export const GET = withPermission(
             OR e.LastName LIKE ${search} ESCAPE '|'
             OR u.Usuario LIKE ${search} ESCAPE '|'
           )`
-        );
+        )
       }
 
-      const whereClause = Prisma.sql`WHERE ${Prisma.join(conditions, ' AND ')}`;
+      const whereClause = Prisma.sql`WHERE ${Prisma.join(conditions, ' AND ')}`
 
       const countRows = await tx.$queryRaw<Array<{ total: bigint }>>(
         Prisma.sql`
@@ -125,7 +125,7 @@ export const GET = withPermission(
             AND u.EmployeeID = e.EmployeeID
           ${whereClause}
         `
-      );
+      )
 
       const rows = await tx.$queryRaw<UserAccountRow[]>(
         Prisma.sql`
@@ -155,18 +155,18 @@ export const GET = withPermission(
           ORDER BY u.IdUsuario ASC, len(e.EmployeeNumber) ASC
           OFFSET ${offset} ROWS FETCH NEXT ${pageSize} ROWS ONLY
         `
-      );
+      )
 
       return NextResponse.json({
         data: rows.map(normalizeRow),
         total: Number(countRows[0]?.total ?? 0),
         page,
         pageSize
-      });
-    });
+      })
+    })
   },
   { bit: PERM.R }
-);
+)
 
 /**
  * Asignar usuario (alta 1:1). El empleado ya está seleccionado (fila sin cuenta).
@@ -177,17 +177,14 @@ export const GET = withPermission(
 export const POST = withPermission(
   'users',
   async (req, { auth, tenantId }) => {
-    let payload: AssignUserPayload;
+    let payload: AssignUserPayload
 
     try {
-      const body = await req.json();
+      const body = await req.json()
 
-      payload = parseAssignUserPayload(body);
+      payload = parseAssignUserPayload(body)
     } catch (error) {
-      return NextResponse.json(
-        { message: error instanceof Error ? error.message : 'Body inválido' },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: error instanceof Error ? error.message : 'Body inválido' }, { status: 400 })
     }
 
     try {
@@ -213,14 +210,14 @@ export const POST = withPermission(
             WHERE e.TenantID = CAST(${tenantId} AS uniqueidentifier)
               AND e.EmployeeID = ${payload.employeeId}
           `
-        );
+        )
 
-        const check = checks[0];
+        const check = checks[0]
 
-        if (!check) throw new Error('EMPLOYEE_NOT_FOUND');
-        if (!Boolean(check.IsActive)) throw new Error('EMPLOYEE_INACTIVE');
-        if (Number(check.HasAccount) > 0) throw new Error('ACCOUNT_EXISTS');
-        if (Number(check.UsernameTaken) > 0) throw new Error('USERNAME_TAKEN');
+        if (!check) throw new Error('EMPLOYEE_NOT_FOUND')
+        if (!Boolean(check.IsActive)) throw new Error('EMPLOYEE_INACTIVE')
+        if (Number(check.HasAccount) > 0) throw new Error('ACCOUNT_EXISTS')
+        if (Number(check.UsernameTaken) > 0) throw new Error('USERNAME_TAKEN')
 
         // Alta: solo columnas mínimas. IdUsuario es IDENTITY; FechaAlta/Estatus tienen default;
         // identidad (Nombre/Email) NO se toca — se resuelve por join a Employees.
@@ -235,7 +232,7 @@ export const POST = withPermission(
               'A'
             )
           `
-        );
+        )
 
         // Correlación 1:1 para recuperar el IdUsuario (evita OUTPUT en tabla con trigger/FK).
         const created = await tx.$queryRaw<Array<{ IdUsuario: number }>>(
@@ -245,10 +242,10 @@ export const POST = withPermission(
             WHERE u.TenantID = CAST(${tenantId} AS uniqueidentifier)
               AND u.EmployeeID = ${payload.employeeId}
           `
-        );
+        )
 
-        return { idUsuario: created[0]?.IdUsuario ?? null };
-      });
+        return { idUsuario: created[0]?.IdUsuario ?? null }
+      })
 
       writeTransactionLog({
         tenantId,
@@ -263,38 +260,35 @@ export const POST = withPermission(
           username: payload.username,
           estatus: 'A'
         }
-      }).catch(() => { });
+      }).catch(() => {})
 
       return NextResponse.json(
         { data: { idUsuario: result.idUsuario, employeeId: payload.employeeId } },
         { status: 201 }
-      );
+      )
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR';
+      const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR'
 
       if (message.includes('EMPLOYEE_NOT_FOUND')) {
-        return NextResponse.json({ message: 'El empleado no existe.' }, { status: 404 });
+        return NextResponse.json({ message: 'El empleado no existe.' }, { status: 404 })
       }
 
       if (message.includes('EMPLOYEE_INACTIVE')) {
-        return NextResponse.json(
-          { message: 'Solo se puede asignar usuario a empleados activos.' },
-          { status: 409 }
-        );
+        return NextResponse.json({ message: 'Solo se puede asignar usuario a empleados activos.' }, { status: 409 })
       }
 
       if (message.includes('ACCOUNT_EXISTS') || message.includes('UX_Usuarios_Tenant_Employee')) {
-        return NextResponse.json({ message: 'El empleado ya tiene una cuenta.' }, { status: 409 });
+        return NextResponse.json({ message: 'El empleado ya tiene una cuenta.' }, { status: 409 })
       }
 
       if (message.includes('USERNAME_TAKEN') || message.includes('UX_Usuarios_Tenant_Usuario')) {
-        return NextResponse.json({ message: 'El nombre de usuario ya existe.' }, { status: 409 });
+        return NextResponse.json({ message: 'El nombre de usuario ya existe.' }, { status: 409 })
       }
 
-      console.error('[USERS_ASSIGN_ERROR]', { message });
+      console.error('[USERS_ASSIGN_ERROR]', { message })
 
-      return NextResponse.json({ message: 'Error al asignar usuario.' }, { status: 500 });
+      return NextResponse.json({ message: 'Error al asignar usuario.' }, { status: 500 })
     }
   },
   { bit: PERM.W }
-);
+)

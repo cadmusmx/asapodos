@@ -1,7 +1,8 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+
+import { useRouter } from 'next/navigation'
 
 import Box from '@mui/material/Box'
 import Paper from '@mui/material/Paper'
@@ -20,6 +21,7 @@ import Divider from '@mui/material/Divider'
 import Stack from '@mui/material/Stack'
 import Tooltip from '@mui/material/Tooltip'
 import { AUDIT_ACTION_LABELS, type AuditActionCode } from '@gaso/shared'
+
 import type { AuditEntryWithTenantName } from '@/services/audit-service'
 
 interface AuditTableProps {
@@ -70,6 +72,7 @@ function buildUrl(params: {
   endDate: string | null
 }) {
   const p = new URLSearchParams()
+
   p.set('page', String(params.page))
   p.set('pageSize', String(params.pageSize))
   if (params.tenantId) p.set('tenantId', params.tenantId)
@@ -78,22 +81,27 @@ function buildUrl(params: {
   if (params.appUser) p.set('appUser', params.appUser)
   if (params.startDate) p.set('startDate', params.startDate)
   if (params.endDate) p.set('endDate', params.endDate)
-  return `/admin/audit?${p.toString()}`
+  
+return `/admin/audit?${p.toString()}`
 }
 
 function normalizeDate(value: Date | string | null | undefined): Date | null {
   if (!value) return null
   if (value instanceof Date) return value
   const str = String(value)
+
   if (/[+-]\d{2}:\d{2}$/.test(str) || str.endsWith('Z')) return new Date(str)
-  return new Date(str + 'Z')
+  
+return new Date(str + 'Z')
 }
 
 function formatDate(date: Date | string | null | undefined) {
   if (!date) return '-'
   const d = normalizeDate(date)
+
   if (!d || isNaN(d.getTime())) return '-'
-  return d.toLocaleString('es-MX', {
+  
+return d.toLocaleString('es-MX', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -104,6 +112,7 @@ function formatDate(date: Date | string | null | undefined) {
 
 function safeJsonParse(value: unknown): Record<string, unknown> | null {
   if (typeof value !== 'string' || !value) return null
+
   try {
     return JSON.parse(value) as Record<string, unknown>
   } catch {

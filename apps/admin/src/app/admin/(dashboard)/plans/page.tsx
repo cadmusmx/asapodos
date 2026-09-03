@@ -1,9 +1,10 @@
 import { redirect } from 'next/navigation'
 
 import { requirePlatformRole } from '@gaso/shared'
+
+
 import { listPlans, getPlanFeatures, computeFeaturesById, mapFeatureRowToPlanFeature } from '@/services/plan-service'
 import PlansPageClient from '@/components/plans/PlansPageClient'
-import type { PlanFeatureMap } from '@gaso/shared/types/plan'
 import type { PlanWithFeatures } from '@/components/plans/PlansPageClient'
 
 export const dynamic = 'force-dynamic'

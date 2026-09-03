@@ -1,21 +1,15 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client'
 
-import { PERM, withPermission } from '@gaso/shared';
+import { PERM, withPermission } from '@gaso/shared'
 
-import { withTenantContext } from '@/lib/tenant-context';
-import {
-  normalizeDepartmentFromRow,
-  normalizePositionFromRow
-} from '@/lib/human-capital/normalize';
+import { withTenantContext } from '@/lib/tenant-context'
+import { normalizeDepartmentFromRow, normalizePositionFromRow } from '@/lib/human-capital/normalize'
 
-import type {
-  HumanCapitalDepartmentRow,
-  HumanCapitalPositionRow
-} from '@/types/human-capital';
+import type { HumanCapitalDepartmentRow, HumanCapitalPositionRow } from '@/types/human-capital'
 
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'
 
 export const GET = withPermission(
   'employees',
@@ -38,7 +32,7 @@ export const GET = withPermission(
                     AND IsActive = 1
                   ORDER BY Name ASC
                 `
-      );
+      )
 
       const positions = await tx.$queryRaw<HumanCapitalPositionRow[]>(
         Prisma.sql`
@@ -62,15 +56,15 @@ export const GET = withPermission(
                     AND p.IsActive = 1
                   ORDER BY p.Name ASC
         `
-      );
+      )
 
       return {
         departments: departments.map(normalizeDepartmentFromRow),
         positions: positions.map(normalizePositionFromRow)
-      };
+      }
     })
 
-    return NextResponse.json(result);
+    return NextResponse.json(result)
   },
   { bit: PERM.R }
-);
+)

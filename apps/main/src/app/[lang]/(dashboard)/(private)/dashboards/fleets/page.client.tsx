@@ -1,11 +1,7 @@
 'use client'
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable padding-line-between-statements */
-/* eslint-disable newline-before-return */
-/* eslint-disable import/order */
+import { useCallback, useEffect, useState } from 'react'
 
-import { useEffect, useState } from 'react'
 import Grid from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
@@ -70,6 +66,7 @@ const FleetsDashboard = ({ dictionary }: Props) => {
   const [searchKey, setSearchKey] = useState(0)
   const [modalMonthlyOpen, setModalMonthlyOpen] = useState(false)
   const defaultDates = getCurrentYearRange()
+
   const [filters, setFilters] = useState({
     fechaInicio: defaultDates.fechaInicio,
     fechaFin: defaultDates.fechaFin,
@@ -78,41 +75,61 @@ const FleetsDashboard = ({ dictionary }: Props) => {
     responsable: [] as string[],
     estatus: [] as string[]
   })
-  const [catalogs, setCatalogs] = useState<CatalogData>({ vehicleNoEconomico: [], vehicleExpenseTypes: [], vehicleResponsibles: [] })
+
+  const [catalogs, setCatalogs] = useState<CatalogData>({
+    vehicleNoEconomico: [],
+    vehicleExpenseTypes: [],
+    vehicleResponsibles: []
+  })
 
   const t = (key: string) => {
-    return key.split('.').reduce((obj, k) => obj?.[k], dictionary) as unknown as string ?? key
+    return (key.split('.').reduce((obj, k) => obj?.[k], dictionary) as unknown as string) ?? key
   }
 
-  const buildParams = () => {
+  const buildParams = useCallback(() => {
     const params = new URLSearchParams()
+
     if (filters.fechaInicio) params.append('fechaInicio', filters.fechaInicio)
     if (filters.fechaFin) params.append('fechaFin', filters.fechaFin)
-    filters.noEconomico.forEach(v => { if (v) params.append('noEconomico', v) })
-    filters.tipoGasto.forEach(v => { if (v) params.append('tipoGasto', v) })
-    filters.responsable.forEach(v => { if (v) params.append('responsable', v) })
-    filters.estatus.forEach(v => { if (v) params.append('estatus', v) })
-    return params
-  }
+    filters.noEconomico.forEach(v => {
+      if (v) params.append('noEconomico', v)
+    })
+    filters.tipoGasto.forEach(v => {
+      if (v) params.append('tipoGasto', v)
+    })
+    filters.responsable.forEach(v => {
+      if (v) params.append('responsable', v)
+    })
+    filters.estatus.forEach(v => {
+      if (v) params.append('estatus', v)
+    })
 
-  const fetchData = async (signal?: AbortSignal) => {
-    try {
-      if (data !== null) setRefreshing(true)
-      setLoading(true)
-      const params = buildParams()
-      const url = params.toString() ? `/api/fleets/dashboard?${params.toString()}` : '/api/fleets/dashboard'
-      const response = await fetch(url, { signal })
-      if (!response.ok) throw new Error('Failed to fetch dashboard data')
-      const result = await response.json()
-      setData(result.data)
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') return
-      setError(err instanceof Error ? err.message : 'Unknown error')
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }
+    return params
+  }, [filters])
+
+  const fetchData = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        setRefreshing(true)
+        setLoading(true)
+        const params = buildParams()
+        const url = params.toString() ? `/api/fleets/dashboard?${params.toString()}` : '/api/fleets/dashboard'
+        const response = await fetch(url, { signal })
+
+        if (!response.ok) throw new Error('Failed to fetch dashboard data')
+        const result = await response.json()
+
+        setData(result.data)
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return
+        setError(err instanceof Error ? err.message : 'Unknown error')
+      } finally {
+        setLoading(false)
+        setRefreshing(false)
+      }
+    },
+    [buildParams]
+  )
 
   const fetchCatalogs = async () => {
     try {
@@ -121,11 +138,9 @@ const FleetsDashboard = ({ dictionary }: Props) => {
         fetch('/api/catalogs?type=vehicleExpenseTypes'),
         fetch('/api/catalogs?type=vehicleResponsibles')
       ])
-      const [noEco, tipos, resps] = await Promise.all([
-        noEcoRes.json(),
-        tipoRes.json(),
-        respRes.json()
-      ])
+
+      const [noEco, tipos, resps] = await Promise.all([noEcoRes.json(), tipoRes.json(), respRes.json()])
+
       setCatalogs({
         vehicleNoEconomico: noEco.data || [],
         vehicleExpenseTypes: tipos.data || [],
@@ -138,10 +153,12 @@ const FleetsDashboard = ({ dictionary }: Props) => {
 
   useEffect(() => {
     const controller = new AbortController()
+
     fetchData(controller.signal)
     fetchCatalogs()
+
     return () => controller.abort()
-  }, [searchKey])
+  }, [searchKey, fetchData])
 
   const handleFilterChange = (field: string, value: string | string[]) => {
     setFilters(prev => ({ ...prev, [field]: value }))
@@ -198,7 +215,20 @@ const FleetsDashboard = ({ dictionary }: Props) => {
       </Grid>
 
       <Grid size={{ xs: 12 }}>
-        <Typography variant='body2' sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--mui-palette-text-disabled)', textTransform: 'uppercase', letterSpacing: 1.2, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography
+          variant='body2'
+          sx={{
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            color: 'var(--mui-palette-text-disabled)',
+            textTransform: 'uppercase',
+            letterSpacing: 1.2,
+            mb: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
+          }}
+        >
           <i className='ri-truck-line' style={{ fontSize: '1rem' }} />
           {t('dashboard.fleets.main')}
         </Typography>
@@ -214,7 +244,11 @@ const FleetsDashboard = ({ dictionary }: Props) => {
           iconClass='fa-solid fa-chart-line'
           loading={refreshing}
           action={
-            <IconButton size='small' onClick={() => setModalMonthlyOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
+            <IconButton
+              size='small'
+              onClick={() => setModalMonthlyOpen(true)}
+              sx={{ color: 'var(--mui-palette-text-secondary)' }}
+            >
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }
@@ -308,13 +342,29 @@ const FleetsDashboard = ({ dictionary }: Props) => {
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <KpiCard title={t('dashboard.fleets.unitsTable')} subtitle='' borderColor='#0d6efd' iconBackground='rgba(13,110,253,.12)' iconColor='#0d6efd' iconClass='fa-solid fa-list' loading={refreshing}>
+        <KpiCard
+          title={t('dashboard.fleets.unitsTable')}
+          subtitle=''
+          borderColor='#0d6efd'
+          iconBackground='rgba(13,110,253,.12)'
+          iconColor='#0d6efd'
+          iconClass='fa-solid fa-list'
+          loading={refreshing}
+        >
           <FleetTable t={t} title='' data={data.unitsTable} height={300} />
         </KpiCard>
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <KpiCard title={t('dashboard.fleets.facturadoPagado')} subtitle='' borderColor='#198754' iconBackground='rgba(25,135,84,.12)' iconColor='#198754' iconClass='fa-solid fa-receipt' loading={refreshing}>
+        <KpiCard
+          title={t('dashboard.fleets.facturadoPagado')}
+          subtitle=''
+          borderColor='#198754'
+          iconBackground='rgba(25,135,84,.12)'
+          iconColor='#198754'
+          iconClass='fa-solid fa-receipt'
+          loading={refreshing}
+        >
           <FleetTable t={t} title='' data={data.facturadoPagado} height={300} />
         </KpiCard>
       </Grid>

@@ -13,10 +13,7 @@ const Page = async (props: { params: Promise<{ lang: Locale }> }) => {
   const access = await requireViewAccess('vacation')
 
   if (!access.ok) {
-    const target =
-      access.reason === 'UNAUTHENTICATED'
-        ? '/login'
-        : '/pages/misc/401-not-authorized'
+    const target = access.reason === 'UNAUTHENTICATED' ? '/login' : '/pages/misc/401-not-authorized'
 
     redirect(getLocalizedUrl(target, lang))
   }

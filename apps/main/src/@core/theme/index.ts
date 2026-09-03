@@ -23,10 +23,15 @@ const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['300', 
 export const FONT_OPTIONS = [
   { value: 'Inter', label: 'Inter', fontFamily: 'Inter, sans-serif', instance: inter },
   { value: 'Geist', label: 'Geist', fontFamily: 'Geist, sans-serif', instance: geist },
-  { value: 'Plus Jakarta Sans', label: 'Plus Jakarta Sans', fontFamily: '"Plus Jakarta Sans", sans-serif', instance: plusJakartaSans }
+  {
+    value: 'Plus Jakarta Sans',
+    label: 'Plus Jakarta Sans',
+    fontFamily: '"Plus Jakarta Sans", sans-serif',
+    instance: plusJakartaSans
+  }
 ] as const
 
-export type FontOption = typeof FONT_OPTIONS[number]
+export type FontOption = (typeof FONT_OPTIONS)[number]
 
 const fontFamilyMap: Record<string, string> = {
   Inter: inter.style.fontFamily,
@@ -40,7 +45,8 @@ const theme = (
   direction: Theme['direction'],
   fontFamily?: string | null
 ): Theme => {
-  const resolvedFontFamily = fontFamily && fontFamilyMap[fontFamily] ? fontFamilyMap[fontFamily] : inter.style.fontFamily
+  const resolvedFontFamily =
+    fontFamily && fontFamilyMap[fontFamily] ? fontFamilyMap[fontFamily] : inter.style.fontFamily
 
   return {
     direction,

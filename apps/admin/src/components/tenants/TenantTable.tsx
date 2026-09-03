@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useTransition, useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState, useTransition } from 'react'
+import type { ChangeEvent, MouseEvent } from 'react'
+
 import { useRouter, useSearchParams } from 'next/navigation'
 
 import Table from '@mui/material/Table'
@@ -20,7 +22,7 @@ import MenuItem from '@mui/material/MenuItem'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import Divider from '@mui/material/Divider'
 import Checkbox from '@mui/material/Checkbox'
-import Alert from '@mui/material/Alert'
+import _Alert from '@mui/material/Alert'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
@@ -29,6 +31,7 @@ import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import Stack from '@mui/material/Stack'
+
 import type { TenantRow, TenantStatus } from '@/services/tenant-service'
 import TenantStatusBadge from './TenantStatusBadge'
 import EmptyState from '@/components/shared/EmptyState'
@@ -57,7 +60,8 @@ interface TenantTableProps {
 
 function SortIcon({ field, current, direction }: { field: SortField; current: SortField; direction: SortDir }) {
   if (field !== current) return <i className='ri-expand-sorter-line' style={{ opacity: 0.3, fontSize: '0.875rem' }} />
-  return direction === 'asc'
+  
+return direction === 'asc'
     ? <i className='ri-arrow-up-s-line' style={{ fontSize: '0.875rem' }} />
     : <i className='ri-arrow-down-s-line' style={{ fontSize: '0.875rem' }} />
 }
@@ -82,6 +86,7 @@ function BulkActionToolbar({
         alignItems: 'center',
         gap: 2,
         p: 1.5,
+
         // bgcolor: 'primary.main',
         color: 'primary.contrastText',
         borderRadius: 1,
@@ -195,7 +200,6 @@ function BulkConfirmDialog({
   )
 }
 
-import * as React from 'react'
 
 export default function TenantTable({
   tenants,
@@ -217,7 +221,7 @@ export default function TenantTable({
 }: TenantTableProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [mounted, setMounted] = useState(false)
+  const [_mounted, setMounted] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [pageNum, setPageNum] = useState(page)
   const [rowsPerPage, setRowsPerPage] = useState(pageSize)
@@ -242,13 +246,15 @@ export default function TenantTable({
 
   const buildUrl = useCallback((overrides: Record<string, string | number | null> = {}) => {
     const params = new URLSearchParams()
+
     params.set('page', String(overrides.page ?? pageNum + 1))
     params.set('pageSize', String(overrides.pageSize ?? rowsPerPage))
     if (status) params.set('status', status)
     if (search) params.set('search', search)
     if (overrides.sort) params.set('sort', String(overrides.sort))
     if (overrides.dir) params.set('dir', String(overrides.dir))
-    return `/admin/tenants?${params.toString()}`
+    
+return `/admin/tenants?${params.toString()}`
   }, [pageNum, rowsPerPage, status, search])
 
   const handleChangePage = (_: unknown, newPage: number) => {
@@ -258,8 +264,9 @@ export default function TenantTable({
     })
   }
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
     const newSize = parseInt(event.target.value, 10)
+
     setRowsPerPage(newSize)
     setPageNum(0)
     startTransition(() => {
@@ -269,6 +276,7 @@ export default function TenantTable({
 
   const handleSort = (field: SortField) => {
     const newDir = field === sortField && sortDir === 'asc' ? 'desc' : 'asc'
+
     setSortField(field)
     setSortDir(newDir)
     startTransition(() => {
@@ -278,14 +286,15 @@ export default function TenantTable({
 
   const formatDate = (date: Date | null | undefined) => {
     if (!date) return '-'
-    return new Date(date).toLocaleDateString('es-MX', {
+    
+return new Date(date).toLocaleDateString('es-MX', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     })
   }
 
-  const handleMenuOpen = (e: React.MouseEvent<HTMLElement>, tenant: TenantRow) => {
+  const handleMenuOpen = (e: MouseEvent<HTMLElement>, tenant: TenantRow) => {
     e.stopPropagation()
     setMenuAnchor({ el: e.currentTarget, tenant })
   }
@@ -340,7 +349,9 @@ export default function TenantTable({
 
   if (!tenants.length) {
     const hasFilters = Boolean(search || status)
-    return (
+
+    
+return (
       <Paper sx={{ width: '100%' }}>
         <EmptyState
           icon='ri-building-line'
@@ -361,14 +372,17 @@ export default function TenantTable({
 
   const sortedTenants = [...safeTenants].sort((a, b) => {
     let cmp = 0
+
     if (sortField === 'CompanyName') cmp = (a.CompanyName || '').localeCompare(b.CompanyName || '')
     else if (sortField === 'Status') cmp = a.Status.localeCompare(b.Status)
     else if (sortField === 'CreatedAt') {
       const da = a.CreatedAt ? new Date(a.CreatedAt).getTime() : 0
       const db = b.CreatedAt ? new Date(b.CreatedAt).getTime() : 0
+
       cmp = da - db
     } else if (sortField === 'SubscriptionPlan') cmp = (a.SubscriptionPlan || '').localeCompare(b.SubscriptionPlan || '')
-    return sortDir === 'asc' ? cmp : -cmp
+    
+return sortDir === 'asc' ? cmp : -cmp
   })
 
   const selectableTenants = sortedTenants.filter(t => !isMainTenant(t))
@@ -439,7 +453,9 @@ export default function TenantTable({
               {sortedTenants.map(tenant => {
                 const locked = isMainTenant(tenant)
                 const isSelected = selected.some(s => s.TenantID === tenant.TenantID)
-                return (
+
+                
+return (
                   <TableRow
                     key={tenant.TenantID}
                     hover

@@ -21,9 +21,10 @@ const TenantInactive = () => {
             {isSuspended ? 'Organization Suspended' : 'Organization Inactive'}
           </Typography>
           <Typography color='text.secondary'>
-            {message || (isSuspended
-              ? 'This organization has been suspended due to a payment issue or request.'
-              : 'This organization is currently inactive and not accessible.')}
+            {message ||
+              (isSuspended
+                ? 'This organization has been suspended due to a payment issue or request.'
+                : 'This organization is currently inactive and not accessible.')}
           </Typography>
           {reason && (
             <Typography variant='body2' color='text.warning' sx={{ mt: 1 }}>

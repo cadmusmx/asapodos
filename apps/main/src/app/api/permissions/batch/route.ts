@@ -1,71 +1,65 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 
-import {
-  ForbiddenError,
-  PERM,
-  ValidationError,
-  withPermission,
-  writeTransactionLog
-} from '@gaso/shared';
+import { ForbiddenError, PERM, ValidationError, withPermission, writeTransactionLog } from '@gaso/shared'
 
-import { assignPermissionsBatch } from '@/lib/permissions/assign-permission';
+import { assignPermissionsBatch } from '@/lib/permissions/assign-permission'
 
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'
 
 interface ParsedBatchBody {
-  targetIdUsuario: number;
-  changes: { viewCode: string; mask: number }[];
+  targetIdUsuario: number
+  changes: { viewCode: string; mask: number }[]
 }
 
 // Forma (tipos + reglas de lote). La semántica por-vista vive en assignPermissionsBatch.
 function parseBody(raw: unknown): ParsedBatchBody {
   if (typeof raw !== 'object' || raw === null) {
-    throw new ValidationError('Body inválido', 'INVALID_MASK');
+    throw new ValidationError('Body inválido', 'INVALID_MASK')
   }
 
-  const b = raw as Record<string, unknown>;
+  const b = raw as Record<string, unknown>
 
   if (!Number.isInteger(b.targetIdUsuario)) {
-    throw new ValidationError('targetIdUsuario debe ser entero', 'INVALID_MASK');
+    throw new ValidationError('targetIdUsuario debe ser entero', 'INVALID_MASK')
   }
 
   // changes vacío -> 400 (decisión del dev)
   if (!Array.isArray(b.changes) || b.changes.length === 0) {
-    throw new ValidationError('changes debe ser una lista no vacía', 'INVALID_MASK');
+    throw new ValidationError('changes debe ser una lista no vacía', 'INVALID_MASK')
   }
 
   const changes = b.changes.map((c, i) => {
     if (typeof c !== 'object' || c === null) {
-      throw new ValidationError(`changes[${i}] inválido`, 'INVALID_MASK');
+      throw new ValidationError(`changes[${i}] inválido`, 'INVALID_MASK')
     }
 
-    const cc = c as Record<string, unknown>;
+    const cc = c as Record<string, unknown>
 
     if (typeof cc.viewCode !== 'string' || cc.viewCode.trim() === '') {
-      throw new ValidationError(`changes[${i}].viewCode requerido`, 'UNKNOWN_VIEW');
+      throw new ValidationError(`changes[${i}].viewCode requerido`, 'UNKNOWN_VIEW')
     }
 
     if (!Number.isInteger(cc.mask)) {
-      throw new ValidationError(`changes[${i}].mask debe ser entero`, 'INVALID_MASK');
+      throw new ValidationError(`changes[${i}].mask debe ser entero`, 'INVALID_MASK')
     }
 
-    return { viewCode: (cc.viewCode as string).trim(), mask: cc.mask as number };
-  });
+    return { viewCode: (cc.viewCode as string).trim(), mask: cc.mask as number }
+  })
 
   // viewCode duplicado en el lote -> 400 (decisión del dev)
-  const seen = new Set<string>();
+  const seen = new Set<string>()
 
   for (const c of changes) {
     if (seen.has(c.viewCode)) {
       throw new ValidationError(`viewCode duplicado en el lote: ${c.viewCode}`, 'INVALID_MASK', {
         viewCode: c.viewCode
-      });
+      })
     }
 
-    seen.add(c.viewCode);
+    seen.add(c.viewCode)
   }
 
-  return { targetIdUsuario: b.targetIdUsuario as number, changes };
+  return { targetIdUsuario: b.targetIdUsuario as number, changes }
 }
 
 /**
@@ -81,17 +75,17 @@ function parseBody(raw: unknown): ParsedBatchBody {
 export const POST = withPermission(
   'permissions_access',
   async (req, { auth, tenantId }) => {
-    let raw: unknown;
+    let raw: unknown
 
     try {
-      raw = await req.json();
+      raw = await req.json()
     } catch {
-      throw new ValidationError('JSON inválido', 'INVALID_MASK');
+      throw new ValidationError('JSON inválido', 'INVALID_MASK')
     }
 
-    const { targetIdUsuario, changes } = parseBody(raw);
+    const { targetIdUsuario, changes } = parseBody(raw)
 
-    let result;
+    let result
 
     try {
       result = await assignPermissionsBatch({
@@ -99,7 +93,7 @@ export const POST = withPermission(
         actorIdUsuario: auth.userId,
         targetIdUsuario,
         changes
-      });
+      })
     } catch (e) {
       // Falla de dominio de UN item -> ya hubo rollback en $transaction.
       // Mapeamos aquí (no en el HOF) para devolver la vista ofensora a la UI.
@@ -107,25 +101,30 @@ export const POST = withPermission(
         return NextResponse.json(
           { ok: false, code: e.code, failedViewCode: (e.details?.viewCode as string) ?? null, message: e.message },
           { status: 400 }
-        );
+        )
       }
 
       if (e instanceof ForbiddenError) {
-        console.warn('[RBAC_FORBIDDEN_BATCH]', e.code, e.details ?? {});
+        console.warn('[RBAC_FORBIDDEN_BATCH]', e.code, e.details ?? {})
 
         return NextResponse.json(
-          { ok: false, code: e.code, failedViewCode: (e.details?.viewCode as string) ?? null, message: 'Permiso denegado' },
+          {
+            ok: false,
+            code: e.code,
+            failedViewCode: (e.details?.viewCode as string) ?? null,
+            message: 'Permiso denegado'
+          },
           { status: 403 }
-        );
+        )
       }
 
-      throw e; // TenantError / inesperado -> manejo existente
+      throw e // TenantError / inesperado -> manejo existente
     }
 
     // commit -> audit: una entrada PERM_CHG por item (solo si el lote entero pasó).
-    const originRaw = req.headers.get('x-origin-id');
-    const parsedOrigin = originRaw !== null ? Number(originRaw) : NaN;
-    const idOrigin = Number.isInteger(parsedOrigin) ? parsedOrigin : undefined;
+    const originRaw = req.headers.get('x-origin-id')
+    const parsedOrigin = originRaw !== null ? Number(originRaw) : NaN
+    const idOrigin = Number.isInteger(parsedOrigin) ? parsedOrigin : undefined
 
     for (const r of result.results) {
       writeTransactionLog({
@@ -138,10 +137,10 @@ export const POST = withPermission(
         oldData: { idUsuario: result.target, viewCode: r.viewCode, mask: r.old },
         newData: { idUsuario: result.target, viewCode: r.viewCode, mask: r.new },
         changedAt: new Date()
-      }).catch(() => { });
+      }).catch(() => {})
     }
 
-    return NextResponse.json({ ok: true, target: result.target, results: result.results });
+    return NextResponse.json({ ok: true, target: result.target, results: result.results })
   },
   { bit: PERM.U }
-);
+)

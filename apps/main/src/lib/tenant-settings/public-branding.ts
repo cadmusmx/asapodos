@@ -9,8 +9,10 @@ import type { TenantBrandingSettings } from '@/types/tenant-settings'
 
 const getBrandingByTenantId = unstable_cache(
   async (tenantId: string): Promise<TenantBrandingSettings> => {
-    const row = await withTenantContext(tenantId, tx =>
-      tx.$queryRaw<TenantSettingsRow[]>`
+    const row = await withTenantContext(
+      tenantId,
+      tx =>
+        tx.$queryRaw<TenantSettingsRow[]>`
         SELECT BrandingJson, LimitsJson
         FROM Security.TenantSettings
         WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Dialog from '@mui/material/Dialog'
@@ -12,8 +13,10 @@ import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
-import type { TenantRow } from '@/services/tenant-service'
+
 import { toast } from 'react-toastify'
+
+import type { TenantRow } from '@/services/tenant-service'
 
 interface TenantActivateModalProps {
   open: boolean
@@ -38,6 +41,7 @@ export default function TenantActivateModal({ open, onClose, tenant, onSuccess }
 
       if (!res.ok) {
         const result = await res.json()
+
         throw new Error(result.message?.[0] || 'Failed to activate tenant')
       }
 

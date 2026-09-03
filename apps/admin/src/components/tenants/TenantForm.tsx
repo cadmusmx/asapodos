@@ -16,10 +16,13 @@ const DOMAIN_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z
 
 function validateDomain(value: string): boolean {
   const trimmed = value.trim()
+
   if (!trimmed) return false
   const parts = trimmed.split('.')
+
   if (parts.length < 2) return false
-  return DOMAIN_REGEX.test(trimmed)
+  
+return DOMAIN_REGEX.test(trimmed)
 }
 
 interface TenantFormProps {
@@ -50,7 +53,8 @@ export default function TenantForm({ tenantId, initialData, onSuccess, onCancel 
     if (!validateDomain(dominio)) {
       setDominioError('Ingresa un dominio válido (ej. empresa.com)')
       setLoading(false)
-      return
+      
+return
     }
 
     const data = {
@@ -72,10 +76,12 @@ export default function TenantForm({ tenantId, initialData, onSuccess, onCancel 
 
       if (!res.ok) {
         const result = await res.json()
+
         throw new Error(result.message?.[0] || `Failed to ${isEdit ? 'update' : 'create'} tenant`)
       }
 
       const result = await res.json()
+
       onSuccess?.(result.tenantId)
     } catch (err) {
       setError(err instanceof Error ? err.message : `Failed to ${tenantId ? 'update' : 'create'} tenant`)

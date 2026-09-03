@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Dialog from '@mui/material/Dialog'
@@ -54,6 +55,7 @@ export default function AssignPlanModal({
         .then(r => r.json())
         .then(data => {
           setPlans(data.plans ?? [])
+
           if (!form.planId) {
             setForm(prev => ({
               ...prev,
@@ -63,7 +65,7 @@ export default function AssignPlanModal({
         })
         .catch(() => {})
     }
-  }, [open])
+  }, [open, currentPlanId, form.planId])
 
   useEffect(() => {
     if (currentPlanId && open) {
@@ -79,7 +81,8 @@ export default function AssignPlanModal({
     if (!form.planId) {
       setError('Selecciona un plan')
       setLoading(false)
-      return
+      
+return
     }
 
     try {
@@ -98,6 +101,7 @@ export default function AssignPlanModal({
 
         if (!res.ok) {
           const result = await res.json()
+
           throw new Error(result.message || 'Error al actualizar el plan')
         }
       } else {
@@ -114,6 +118,7 @@ export default function AssignPlanModal({
 
         if (!res.ok) {
           const result = await res.json()
+
           throw new Error(result.message || 'Error al asignar el plan')
         }
       }

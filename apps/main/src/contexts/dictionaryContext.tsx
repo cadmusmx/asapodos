@@ -1,6 +1,7 @@
 'use client'
 
-import { createContext, useContext } from 'react'
+import { createContext, useCallback, useContext } from 'react'
+
 import { getDictionaryValue } from '@/lib/erp-navigation'
 
 const DEFAULT_LABELS: Record<string, string> = {
@@ -55,18 +56,21 @@ export const useDictionary = () => {
 export const useTranslate = () => {
   const dictionary = useDictionary()
 
-  const t = (path: string, params?: Record<string, string | number>): string => {
-    const key = path
-    const resolved = dictionary ? getDictionaryValue(dictionary, `navbar.${path}`) : key
+  const t = useCallback(
+    (path: string, params?: Record<string, string | number>): string => {
+      const key = path
+      const resolved = dictionary ? getDictionaryValue(dictionary, `navbar.${path}`) : key
 
-    if (resolved === `navbar.${path}`) {
-      const defaultLabel = DEFAULT_LABELS[key] ?? key
+      if (resolved === `navbar.${path}`) {
+        const defaultLabel = DEFAULT_LABELS[key] ?? key
 
-      return params ? interpolate(defaultLabel, params) : defaultLabel
-    }
+        return params ? interpolate(defaultLabel, params) : defaultLabel
+      }
 
-    return params ? interpolate(resolved, params) : resolved
-  }
+      return params ? interpolate(resolved, params) : resolved
+    },
+    [dictionary]
+  )
 
   return { t }
 }
@@ -74,15 +78,18 @@ export const useTranslate = () => {
 export const useTranslatePage = () => {
   const dictionary = useDictionary()
 
-  const t = (path: string, params?: Record<string, string | number>): string => {
-    const resolved = path.split('.').reduce((currentValue, currentKey) => currentValue?.[currentKey], dictionary ?? {})
+  const t = useCallback(
+    (path: string, params?: Record<string, string | number>): string => {
+      const resolved = path.split('.').reduce((currentValue, currentKey) => currentValue?.[currentKey], dictionary ?? {})
 
-    if (typeof resolved !== 'string') {
-      return params ? interpolate(path, params) : path
-    }
+      if (typeof resolved !== 'string') {
+        return params ? interpolate(path, params) : path
+      }
 
-    return params ? interpolate(resolved, params) : resolved
-  }
+      return params ? interpolate(resolved, params) : resolved
+    },
+    [dictionary]
+  )
 
   return { t }
 }

@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requirePlatformRole } from '@gaso/shared'
+
 import { getGlobalAuditLog } from '@/services/audit-service'
 
 export async function GET(req: NextRequest) {
@@ -42,6 +44,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(result)
   } catch (error) {
     console.error('[ADMIN_GET_GLOBAL_AUDIT_ERROR]', error)
-    return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
+    
+return NextResponse.json({ message: ['Internal server error'] }, { status: 500 })
   }
 }

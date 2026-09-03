@@ -7,38 +7,35 @@ import { PERM, withPermission, writeTransactionLog } from '@gaso/shared'
 import { withTenantContext } from '@/lib/tenant-context'
 import { calculateCurrentMexicanVacationPeriod } from '@/lib/human-capital/vacation-policy'
 import {
-    normalizeVacationBalanceFromRow,
-    parseVacationBalanceGeneratePayload
+  normalizeVacationBalanceFromRow,
+  parseVacationBalanceGeneratePayload
 } from '@/lib/human-capital/vacation-normalize'
 
-import type {
-    HumanCapitalVacationBalanceRow,
-    VacationBalanceGenerationResult
-} from '@/types/human-capital-vacation'
+import type { HumanCapitalVacationBalanceRow, VacationBalanceGenerationResult } from '@/types/human-capital-vacation'
 
 export const runtime = 'nodejs'
 
 type EmployeeVacationSourceRow = {
-    EmployeeID: number
-    EmployeeName: string | null
-    HireDate: Date | string | null
+  EmployeeID: number
+  EmployeeName: string | null
+  HireDate: Date | string | null
 }
 
 const toSqlDate = (value: string): Prisma.Sql => Prisma.sql`CAST(${value} AS date)`
 
 const toIsoDate = (value: Date | string): string => {
-    const date = value instanceof Date ? value : new Date(value)
+  const date = value instanceof Date ? value : new Date(value)
 
-    return Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 10)
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 10)
 }
 
 const getVacationBalanceById = async (
-    tx: Parameters<Parameters<typeof withTenantContext>[1]>[0],
-    tenantId: string,
-    balanceId: number
+  tx: Parameters<Parameters<typeof withTenantContext>[1]>[0],
+  tenantId: string,
+  balanceId: number
 ) => {
-    const rows = await tx.$queryRaw<HumanCapitalVacationBalanceRow[]>(
-        Prisma.sql`
+  const rows = await tx.$queryRaw<HumanCapitalVacationBalanceRow[]>(
+    Prisma.sql`
       SELECT
         b.BalanceID,
         b.TenantID,
@@ -75,31 +72,28 @@ const getVacationBalanceById = async (
       WHERE b.TenantID = CAST(${tenantId} AS uniqueidentifier)
         AND b.BalanceID = ${balanceId}
     `
-    )
+  )
 
-    return rows[0] ? normalizeVacationBalanceFromRow(rows[0]) : null
+  return rows[0] ? normalizeVacationBalanceFromRow(rows[0]) : null
 }
 
 export const POST = withPermission(
-    'vacation',
-    async (req, { auth, tenantId }) => {
-        let payload
+  'vacation',
+  async (req, { auth, tenantId }) => {
+    let payload
 
-        try {
-            const body = await req.json()
+    try {
+      const body = await req.json()
 
-            payload = parseVacationBalanceGeneratePayload(body)
-        } catch (error) {
-            return NextResponse.json(
-                { message: error instanceof Error ? error.message : 'Body inválido' },
-                { status: 400 }
-            )
-        }
+      payload = parseVacationBalanceGeneratePayload(body)
+    } catch (error) {
+      return NextResponse.json({ message: error instanceof Error ? error.message : 'Body inválido' }, { status: 400 })
+    }
 
-        try {
-            const result = await withTenantContext(tenantId, async tx => {
-                const employeeRows = await tx.$queryRaw<EmployeeVacationSourceRow[]>(
-                    Prisma.sql`
+    try {
+      const result = await withTenantContext(tenantId, async tx => {
+        const employeeRows = await tx.$queryRaw<EmployeeVacationSourceRow[]>(
+          Prisma.sql`
             SELECT
               EmployeeID,
               CONCAT(FirstName, ' ', LastName) AS EmployeeName,
@@ -109,33 +103,33 @@ export const POST = withPermission(
               AND EmployeeID = ${payload.employeeId}
               AND IsActive = 1
           `
-                )
+        )
 
-                const employee = employeeRows[0]
+        const employee = employeeRows[0]
 
-                if (!employee) {
-                    throw new Error('EMPLOYEE_NOT_FOUND')
-                }
+        if (!employee) {
+          throw new Error('EMPLOYEE_NOT_FOUND')
+        }
 
-                if (!employee.HireDate) {
-                    throw new Error('EMPLOYEE_WITHOUT_HIRE_DATE')
-                }
+        if (!employee.HireDate) {
+          throw new Error('EMPLOYEE_WITHOUT_HIRE_DATE')
+        }
 
-                const calculation = calculateCurrentMexicanVacationPeriod(
-                    employee.HireDate,
-                    payload.referenceDate ?? new Date()
-                )
+        const calculation = calculateCurrentMexicanVacationPeriod(
+          employee.HireDate,
+          payload.referenceDate ?? new Date()
+        )
 
-                if (!calculation) {
-                    throw new Error('EMPLOYEE_WITHOUT_COMPLETED_YEAR')
-                }
+        if (!calculation) {
+          throw new Error('EMPLOYEE_WITHOUT_COMPLETED_YEAR')
+        }
 
-                if (payload.usedDays && payload.usedDays > calculation.assignedDays) {
-                    throw new Error('USED_DAYS_GREATER_THAN_ASSIGNED')
-                }
+        if (payload.usedDays && payload.usedDays > calculation.assignedDays) {
+          throw new Error('USED_DAYS_GREATER_THAN_ASSIGNED')
+        }
 
-                const existingRows = await tx.$queryRaw<Array<{ BalanceID: number }>>(
-                    Prisma.sql`
+        const existingRows = await tx.$queryRaw<Array<{ BalanceID: number }>>(
+          Prisma.sql`
             SELECT TOP 1 BalanceID
             FROM HumanCapital.VacationBalances
             WHERE TenantID = CAST(${tenantId} AS uniqueidentifier)
@@ -145,34 +139,34 @@ export const POST = withPermission(
               AND PeriodEnd >= ${toSqlDate(calculation.periodStart)}
             ORDER BY PeriodStart DESC, BalanceID DESC
           `
-                )
+        )
 
-                const existingBalanceId = existingRows[0]?.BalanceID
+        const existingBalanceId = existingRows[0]?.BalanceID
 
-                if (existingBalanceId) {
-                    const balance = await getVacationBalanceById(tx, tenantId, existingBalanceId)
+        if (existingBalanceId) {
+          const balance = await getVacationBalanceById(tx, tenantId, existingBalanceId)
 
-                    if (!balance) {
-                        throw new Error('VACATION_BALANCE_NOT_FOUND')
-                    }
+          if (!balance) {
+            throw new Error('VACATION_BALANCE_NOT_FOUND')
+          }
 
-                    return {
-                        generated: false,
-                        balance,
-                        calculation: {
-                            employeeId: employee.EmployeeID,
-                            employeeName: employee.EmployeeName,
-                            hireDate: toIsoDate(employee.HireDate),
-                            yearsCompleted: calculation.yearsCompleted,
-                            assignedDays: calculation.assignedDays,
-                            periodStart: calculation.periodStart,
-                            periodEnd: calculation.periodEnd
-                        }
-                    } satisfies VacationBalanceGenerationResult
-                }
+          return {
+            generated: false,
+            balance,
+            calculation: {
+              employeeId: employee.EmployeeID,
+              employeeName: employee.EmployeeName,
+              hireDate: toIsoDate(employee.HireDate),
+              yearsCompleted: calculation.yearsCompleted,
+              assignedDays: calculation.assignedDays,
+              periodStart: calculation.periodStart,
+              periodEnd: calculation.periodEnd
+            }
+          } satisfies VacationBalanceGenerationResult
+        }
 
-                const insertedRows = await tx.$queryRaw<Array<{ BalanceID: number }>>(
-                    Prisma.sql`
+        const insertedRows = await tx.$queryRaw<Array<{ BalanceID: number }>>(
+          Prisma.sql`
             INSERT INTO HumanCapital.VacationBalances (
               TenantID,
               EmployeeID,
@@ -199,85 +193,79 @@ export const POST = withPermission(
               ${auth.userId}
             )
           `
-                )
+        )
 
-                const balanceId = insertedRows[0]?.BalanceID
+        const balanceId = insertedRows[0]?.BalanceID
 
-                if (!balanceId) {
-                    throw new Error('VACATION_BALANCE_INSERT_FAILED')
-                }
-
-                const balance = await getVacationBalanceById(tx, tenantId, balanceId)
-
-                if (!balance) {
-                    throw new Error('VACATION_BALANCE_NOT_FOUND')
-                }
-
-                return {
-                    generated: true,
-                    balance,
-                    calculation: {
-                        employeeId: employee.EmployeeID,
-                        employeeName: employee.EmployeeName,
-                        hireDate: toIsoDate(employee.HireDate),
-                        yearsCompleted: calculation.yearsCompleted,
-                        assignedDays: calculation.assignedDays,
-                        periodStart: calculation.periodStart,
-                        periodEnd: calculation.periodEnd
-                    }
-                } satisfies VacationBalanceGenerationResult
-            })
-
-            if (result.generated) {
-                writeTransactionLog({
-                    tenantId,
-                    tableName: 'HumanCapital.VacationBalances',
-                    action: 'GENERATE_BALANCE',
-                    userId: auth.userId,
-                    appUser: auth.email ?? null,
-                    oldData: null,
-                    newData: result
-                }).catch(() => { })
-            }
-
-            return NextResponse.json({
-                data: result,
-                message: result.generated
-                    ? 'Saldo generado correctamente.'
-                    : 'El empleado ya tiene un saldo activo para ese periodo.'
-            })
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR'
-
-            if (message === 'EMPLOYEE_NOT_FOUND') {
-                return NextResponse.json({ message: 'Empleado no encontrado o inactivo.' }, { status: 404 })
-            }
-
-            if (message === 'EMPLOYEE_WITHOUT_HIRE_DATE') {
-                return NextResponse.json(
-                    { message: 'El empleado no tiene fecha de ingreso registrada.' },
-                    { status: 409 }
-                )
-            }
-
-            if (message === 'EMPLOYEE_WITHOUT_COMPLETED_YEAR') {
-                return NextResponse.json(
-                    { message: 'El empleado aún no cumple un año de servicio.' },
-                    { status: 409 }
-                )
-            }
-
-            if (message === 'USED_DAYS_GREATER_THAN_ASSIGNED') {
-                return NextResponse.json(
-                    { message: 'Los días usados no pueden ser mayores a los días asignados legalmente.' },
-                    { status: 409 }
-                )
-            }
-
-            console.error('[HUMAN_CAPITAL_VACATION_BALANCE_GENERATE_ERROR]', { message })
-
-            return NextResponse.json({ message: 'Error al generar saldo de vacaciones.' }, { status: 500 })
+        if (!balanceId) {
+          throw new Error('VACATION_BALANCE_INSERT_FAILED')
         }
-    },
-    { bit: PERM.W }
+
+        const balance = await getVacationBalanceById(tx, tenantId, balanceId)
+
+        if (!balance) {
+          throw new Error('VACATION_BALANCE_NOT_FOUND')
+        }
+
+        return {
+          generated: true,
+          balance,
+          calculation: {
+            employeeId: employee.EmployeeID,
+            employeeName: employee.EmployeeName,
+            hireDate: toIsoDate(employee.HireDate),
+            yearsCompleted: calculation.yearsCompleted,
+            assignedDays: calculation.assignedDays,
+            periodStart: calculation.periodStart,
+            periodEnd: calculation.periodEnd
+          }
+        } satisfies VacationBalanceGenerationResult
+      })
+
+      if (result.generated) {
+        writeTransactionLog({
+          tenantId,
+          tableName: 'HumanCapital.VacationBalances',
+          action: 'GENERATE_BALANCE',
+          userId: auth.userId,
+          appUser: auth.email ?? null,
+          oldData: null,
+          newData: result
+        }).catch(() => {})
+      }
+
+      return NextResponse.json({
+        data: result,
+        message: result.generated
+          ? 'Saldo generado correctamente.'
+          : 'El empleado ya tiene un saldo activo para ese periodo.'
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR'
+
+      if (message === 'EMPLOYEE_NOT_FOUND') {
+        return NextResponse.json({ message: 'Empleado no encontrado o inactivo.' }, { status: 404 })
+      }
+
+      if (message === 'EMPLOYEE_WITHOUT_HIRE_DATE') {
+        return NextResponse.json({ message: 'El empleado no tiene fecha de ingreso registrada.' }, { status: 409 })
+      }
+
+      if (message === 'EMPLOYEE_WITHOUT_COMPLETED_YEAR') {
+        return NextResponse.json({ message: 'El empleado aún no cumple un año de servicio.' }, { status: 409 })
+      }
+
+      if (message === 'USED_DAYS_GREATER_THAN_ASSIGNED') {
+        return NextResponse.json(
+          { message: 'Los días usados no pueden ser mayores a los días asignados legalmente.' },
+          { status: 409 }
+        )
+      }
+
+      console.error('[HUMAN_CAPITAL_VACATION_BALANCE_GENERATE_ERROR]', { message })
+
+      return NextResponse.json({ message: 'Error al generar saldo de vacaciones.' }, { status: 500 })
+    }
+  },
+  { bit: PERM.W }
 )

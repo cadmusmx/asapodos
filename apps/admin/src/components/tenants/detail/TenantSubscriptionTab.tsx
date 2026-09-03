@@ -7,8 +7,10 @@ import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 import Divider from '@mui/material/Divider'
 import Chip from '@mui/material/Chip'
-import type { TenantRow } from '@/services/tenant-service'
+
 import type { TenantSubscription } from '@gaso/shared/types/plan'
+
+import type { TenantRow } from '@/services/tenant-service'
 import SubscriptionStatusBadge from '../SubscriptionStatusBadge'
 
 interface TenantSubscriptionTabProps {
@@ -20,7 +22,9 @@ export default function TenantSubscriptionTab({ subscription }: TenantSubscripti
   const formatDate = (date: Date | string | null) => {
     if (!date) return '-'
     const d = typeof date === 'string' ? new Date(date) : date
-    return d.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })
+
+    
+return d.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })
   }
 
   return (

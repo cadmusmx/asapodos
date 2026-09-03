@@ -17,7 +17,7 @@ export const tenantModuleKeys: TenantModuleKey[] = [
   'warehouses',
   'human_capital',
   'projects',
-  'administration',
+  'administration'
 ]
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -41,8 +41,7 @@ const readNullableString = (value: unknown): string | null => {
   return typeof value === 'string' ? value : null
 }
 
-const readString = (value: unknown, fallback: string): string =>
-  typeof value === 'string' ? value : fallback
+const readString = (value: unknown, fallback: string): string => (typeof value === 'string' ? value : fallback)
 
 const readNullableNumber = (value: unknown): number | null => {
   if (value === null || value === undefined) return null

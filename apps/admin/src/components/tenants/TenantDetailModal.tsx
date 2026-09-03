@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
@@ -17,21 +16,12 @@ import Stack from '@mui/material/Stack'
 import CircularProgress from '@mui/material/CircularProgress'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
-import type { TenantRow } from '@/services/tenant-service'
+
 import type { TransactionLogEntry } from '@gaso/shared'
+
+import type { TenantRow } from '@/services/tenant-service'
 import TenantStatusBadge from './TenantStatusBadge'
 import TenantAuditTimeline from './TenantAuditTimeline'
-
-interface TenantDetailModalProps {
-  open: boolean
-  onClose: () => void
-  tenant: TenantRow | null
-  adminTenantDomain?: string
-  onEdit?: (tenant: TenantRow) => void
-  onSuspend?: (tenant: TenantRow) => void
-  onActivate?: (tenant: TenantRow) => void
-  onDeactivate?: (tenant: TenantRow) => void
-}
 
 interface TenantDetailModalProps {
   open: boolean
@@ -54,7 +44,6 @@ export default function TenantDetailModal({
   onActivate,
   onDeactivate
 }: TenantDetailModalProps) {
-  const router = useRouter()
   const [auditEntries, setAuditEntries] = useState<TransactionLogEntry[]>([])
   const [loadingAudit, setLoadingAudit] = useState(false)
   const [auditError, setAuditError] = useState<string | null>(null)
@@ -81,7 +70,9 @@ export default function TenantDetailModal({
   const formatDate = (date: Date | string | null | undefined) => {
     if (!date) return '-'
     const d = typeof date === 'string' ? new Date(date) : date
-    return d.toLocaleDateString('es-MX', {
+
+    
+return d.toLocaleDateString('es-MX', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',

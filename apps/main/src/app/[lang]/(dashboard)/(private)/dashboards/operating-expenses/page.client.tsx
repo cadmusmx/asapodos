@@ -1,11 +1,7 @@
 'use client'
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable padding-line-between-statements */
-/* eslint-disable newline-before-return */
-/* eslint-disable import/order */
+import { useCallback, useEffect, useState } from 'react'
 
-import { useEffect, useState } from 'react'
 import Grid from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
@@ -64,7 +60,15 @@ type CatalogData = {
 
 const OperatingExpensesDashboard = ({ dictionary }: Props) => {
   const [data, setData] = useState<DashboardData | null>(null)
-  const [catalogs, setCatalogs] = useState<CatalogData>({ projects: [], regions: [], departments: [], employees: [], expenseTypes: [] })
+
+  const [catalogs, setCatalogs] = useState<CatalogData>({
+    projects: [],
+    regions: [],
+    departments: [],
+    employees: [],
+    expenseTypes: []
+  })
+
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -74,6 +78,7 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
   const [modalByProjectOpen, setModalByProjectOpen] = useState(false)
   const [modalByTypeOpen, setModalByTypeOpen] = useState(false)
   const defaultDates = getCurrentYearRange()
+
   const [filters, setFilters] = useState({
     fechaInicio: defaultDates.fechaInicio,
     fechaFin: defaultDates.fechaFin,
@@ -86,7 +91,7 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
   })
 
   const t = (key: string) => {
-    return key.split('.').reduce((obj, k) => obj?.[k], dictionary) as unknown as string ?? key
+    return (key.split('.').reduce((obj, k) => obj?.[k], dictionary) as unknown as string) ?? key
   }
 
   const fetchCatalogs = async () => {
@@ -98,6 +103,7 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
         fetch('/api/catalogs?type=employees'),
         fetch('/api/catalogs?type=expenseTypes')
       ])
+
       const [projects, regions, departments, employees, expenseTypes] = await Promise.all([
         projectsRes.json(),
         regionsRes.json(),
@@ -105,6 +111,7 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
         employeesRes.json(),
         expenseTypesRes.json()
       ])
+
       setCatalogs({
         projects: projects.data || [],
         regions: regions.data || [],
@@ -117,43 +124,64 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
     }
   }
 
-  const buildParams = () => {
+  const buildParams = useCallback(() => {
     const params = new URLSearchParams()
+
     if (filters.fechaInicio) params.append('fechaInicio', filters.fechaInicio)
     if (filters.fechaFin) params.append('fechaFin', filters.fechaFin)
-    filters.estatus.forEach(v => { if (v) params.append('estatus', v) })
-    filters.proyecto.forEach(v => { if (v) params.append('proyecto', v) })
-    filters.region.forEach(v => { if (v) params.append('region', v) })
-    filters.tipoGasto.forEach(v => { if (v) params.append('tipoGasto', v) })
-    filters.departamento.forEach(v => { if (v) params.append('departamento', v) })
-    filters.solicitante.forEach(v => { if (v) params.append('solicitante', v) })
-    return params
-  }
+    filters.estatus.forEach(v => {
+      if (v) params.append('estatus', v)
+    })
+    filters.proyecto.forEach(v => {
+      if (v) params.append('proyecto', v)
+    })
+    filters.region.forEach(v => {
+      if (v) params.append('region', v)
+    })
+    filters.tipoGasto.forEach(v => {
+      if (v) params.append('tipoGasto', v)
+    })
+    filters.departamento.forEach(v => {
+      if (v) params.append('departamento', v)
+    })
+    filters.solicitante.forEach(v => {
+      if (v) params.append('solicitante', v)
+    })
 
-  const fetchData = async (signal?: AbortSignal) => {
-    try {
-      if (data !== null) setRefreshing(true)
-      setLoading(true)
-      const params = buildParams()
-      const response = await fetch(`/api/operating-expenses/dashboard?${params.toString()}`, { signal })
-      if (!response.ok) throw new Error('Failed to fetch dashboard data')
-      const result = await response.json()
-      setData(result.data)
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') return
-      setError(err instanceof Error ? err.message : 'Unknown error')
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }
+    return params
+  }, [filters])
+
+  const fetchData = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        setRefreshing(true)
+        setLoading(true)
+        const params = buildParams()
+        const response = await fetch(`/api/operating-expenses/dashboard?${params.toString()}`, { signal })
+
+        if (!response.ok) throw new Error('Failed to fetch dashboard data')
+        const result = await response.json()
+
+        setData(result.data)
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return
+        setError(err instanceof Error ? err.message : 'Unknown error')
+      } finally {
+        setLoading(false)
+        setRefreshing(false)
+      }
+    },
+    [buildParams]
+  )
 
   useEffect(() => {
     const controller = new AbortController()
+
     fetchCatalogs()
     fetchData(controller.signal)
+
     return () => controller.abort()
-  }, [searchKey])
+  }, [searchKey, fetchData])
 
   const handleFilterChange = (field: string, value: string | string[]) => {
     setFilters(prev => ({ ...prev, [field]: value }))
@@ -212,7 +240,20 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
       </Grid>
 
       <Grid size={{ xs: 12 }}>
-        <Typography variant='body2' sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--mui-palette-text-disabled)', textTransform: 'uppercase', letterSpacing: 1.2, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography
+          variant='body2'
+          sx={{
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            color: 'var(--mui-palette-text-disabled)',
+            textTransform: 'uppercase',
+            letterSpacing: 1.2,
+            mb: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
+          }}
+        >
           <i className='ri-money-dollar-circle-line' style={{ fontSize: '1rem' }} />
           {t('dashboard.expenses.main')}
         </Typography>
@@ -228,7 +269,11 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
           iconClass='fa-solid fa-chart-line'
           loading={refreshing}
           action={
-            <IconButton size='small' onClick={() => setModalDeptOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
+            <IconButton
+              size='small'
+              onClick={() => setModalDeptOpen(true)}
+              sx={{ color: 'var(--mui-palette-text-secondary)' }}
+            >
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }
@@ -261,7 +306,11 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
           iconClass='fa-solid fa-chart-bar'
           loading={refreshing}
           action={
-            <IconButton size='small' onClick={() => setModalStatusOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
+            <IconButton
+              size='small'
+              onClick={() => setModalStatusOpen(true)}
+              sx={{ color: 'var(--mui-palette-text-secondary)' }}
+            >
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }
@@ -280,7 +329,10 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
           iconClass='fa-solid fa-building'
           loading={refreshing}
         >
-          <ByDepartmentChart t={t} data={data.porDepartamento.map(d => ({ key: d.key, count: d.count, monto: d.importe }))} />
+          <ByDepartmentChart
+            t={t}
+            data={data.porDepartamento.map(d => ({ key: d.key, count: d.count, monto: d.importe }))}
+          />
         </KpiCard>
       </Grid>
 
@@ -294,7 +346,11 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
           iconClass='fa-solid fa-list-check'
           loading={refreshing}
           action={
-            <IconButton size='small' onClick={() => setModalByProjectOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
+            <IconButton
+              size='small'
+              onClick={() => setModalByProjectOpen(true)}
+              sx={{ color: 'var(--mui-palette-text-secondary)' }}
+            >
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }
@@ -313,7 +369,11 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
           iconClass='fa-solid fa-tags'
           loading={refreshing}
           action={
-            <IconButton size='small' onClick={() => setModalByTypeOpen(true)} sx={{ color: 'var(--mui-palette-text-secondary)' }}>
+            <IconButton
+              size='small'
+              onClick={() => setModalByTypeOpen(true)}
+              sx={{ color: 'var(--mui-palette-text-secondary)' }}
+            >
               <i className='ri-eye-line' style={{ fontSize: '1.1rem' }} />
             </IconButton>
           }
@@ -337,42 +397,94 @@ const OperatingExpensesDashboard = ({ dictionary }: Props) => {
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <KpiCard title={t('dashboard.expenses.byApplicant')} subtitle='' borderColor='#0d6efd' iconBackground='rgba(13,110,253,.12)' iconColor='#0d6efd' iconClass='fa-solid fa-user-tie' loading={refreshing}>
+        <KpiCard
+          title={t('dashboard.expenses.byApplicant')}
+          subtitle=''
+          borderColor='#0d6efd'
+          iconBackground='rgba(13,110,253,.12)'
+          iconColor='#0d6efd'
+          iconClass='fa-solid fa-user-tie'
+          loading={refreshing}
+        >
           <ExpenseTable t={t} title='' data={data.porSolicitante} height={300} />
         </KpiCard>
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <KpiCard title={t('dashboard.expenses.byDepartment')} subtitle='' borderColor='#198754' iconBackground='rgba(25,135,84,.12)' iconColor='#198754' iconClass='fa-solid fa-building' loading={refreshing}>
+        <KpiCard
+          title={t('dashboard.expenses.byDepartment')}
+          subtitle=''
+          borderColor='#198754'
+          iconBackground='rgba(25,135,84,.12)'
+          iconColor='#198754'
+          iconClass='fa-solid fa-building'
+          loading={refreshing}
+        >
           <ExpenseTable t={t} title='' data={data.porDepartamento} height={300} />
         </KpiCard>
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <KpiCard title={t('dashboard.expenses.byType')} subtitle='' borderColor='#ffc107' iconBackground='rgba(255,193,7,.15)' iconColor='#b45309' iconClass='fa-solid fa-tags' loading={refreshing}>
+        <KpiCard
+          title={t('dashboard.expenses.byType')}
+          subtitle=''
+          borderColor='#ffc107'
+          iconBackground='rgba(255,193,7,.15)'
+          iconColor='#b45309'
+          iconClass='fa-solid fa-tags'
+          loading={refreshing}
+        >
           <ExpenseTable t={t} title='' data={data.porTipo} height={300} />
         </KpiCard>
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <KpiCard title={t('dashboard.expenses.facturadoPagado')} subtitle='' borderColor='#20c997' iconBackground='rgba(32,201,151,.12)' iconColor='#20c997' iconClass='fa-solid fa-receipt' loading={refreshing}>
+        <KpiCard
+          title={t('dashboard.expenses.facturadoPagado')}
+          subtitle=''
+          borderColor='#20c997'
+          iconBackground='rgba(32,201,151,.12)'
+          iconColor='#20c997'
+          iconClass='fa-solid fa-receipt'
+          loading={refreshing}
+        >
           <ExpenseTable t={t} title='' data={data.facturadoPagado} height={300} />
         </KpiCard>
       </Grid>
 
-      <ChartModal open={modalDeptOpen} onClose={() => setModalDeptOpen(false)} title={t('dashboard.expenses.monthlyByDept')} t={t}>
+      <ChartModal
+        open={modalDeptOpen}
+        onClose={() => setModalDeptOpen(false)}
+        title={t('dashboard.expenses.monthlyByDept')}
+        t={t}
+      >
         <MonthlyDeptChart data={data.porMes} height={450} />
       </ChartModal>
 
-      <ChartModal open={modalStatusOpen} onClose={() => setModalStatusOpen(false)} title={t('dashboard.expenses.monthlyByStatus')} t={t}>
+      <ChartModal
+        open={modalStatusOpen}
+        onClose={() => setModalStatusOpen(false)}
+        title={t('dashboard.expenses.monthlyByStatus')}
+        t={t}
+      >
         <MonthlyStatusChart data={data.porMesEstatus} height={450} />
       </ChartModal>
 
-      <ChartModal open={modalByProjectOpen} onClose={() => setModalByProjectOpen(false)} title={t('dashboard.expenses.topProjects')} t={t}>
+      <ChartModal
+        open={modalByProjectOpen}
+        onClose={() => setModalByProjectOpen(false)}
+        title={t('dashboard.expenses.topProjects')}
+        t={t}
+      >
         <ByProjectChart t={t} data={projectChartData} height={450} />
       </ChartModal>
 
-      <ChartModal open={modalByTypeOpen} onClose={() => setModalByTypeOpen(false)} title={t('dashboard.expenses.requestType')} t={t}>
+      <ChartModal
+        open={modalByTypeOpen}
+        onClose={() => setModalByTypeOpen(false)}
+        title={t('dashboard.expenses.requestType')}
+        t={t}
+      >
         <ByTypeChart t={t} data={data.porTipo.map(d => ({ key: d.key, count: d.count }))} />
       </ChartModal>
     </Grid>

@@ -30,7 +30,7 @@ export const GET = withPermission(
     const currentYear = new Date().getFullYear()
 
     // TODAS las queries son HumanCapital / tenant-scoped → sobre `tx`, nunca sobre el pool.
-    return withTenantContext(tenantId, async (tx) => {
+    return withTenantContext(tenantId, async tx => {
       const tenantCondition = Prisma.sql`e.TenantID = CAST(${tenantId} AS uniqueidentifier) AND e.TenantID <> '00000000-0000-0000-0000-000000000000'`
 
       const employeeBase = Prisma.sql`
@@ -51,7 +51,8 @@ export const GET = withPermission(
         return conditions
       }
 
-      const whereClause = (extra: Prisma.Sql[] = []) => Prisma.sql`WHERE ${Prisma.join(buildConditions(extra), ' AND ')}`
+      const whereClause = (extra: Prisma.Sql[] = []) =>
+        Prisma.sql`WHERE ${Prisma.join(buildConditions(extra), ' AND ')}`
 
       const totalResult = await tx.$queryRaw<Array<{ total: bigint }>>(
         Prisma.sql`SELECT COUNT_BIG(1) as total ${employeeBase} ${whereClause()}`
@@ -133,11 +134,10 @@ export const GET = withPermission(
 
       const porGenero = await tx.$queryRaw<CountByKey[]>(
         Prisma.sql`
-        SELECT ISNULL(s.nombreSexo, 'No especificado') as [key], COUNT(e.EmployeeID) as [count]
+        SELECT CASE WHEN ed.Sexo = 'M' THEN 'Masculino' WHEN ed.Sexo = 'F' THEN 'Femenino' ELSE 'No especificado' END as [key], COUNT(e.EmployeeID) as [count]
         ${employeeBase}
-        LEFT JOIN cat_sexo s ON s.idSexo = ed.SexoID
         ${whereClause([Prisma.sql`e.IsActive = 1`])}
-        GROUP BY s.nombreSexo
+        GROUP BY CASE WHEN ed.Sexo = 'M' THEN 'Masculino' WHEN ed.Sexo = 'F' THEN 'Femenino' ELSE 'No especificado' END
         ORDER BY [count] DESC`
       )
 

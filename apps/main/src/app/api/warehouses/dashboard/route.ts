@@ -45,18 +45,18 @@ export const GET = withPermission(
       let filtered: typeof warehouses = warehouses
 
       if (region) {
-        filtered = filtered.filter((w) => w.Region === region)
+        filtered = filtered.filter(w => w.Region === region)
       }
       if (ciudad) {
-        filtered = filtered.filter((w) => w.Ciudad === ciudad)
+        filtered = filtered.filter(w => w.Ciudad === ciudad)
       }
       if (estado) {
-        filtered = filtered.filter((w) => w.Estado_Almacen === estado)
+        filtered = filtered.filter(w => w.Estado_Almacen === estado)
       }
 
       const totalAlmacenes = filtered.length
 
-      const operativos = filtered.filter((w) => w.Estado_Almacen === 'Operativo').length
+      const operativos = filtered.filter(w => w.Estado_Almacen === 'Operativo').length
 
       const capacidadTotal = filtered.reduce((sum, w) => sum + (w.Capacidad ?? 0), 0)
 
@@ -64,9 +64,7 @@ export const GET = withPermission(
 
       const espacioDisponible = capacidadTotal - espacioOcupado
 
-      const ocupacionPorcentaje = capacidadTotal > 0
-        ? Math.round((espacioOcupado / capacidadTotal) * 100)
-        : 0
+      const ocupacionPorcentaje = capacidadTotal > 0 ? Math.round((espacioOcupado / capacidadTotal) * 100) : 0
 
       const getNivel = (porcentaje: number): string => {
         if (porcentaje >= 90) return 'CRITICO'
@@ -75,7 +73,7 @@ export const GET = withPermission(
         return 'NORMAL'
       }
 
-      const warehouseItems: WarehouseItem[] = filtered.map((w: typeof warehouses[number]) => {
+      const warehouseItems: WarehouseItem[] = filtered.map((w: (typeof warehouses)[number]) => {
         const capacidad = w.Capacidad ?? 0
         const ocupada = w.Capacidad_Ocupada ?? 0
         const pct = capacidad > 0 ? Math.round((ocupada / capacidad) * 100) : 0
@@ -106,7 +104,9 @@ export const GET = withPermission(
       })
 
       const nivelCounts: Record<string, number> = { NORMAL: 0, MEDIO: 0, ALTO: 0, CRITICO: 0 }
-      nivelesRaw.forEach(n => { nivelCounts[n] = (nivelCounts[n] || 0) + 1 })
+      nivelesRaw.forEach(n => {
+        nivelCounts[n] = (nivelCounts[n] || 0) + 1
+      })
 
       const occupancyLevels: OccupancyLevel[] = [
         { level: 'NORMAL', count: nivelCounts['NORMAL'] || 0 },

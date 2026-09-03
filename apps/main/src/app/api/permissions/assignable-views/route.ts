@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client'
 
-import { withPermission, PERM, getEnabledMenuGroups } from '@gaso/shared';
+import { withPermission, PERM, getEnabledMenuGroups } from '@gaso/shared'
 
-import { withTenantContext } from '@/lib/tenant-context';
+import { withTenantContext } from '@/lib/tenant-context'
 
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'
 
 /**
  * GET /api/permissions/assignable-views — vistas asignables del TENANT (tenant-level).
@@ -23,24 +23,26 @@ export const GET = withPermission(
   async (_req, { tenantId }) => {
     try {
       const rows = await withTenantContext(tenantId, async tx => {
-        const enabled = await getEnabledMenuGroups(tx, tenantId);
+        const enabled = await getEnabledMenuGroups(tx, tenantId)
 
         if (enabled.size === 0) {
-          return [] as Array<{ ViewCode: string; Label: string; MenuGroup: string | null; PublicMask: number | null }>;
+          return [] as Array<{ ViewCode: string; Label: string; MenuGroup: string | null; PublicMask: number | null }>
         }
 
-        const menuGroups = Array.from(enabled);
+        const menuGroups = Array.from(enabled)
 
-        return tx.$queryRaw<Array<{ ViewCode: string; Label: string; MenuGroup: string | null; PublicMask: number | null }>>(
+        return tx.$queryRaw<
+          Array<{ ViewCode: string; Label: string; MenuGroup: string | null; PublicMask: number | null }>
+        >(
           Prisma.sql`
             SELECT v.ViewCode, v.Label, v.MenuGroup, v.PublicMask
             FROM Security.Views v
             WHERE v.MenuGroup IN (${Prisma.join(menuGroups)})
               AND (15 & ~ISNULL(v.PublicMask, 0)) <> 0
             ORDER BY v.MenuGroup, v.ViewCode
-          `,
-        );
-      });
+          `
+        )
+      })
 
       return NextResponse.json(
         {
@@ -49,16 +51,16 @@ export const GET = withPermission(
             label: v.Label,
             menuGroup: v.MenuGroup,
             ceilingMask: 15,
-            publicMask: v.PublicMask ?? 0,
-          })),
+            publicMask: v.PublicMask ?? 0
+          }))
         },
-        { status: 200 },
-      );
+        { status: 200 }
+      )
     } catch (e) {
-      console.error('[PERMISSIONS_ASSIGNABLE_VIEWS_ERROR]', e instanceof Error ? { message: e.message } : e);
+      console.error('[PERMISSIONS_ASSIGNABLE_VIEWS_ERROR]', e instanceof Error ? { message: e.message } : e)
 
-      return NextResponse.json({ message: 'Error al listar vistas asignables' }, { status: 500 });
+      return NextResponse.json({ message: 'Error al listar vistas asignables' }, { status: 500 })
     }
   },
-  { bit: PERM.R },
-);
+  { bit: PERM.R }
+)

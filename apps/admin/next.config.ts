@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   transpilePackages: ['@gaso/shared'],
   trailingSlash: false,
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   }
 }
 

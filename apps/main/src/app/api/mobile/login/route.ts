@@ -44,8 +44,13 @@ export async function POST(req: Request) {
 
     if (!tenantStatus || (tenantStatus.Status !== 'ACTIVE' && tenantStatus.Status !== 'TRIAL')) {
       await writeAuthAudit({
-        eventType: 'LOGIN_FAILED', eventStatus: 'FAILED',
-        tenantId, tenantSlug, username, reason: 'TENANT_SUSPENDED', idOrigin
+        eventType: 'LOGIN_FAILED',
+        eventStatus: 'FAILED',
+        tenantId,
+        tenantSlug,
+        username,
+        reason: 'TENANT_SUSPENDED',
+        idOrigin
       })
 
       return NextResponse.json(
@@ -66,8 +71,13 @@ export async function POST(req: Request) {
 
     if (!user || !user.IdUsuario) {
       await writeAuthAudit({
-        eventType: 'LOGIN_FAILED', eventStatus: 'FAILED',
-        tenantId, tenantSlug, username, reason: 'INVALID_CREDENTIALS', idOrigin
+        eventType: 'LOGIN_FAILED',
+        eventStatus: 'FAILED',
+        tenantId,
+        tenantSlug,
+        username,
+        reason: 'INVALID_CREDENTIALS',
+        idOrigin
       })
 
       return NextResponse.json(
@@ -76,12 +86,18 @@ export async function POST(req: Request) {
       )
     }
 
-    const emp = await withTenantContext(tenantId, async (tx) => {
-      const rows = await tx.$queryRaw<Array<{
-        Nombre: string | null; Email: string | null
-        IdDepartamento: number | null; IdPuesto: number | null
-        IdArea: number | null; IdRegion: number | null; IsActive: boolean
-      }>>`
+    const emp = await withTenantContext(tenantId, async tx => {
+      const rows = await tx.$queryRaw<
+        Array<{
+          Nombre: string | null
+          Email: string | null
+          IdDepartamento: number | null
+          IdPuesto: number | null
+          IdArea: number | null
+          IdRegion: number | null
+          IsActive: boolean
+        }>
+      >`
         SELECT
           LTRIM(RTRIM(e.FirstName + ' ' + e.LastName)) AS Nombre,
           e.Email,
@@ -100,16 +116,33 @@ export async function POST(req: Request) {
 
     // Gate de empleo (decisión — borra el if para puro-cuenta):
     if (!emp || !emp.IsActive) {
-      await writeAuthAudit({ eventType: 'LOGIN_FAILED', eventStatus: 'FAILED', tenantId, tenantSlug, username, userId: user.IdUsuario, reason: 'EMPLOYEE_INACTIVE' })
+      await writeAuthAudit({
+        eventType: 'LOGIN_FAILED',
+        eventStatus: 'FAILED',
+        tenantId,
+        tenantSlug,
+        username,
+        userId: user.IdUsuario,
+        reason: 'EMPLOYEE_INACTIVE'
+      })
 
-      return NextResponse.json({ message: ['User or Password is invalid'] }, { status: 401, statusText: 'Unauthorized Access' })
+      return NextResponse.json(
+        { message: ['User or Password is invalid'] },
+        { status: 401, statusText: 'Unauthorized Access' }
+      )
     }
 
     if (!challengeId || !mfaCode) {
       await writeAuthAudit({
-        eventType: 'MFA_FAILED', eventStatus: 'FAILED',
-        tenantId, tenantSlug, username, userId: user.IdUsuario, email: emp.Email ?? null,
-        reason: 'MISSING_MFA', idOrigin
+        eventType: 'MFA_FAILED',
+        eventStatus: 'FAILED',
+        tenantId,
+        tenantSlug,
+        username,
+        userId: user.IdUsuario,
+        email: emp.Email ?? null,
+        reason: 'MISSING_MFA',
+        idOrigin
       })
 
       return NextResponse.json(
@@ -140,24 +173,33 @@ export async function POST(req: Request) {
       }
 
       await writeAuthAudit({
-        eventType: 'MFA_FAILED', eventStatus: 'FAILED',
-        tenantId, tenantSlug, username, userId: user.IdUsuario, email: emp.Email ?? null,
-        reason: challengeResult.error ?? 'MFA_VALIDATION_FAILED', idOrigin
+        eventType: 'MFA_FAILED',
+        eventStatus: 'FAILED',
+        tenantId,
+        tenantSlug,
+        username,
+        userId: user.IdUsuario,
+        email: emp.Email ?? null,
+        reason: challengeResult.error ?? 'MFA_VALIDATION_FAILED',
+        idOrigin
       })
 
-      return NextResponse.json(
-        { ok: false, code: mapped.code, message: [mapped.message] },
-        { status: 401 }
-      )
+      return NextResponse.json({ ok: false, code: mapped.code, message: [mapped.message] }, { status: 401 })
     }
 
     const userTotpSecret = await getTotpSecretForLogin({ tenantId, userId: user.IdUsuario })
 
     if (!userTotpSecret) {
       await writeAuthAudit({
-        eventType: 'MFA_FAILED', eventStatus: 'FAILED',
-        tenantId, tenantSlug, username, userId: user.IdUsuario, email: emp.Email ?? null,
-        reason: 'MFA_FACTOR_NOT_CONFIGURED', idOrigin
+        eventType: 'MFA_FAILED',
+        eventStatus: 'FAILED',
+        tenantId,
+        tenantSlug,
+        username,
+        userId: user.IdUsuario,
+        email: emp.Email ?? null,
+        reason: 'MFA_FACTOR_NOT_CONFIGURED',
+        idOrigin
       })
 
       return NextResponse.json(
@@ -173,8 +215,13 @@ export async function POST(req: Request) {
       await markTotpFactorFailedAttempt({ tenantId, userId: user.IdUsuario })
 
       await writeAuthAudit({
-        eventType: 'MFA_FAILED', eventStatus: 'FAILED',
-        tenantId, tenantSlug, username, userId: user.IdUsuario, email: emp.Email ?? null,
+        eventType: 'MFA_FAILED',
+        eventStatus: 'FAILED',
+        tenantId,
+        tenantSlug,
+        username,
+        userId: user.IdUsuario,
+        email: emp.Email ?? null,
         reason: 'INVALID_MFA_CODE',
         metadata: {
           attempts: challengeResult.challenge!.attempts + 1,
@@ -194,12 +241,24 @@ export async function POST(req: Request) {
     await markTotpFactorUsed({ tenantId, userId: user.IdUsuario })
 
     await writeAuthAudit({
-      eventType: 'MFA_SUCCESS', eventStatus: 'SUCCESS',
-      tenantId, tenantSlug, username, userId: user.IdUsuario, email: emp.Email ?? null, idOrigin
+      eventType: 'MFA_SUCCESS',
+      eventStatus: 'SUCCESS',
+      tenantId,
+      tenantSlug,
+      username,
+      userId: user.IdUsuario,
+      email: emp.Email ?? null,
+      idOrigin
     })
     await writeAuthAudit({
-      eventType: 'LOGIN_SUCCESS', eventStatus: 'SUCCESS',
-      tenantId, tenantSlug, username, userId: user.IdUsuario, email: emp.Email ?? null, idOrigin
+      eventType: 'LOGIN_SUCCESS',
+      eventStatus: 'SUCCESS',
+      tenantId,
+      tenantSlug,
+      username,
+      userId: user.IdUsuario,
+      email: emp.Email ?? null,
+      idOrigin
     })
 
     const { accessToken, expiresIn } = await signMobileToken({
@@ -207,7 +266,7 @@ export async function POST(req: Request) {
       tenantId,
       employeeId: user.EmployeeID,
       name: emp.Nombre ?? null,
-      email: emp.Email ?? null,
+      email: emp.Email ?? null
     })
 
     return NextResponse.json({

@@ -124,8 +124,8 @@ type HumanCapitalEmployeesViewProps = {
 
 const HumanCapitalEmployeesView = ({ canManageUsers = false, usersHref = '' }: HumanCapitalEmployeesViewProps) => {
   const router = useRouter()
-  const { lang } = useParams();
-  const pathname = usePathname();
+  const { lang } = useParams()
+  const pathname = usePathname()
 
   const [employees, setEmployees] = useState<HumanCapitalEmployee[]>([])
 
@@ -134,7 +134,7 @@ const HumanCapitalEmployeesView = ({ canManageUsers = false, usersHref = '' }: H
     positions: []
   })
 
-  const goCatalogs = () => router.push(`/${lang}/human-capital/catalogs`);
+  const goCatalogs = () => router.push(`/${lang}/human-capital/catalogs`)
 
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<EmploymentStatus | 'all'>('all')
@@ -333,10 +333,18 @@ const HumanCapitalEmployeesView = ({ canManageUsers = false, usersHref = '' }: H
             subheader='Expediente básico de empleados por tenant con departamento, puesto y estado.'
             action={
               <div className='flex gap-4'>
-                <Button fullWidth size='small' variant='contained' startIcon={<i className='ri-user-add-line' />} onClick={openCreateDialog}>
+                <Button
+                  fullWidth
+                  size='small'
+                  variant='contained'
+                  startIcon={<i className='ri-user-add-line' />}
+                  onClick={openCreateDialog}
+                >
                   Nuevo
                 </Button>
-                <Button fullWidth size='small' variant='outlined' color='secondary' onClick={goCatalogs}>Catálogos</Button>
+                <Button fullWidth size='small' variant='outlined' color='secondary' onClick={goCatalogs}>
+                  Catálogos
+                </Button>
               </div>
             }
           />
@@ -494,7 +502,9 @@ const HumanCapitalEmployeesView = ({ canManageUsers = false, usersHref = '' }: H
                               <Tooltip title='Gestionar usuario'>
                                 <IconButton
                                   onClick={() =>
-                                    router.push(`${usersHref}?search=${encodeURIComponent(employee.employeeNumber ?? employee.fullName)}`)
+                                    router.push(
+                                      `${usersHref}?search=${encodeURIComponent(employee.employeeNumber ?? employee.fullName)}`
+                                    )
                                   }
                                 >
                                   <i className='ri-shield-user-line' />

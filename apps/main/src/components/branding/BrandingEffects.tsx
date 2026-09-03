@@ -67,7 +67,7 @@ const BrandingEffects = ({ dictionary }: Props) => {
     }
 
     document.title = `${subtitle} | ${name}`
-  }, [pathname, displayName, tenantName, dictionary])
+  }, [pathname, displayName, tenantName, dictionary, meData])
 
   return null
 }

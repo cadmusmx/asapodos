@@ -46,18 +46,21 @@ export async function POST(req: Request) {
         reason: 'INVALID_CREDENTIALS'
       })
 
-      return NextResponse.json(
-        { message: ['Invalid credentials'] },
-        { status: 401, statusText: 'Unauthorized' }
-      )
+      return NextResponse.json({ message: ['Invalid credentials'] }, { status: 401, statusText: 'Unauthorized' })
     }
 
-    const emp = await withTenantContext(user.TenantID, async (tx) => {
-      const rows = await tx.$queryRaw<Array<{
-        Nombre: string | null; Email: string | null
-        IdDepartamento: number | null; IdPuesto: number | null
-        IdArea: number | null; IdRegion: number | null; IsActive: boolean
-      }>>`
+    const emp = await withTenantContext(user.TenantID, async tx => {
+      const rows = await tx.$queryRaw<
+        Array<{
+          Nombre: string | null
+          Email: string | null
+          IdDepartamento: number | null
+          IdPuesto: number | null
+          IdArea: number | null
+          IdRegion: number | null
+          IsActive: boolean
+        }>
+      >`
         SELECT
           LTRIM(RTRIM(e.FirstName + ' ' + e.LastName)) AS Nombre,
           e.Email,
@@ -75,7 +78,15 @@ export async function POST(req: Request) {
     })
 
     if (!emp) {
-      await writeAuthAudit({ eventType: 'LOGIN_FAILED', eventStatus: 'FAILED', tenantId: 'PLATFORM', tenantSlug: 'platform', username, userId: user.IdUsuario, reason: 'EMPLOYEE_NOT_FOUND' })
+      await writeAuthAudit({
+        eventType: 'LOGIN_FAILED',
+        eventStatus: 'FAILED',
+        tenantId: 'PLATFORM',
+        tenantSlug: 'platform',
+        username,
+        userId: user.IdUsuario,
+        reason: 'EMPLOYEE_NOT_FOUND'
+      })
 
       return NextResponse.json({ message: ['Invalid credentials'] }, { status: 401 })
     }
@@ -112,10 +123,7 @@ export async function POST(req: Request) {
         reason: 'MISSING_MFA'
       })
 
-      return NextResponse.json(
-        { message: ['MFA code is required'] },
-        { status: 401, statusText: 'MFA Required' }
-      )
+      return NextResponse.json({ message: ['MFA code is required'] }, { status: 401, statusText: 'MFA Required' })
     }
 
     const challengeResult = await validateMfaChallenge({
@@ -126,11 +134,11 @@ export async function POST(req: Request) {
 
     if (!challengeResult.valid) {
       const errorMessages: Record<string, string> = {
-        'NOT_FOUND': 'Invalid MFA challenge',
-        'EXPIRED': 'MFA challenge expired',
-        'MAX_ATTEMPTS': 'Too many MFA attempts',
-        'INVALID_USER': 'Invalid MFA challenge',
-        'INVALID_TENANT': 'Invalid MFA challenge'
+        NOT_FOUND: 'Invalid MFA challenge',
+        EXPIRED: 'MFA challenge expired',
+        MAX_ATTEMPTS: 'Too many MFA attempts',
+        INVALID_USER: 'Invalid MFA challenge',
+        INVALID_TENANT: 'Invalid MFA challenge'
       }
 
       await writeAuthAudit({
@@ -200,10 +208,7 @@ export async function POST(req: Request) {
         }
       })
 
-      return NextResponse.json(
-        { message: ['Invalid MFA code'] },
-        { status: 401, statusText: 'Invalid MFA Code' }
-      )
+      return NextResponse.json({ message: ['Invalid MFA code'] }, { status: 401, statusText: 'Invalid MFA Code' })
     }
 
     await markMfaSuccess(challengeId)

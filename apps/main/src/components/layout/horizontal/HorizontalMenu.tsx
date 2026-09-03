@@ -81,7 +81,7 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
     isLoading: isNavigationLoading,
     views: me?.views,
     menuGroups: me?.menuGroups,
-    planMenuGroups: me?.planMenuGroups,
+    planMenuGroups: me?.planMenuGroups
   })
 
   return (
@@ -112,9 +112,7 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
           menuSectionStyles: verticalMenuSectionStyles(verticalNavOptions, theme)
         }}
       >
-        {isNavigationLoading && (
-          <MenuItem icon={<i className='ri-loader-4-line' />}>Cargando navegación...</MenuItem>
-        )}
+        {isNavigationLoading && <MenuItem icon={<i className='ri-loader-4-line' />}>Cargando navegación...</MenuItem>}
 
         {modules.map(module =>
           module.flat ? (

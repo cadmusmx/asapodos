@@ -37,10 +37,7 @@ export async function POST(req: Request) {
         idOrigin
       })
 
-      return NextResponse.json(
-        { ok: false, message: ['User and password are required'] },
-        { status: 400 }
-      )
+      return NextResponse.json({ ok: false, message: ['User and password are required'] }, { status: 400 })
     }
 
     const user = await prisma.gASOCO_Cat_Usuarios.findFirst({
@@ -68,10 +65,7 @@ export async function POST(req: Request) {
         idOrigin
       })
 
-      return NextResponse.json(
-        { ok: false, message: ['Invalid credentials'] },
-        { status: 401 }
-      )
+      return NextResponse.json({ ok: false, message: ['Invalid credentials'] }, { status: 401 })
     }
 
     // emp sobre el MISMO pool con contexto ya fijado por setTenantContext (no abrir otra tx)
@@ -84,9 +78,19 @@ export async function POST(req: Request) {
     const emp = empRows[0] ?? null
 
     if (!emp || !emp.IsActive) {
-      await writeAuthAudit({ eventType: 'LOGIN_FAILED', eventStatus: 'FAILED', tenantId, username, userId: user.IdUsuario, reason: 'EMPLOYEE_INACTIVE' })
+      await writeAuthAudit({
+        eventType: 'LOGIN_FAILED',
+        eventStatus: 'FAILED',
+        tenantId,
+        username,
+        userId: user.IdUsuario,
+        reason: 'EMPLOYEE_INACTIVE'
+      })
 
-      return NextResponse.json({ message: ['User or Password is invalid'] }, { status: 401, statusText: 'Unauthorized Access' })
+      return NextResponse.json(
+        { message: ['User or Password is invalid'] },
+        { status: 401, statusText: 'Unauthorized Access' }
+      )
     }
 
     await writeAuthAudit({
@@ -158,7 +162,10 @@ export async function POST(req: Request) {
       factorType: 'TOTP'
     })
   } catch (error) {
-    console.error('[AUTH_MFA_START_ERROR]', error instanceof Error ? { message: error.message, stack: error.stack } : error)
+    console.error(
+      '[AUTH_MFA_START_ERROR]',
+      error instanceof Error ? { message: error.message, stack: error.stack } : error
+    )
 
     return NextResponse.json({ ok: false, message: ['Server error'] }, { status: 500 })
   }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Dialog from '@mui/material/Dialog'
@@ -20,8 +21,10 @@ import ListItem from '@mui/material/ListItem'
 import ListItemButton from '@mui/material/ListItemButton'
 import ListItemText from '@mui/material/ListItemText'
 import Chip from '@mui/material/Chip'
-import type { PlatformRole, SearchUserRow } from '@/types/apps/platformUserTypes'
+
 import { toast } from 'react-toastify'
+
+import type { PlatformRole, SearchUserRow } from '@/types/apps/platformUserTypes'
 
 interface PromoteUserModalProps {
   open: boolean
@@ -47,15 +50,24 @@ export default function PromoteUserModal({ open, onClose, onSuccess }: PromoteUs
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
+
     setSearchQuery(value)
     setSelectedUser(null)
     if (searchTimeout) clearTimeout(searchTimeout)
-    if (value.length < 2) { setSearchResults([]); return }
+
+    if (value.length < 2) { setSearchResults([]); 
+
+return }
+
     setSearchTimeout(setTimeout(async () => {
       setSearchLoading(true)
+
       try {
         const res = await fetch(`/api/admin/platform-users/search?q=${encodeURIComponent(value)}`)
-        if (res.ok) { const data = await res.json(); setSearchResults(data.users || []) }
+
+        if (res.ok) { const data = await res.json();
+
+ setSearchResults(data.users || []) }
       } catch { setSearchResults([]) } finally { setSearchLoading(false) }
     }, 300))
   }
@@ -69,13 +81,18 @@ export default function PromoteUserModal({ open, onClose, onSuccess }: PromoteUs
   const handleSubmit = async () => {
     if (!selectedUser || !selectedRole) return
     setLoading(true)
+
     try {
       const res = await fetch('/api/admin/platform-users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUser.UserID, role: selectedRole })
       })
-      if (!res.ok) { const result = await res.json(); throw new Error(result.message?.[0] || 'Failed to assign role') }
+
+      if (!res.ok) { const result = await res.json();
+
+ throw new Error(result.message?.[0] || 'Failed to assign role') }
+
       toast.success('Rol asignado exitosamente')
       handleClose()
       onSuccess?.()

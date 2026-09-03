@@ -1,4 +1,5 @@
 import { revalidateTag } from 'next/cache'
+
 import { prisma, writeTransactionLog } from '@gaso/shared'
 import type { TenantSubscription, TenantSubscriptionStatus } from '@gaso/shared/types/plan'
 
@@ -122,7 +123,8 @@ export async function createSubscription(
     return { ok: true, subscriptionId: result.SubscriptionId }
   } catch (error) {
     console.error('[CREATE_SUBSCRIPTION_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 
@@ -147,14 +149,17 @@ export async function updateSubscription(
       params.push(options.planId)
       updates.push(`PlanId = @p${i++}`)
     }
+
     if (options.status !== undefined) {
       params.push(options.status)
       updates.push(`Status = @p${i++}`)
     }
+
     if (options.expiresAt !== undefined) {
       params.push(options.expiresAt instanceof Date ? options.expiresAt.toISOString() : options.expiresAt)
       updates.push(`ExpiresAt = @p${i++}`)
     }
+
     if (options.autoRenew !== undefined) {
       params.push(options.autoRenew ? 1 : 0)
       updates.push(`AutoRenew = @p${i++}`)
@@ -187,7 +192,8 @@ export async function updateSubscription(
     return { ok: true }
   } catch (error) {
     console.error('[UPDATE_SUBSCRIPTION_ERROR]', error)
-    return { ok: false, error: 'INTERNAL_ERROR' }
+    
+return { ok: false, error: 'INTERNAL_ERROR' }
   }
 }
 

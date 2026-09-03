@@ -55,7 +55,7 @@ export type Config = {
 
 const themeConfig: Config = {
   templateName: 'Gaso',
-  homePageUrl: '/dashboards/crm',
+  homePageUrl: '/start',
   settingsCookieName: 'gaso-com',
   mode: 'light', // 'system', 'light', 'dark'
   skin: 'default', // 'default', 'bordered'

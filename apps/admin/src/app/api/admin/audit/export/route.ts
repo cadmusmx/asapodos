@@ -1,10 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requirePlatformRole } from '@gaso/shared'
-import { getGlobalAuditLog } from '@/services/audit-service'
+
 import { AUDIT_ACTION_LABELS, type AuditActionCode } from '@gaso/shared'
+
+import { getGlobalAuditLog } from '@/services/audit-service'
 
 export async function GET(request: NextRequest) {
   const guard = await requirePlatformRole(['super_admin', 'auditor'])
+
   if (!guard.ok) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -33,6 +38,7 @@ export async function GET(request: NextRequest) {
   })
 
   const headers = ['Fecha', 'Tenant', 'Usuario', 'Tabla', 'Accion', 'App User', 'TenantID']
+
   const rows = entries.map(entry => [
     entry.changedAt ? new Date(entry.changedAt).toISOString() : '',
     entry.tenantName || '',

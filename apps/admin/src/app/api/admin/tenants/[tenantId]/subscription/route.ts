@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server'
 
-import {
-  getTenantSubscription,
-  createSubscription,
-  updateSubscription,
-  cancelSubscription,
-  renewSubscription,
-} from '@/services/subscription-service'
-import { getTenantById } from '@/services/tenant-service'
 import type { TenantSubscriptionStatus } from '@gaso/shared/types/plan'
+
+import { createSubscription, getTenantSubscription, updateSubscription } from '@/services/subscription-service'
 
 export async function GET(
   req: Request,
@@ -17,10 +11,13 @@ export async function GET(
   try {
     const { tenantId } = await params
     const subscription = await getTenantSubscription(tenantId)
-    return NextResponse.json({ subscription })
+
+    
+return NextResponse.json({ subscription })
   } catch (error) {
     console.error('[GET_SUBSCRIPTION_ERROR]', error)
-    return NextResponse.json({ message: 'Error loading subscription' }, { status: 500 })
+    
+return NextResponse.json({ message: 'Error loading subscription' }, { status: 500 })
   }
 }
 
@@ -57,7 +54,8 @@ export async function POST(
     return NextResponse.json({ subscriptionId: result.subscriptionId }, { status: 201 })
   } catch (error) {
     console.error('[CREATE_SUBSCRIPTION_ERROR]', error)
-    return NextResponse.json({ message: 'Error creating subscription' }, { status: 500 })
+    
+return NextResponse.json({ message: 'Error creating subscription' }, { status: 500 })
   }
 }
 
@@ -66,7 +64,7 @@ export async function PUT(
   { params }: { params: Promise<{ tenantId: string }> }
 ) {
   try {
-    const { tenantId } = await params
+    const { tenantId: _tenantId } = await params
     const body = await req.json()
     const { subscriptionId, planId, status, expiresAt, autoRenew, adminUserId, adminEmail } = body
 
@@ -95,6 +93,7 @@ export async function PUT(
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('[UPDATE_SUBSCRIPTION_ERROR]', error)
-    return NextResponse.json({ message: 'Error updating subscription' }, { status: 500 })
+    
+return NextResponse.json({ message: 'Error updating subscription' }, { status: 500 })
   }
 }

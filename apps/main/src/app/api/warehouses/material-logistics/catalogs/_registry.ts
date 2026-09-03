@@ -8,10 +8,10 @@
  * es seguro porque SIEMPRE salen de este registro, nunca del cliente (que solo aporta la clave `tipo`, validada con isCatalogKey).
  */
 export const CATALOG_REGISTRY = {
-  'xdocks': { table: 'Cat_LMXdocks', nameCol: 'Nombre', label: 'XDOCK' },
-} as const;
+  xdocks: { table: 'Cat_LMXdocks', nameCol: 'Nombre', label: 'XDOCK' }
+} as const
 
-export type CatalogKey = keyof typeof CATALOG_REGISTRY;
+export type CatalogKey = keyof typeof CATALOG_REGISTRY
 
 export const isCatalogKey = (value: string): value is CatalogKey =>
-  Object.prototype.hasOwnProperty.call(CATALOG_REGISTRY, value);
+  Object.prototype.hasOwnProperty.call(CATALOG_REGISTRY, value)

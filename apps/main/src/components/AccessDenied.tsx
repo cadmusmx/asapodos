@@ -41,11 +41,7 @@ const AccessDenied = ({
             <Typography color='text.secondary'>{message}</Typography>
           </div>
 
-          <Button
-            component={Link}
-            href={getLocalizedUrl('/dashboards/general', locale as Locale)}
-            variant='contained'
-          >
+          <Button component={Link} href={getLocalizedUrl('/dashboards/general', locale as Locale)} variant='contained'>
             Volver al dashboard
           </Button>
         </CardContent>

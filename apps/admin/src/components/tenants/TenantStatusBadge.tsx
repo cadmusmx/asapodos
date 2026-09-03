@@ -1,5 +1,6 @@
 import Box from '@mui/material/Box'
 import Chip from '@mui/material/Chip'
+
 import type { TenantStatus } from '@/services/tenant-service'
 
 interface TenantStatusBadgeProps {
