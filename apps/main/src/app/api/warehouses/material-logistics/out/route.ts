@@ -29,9 +29,15 @@ interface OutBody {
 // POST · crear entrega (OutDerived) a partir de una recepción. POST → bit W.
 export const POST = withPermission('material_logistics', async (req, { auth, tenantId }) => {
   try {
+    const directQR = new URL(req.url).searchParams.get('directQR') === 'true';
     const b = (await req.json().catch(() => null)) as OutBody | null;
 
     if (!b) return NextResponse.json({ message: 'Cuerpo inválido' }, { status: 400 });
+
+    // directQR es atómico: ambos o ninguno (evita folioOut sin qr → QR heredado que no calza).
+    if (directQR && (isMissing(b.folioOut) || isMissing(b.qr))) {
+      return NextResponse.json({ message: 'directQR requiere folioOut y qr' }, { status: 400 });
+    }
 
     // Requeridos de cabecera de entrega (confirmado admite false).
     const required = [
@@ -75,8 +81,8 @@ export const POST = withPermission('material_logistics', async (req, { auth, ten
       folioIn: b.folioIn as string,
       sitios,
       documentos,
-      folioOut: b.folioOut,
-      qr: b.qr,
+      folioOut: directQR ? b.folioOut : undefined, // sin flag (web) → el SP genera
+      qr: directQR ? b.qr : undefined,
       generales: {
         fecha: b.fecha as string,
         nombreResponsable: b.nombreResponsable ?? null,
