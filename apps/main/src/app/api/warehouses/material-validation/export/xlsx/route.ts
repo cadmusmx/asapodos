@@ -11,7 +11,7 @@ import { NextResponse } from 'next/server';
 
 import {
   withPermission, PERM, buildWorkbook, xlsxResponse, xlsxFilename, explodeJson,
-  type SheetSpec, type ExportConfig,
+  resolveFileUrl as toUrl, type SheetSpec, type ExportConfig,
 } from '@gaso/shared';
 
 import { withTenantContext } from '@/lib/tenant-context';
@@ -43,21 +43,6 @@ interface VMExportRow {
 
 const fmtFecha = (v: unknown) => (v ? new Date(String(v)).toLocaleDateString('es-MX') : '');
 const fmtFechaHora = (v: unknown) => (v ? new Date(String(v)).toLocaleString('es-MX') : '');
-
-// URL completa para fotos/documentos (punto A). El base es el ORIGEN del bucket
-// SIN el dir de entorno: las keys YA incluyen `Qa/`|`Pr/` (ver VM-RESPONSE-DETAIL).
-// Algunos documentos ya vienen como URL absoluta -> se dejan tal cual.
-const S3_BASE = process.env.S3_PUBLIC_BASE_URL ?? '';
-
-const toUrl = (key: unknown): string => {
-  const k = key == null ? '' : String(key);
-
-  if (!k) return '';
-  if (/^https?:\/\//i.test(k)) return k;
-  if (!S3_BASE) return k;
-
-  return `${S3_BASE.replace(/\/+$/, '')}/${k.replace(/^\/+/, '')}`;
-};
 
 // Tarimas: objeto { tarima_i, papeleta_i }, NO arreglo -> se expande a pares.
 // (Mismo shape que parsea el detalle; candidato a centralizar en @gaso/shared con LM.)
@@ -220,12 +205,13 @@ export const GET = withPermission('material_validation', async (req, { tenantId 
              ( SELECT pm.Clave AS cl, cm.Motivo AS clt, pm.Piezas AS pzs
                  FROM dbo.GASOAL_VMPiezasMotivo pm
                  LEFT JOIN dbo.Cat_VMMotivo cm ON pm.Clave = cm.Id
-                 WHERE pm.IdVM = VM.Id FOR JSON PATH ) AS PiezasMotivo,
+                 WHERE pm.IdVM = COALESCE(voOut.IdIN, VM.Id) FOR JSON PATH ) AS PiezasMotivo,
              ( SELECT pe.Clave AS cl, ce.Estado AS clt, pe.Piezas AS pzs
                  FROM dbo.GASOAL_VMPiezasEstadoF pe
                  LEFT JOIN dbo.Cat_VMEFisico ce ON pe.Clave = ce.Clave
-                 WHERE pe.IdVM = VM.Id FOR JSON PATH ) AS PiezasEstadoF
+                 WHERE pe.IdVM = COALESCE(voOut.IdIN, VM.Id) FOR JSON PATH ) AS PiezasEstadoF
         FROM dbo.GASOAL_VMES VM
+        LEFT JOIN dbo.GASOAL_VMOut voOut ON voOut.TenantID = VM.TenantID AND voOut.IdOut = VM.Id
         INNER JOIN dbo.GASOAL_VMAlmacenes al ON VM.IdAlmacenDestino = al.Id
         INNER JOIN dbo.Cat_VMProyecto pro ON VM.IdProyecto = pro.Id
         INNER JOIN dbo.Cat_VMTiposMaterial tm ON VM.IdTipoMaterial = tm.Id
