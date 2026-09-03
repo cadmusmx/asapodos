@@ -8,7 +8,7 @@
  * es seguro porque SIEMPRE salen de este registro, nunca del cliente (que solo aporta la clave `tipo`, validada con isCatalogKey).
  */
 export const CATALOG_REGISTRY = {
-  xdocks: { table: 'Cat_LMXdocks', nameCol: 'Nombre', label: 'XDOCK' }
+  'xdocks': { table: 'Cat_LMXdocks', nameCol: 'Nombre', label: 'XDOCK' },
 } as const
 
 export type CatalogKey = keyof typeof CATALOG_REGISTRY

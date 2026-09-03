@@ -4,27 +4,11 @@ import { withPermission } from '@gaso/shared'
 
 import { withTenantContext } from '@/lib/tenant-context'
 
-export interface XdockRow {
-  Id: number
-  Nombre: string
-}
-export interface TipoMaterialRow {
-  Id: number
-  Nombre: string
-}
-export interface TipoIncidenciaRow {
-  Id: number
-  Nombre: string
-}
-export interface TipoEvidenciaRow {
-  Id: number
-  Nombre: string
-}
-export interface CarrierRow {
-  Id: number
-  Carrier: string
-  EsOtro: boolean
-}
+export interface XdockRow { Id: number; Nombre: string }
+export interface TipoMaterialRow { Id: number; Nombre: string }
+export interface TipoIncidenciaRow { Id: number; Nombre: string }
+export interface TipoEvidenciaRow { Id: number; Nombre: string }
+export interface CarrierRow { Id: number; Carrier: string; EsOtro: boolean }
 
 // GET /catalogs — reemplaza los 5 GET legacy en una sola llamada (bit R).
 // xdocks = propios del tenant + globales (NULL) vía RLS de fallback; el resto son catálogos globales puros.

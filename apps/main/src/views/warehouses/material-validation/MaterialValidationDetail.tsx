@@ -21,14 +21,19 @@ import Alert from '@mui/material/Alert'
 // Style Imports
 import styles from '@core/styles/table.module.css'
 
-// Base pública de S3 para construir URLs de fotos/QR/documentos (llaves en BD).
-const S3_BASE = process.env.NEXT_PUBLIC_S3_PUBLIC_BASE_URL ?? ''
+import { resolveAssetUrl as photoUrl } from '@/utils/assetUrl'
 
 interface Pieza {
   id: number
   cl: number | string
   clt: string
   pzs: string
+}
+
+interface Tarima {
+  n: number
+  tarima: string | null
+  papeleta: string | null
 }
 
 interface VMDetail {
@@ -53,6 +58,7 @@ interface VMDetail {
   IdRegion: number
   TotalPiezas: number
   NumTarimas: number
+  Tarimas: Tarima
   PlacasTransporte: string
   Notas: string | null
   Qr: string
@@ -67,16 +73,12 @@ interface VMDetail {
   FechaEdicion: string | null
   PiezasMotivo: string
   PiezasEstadoF: string
+  FolioOrigen: string | null
+  FolioSalida: string | null
 }
 
-const photoUrl = (key?: string | null): string => {
-  if (!key) return ''
-  if (!S3_BASE) return key
-
-  return `${S3_BASE.replace(/\/+$/, '')}/${String(key).replace(/^\/+/, '')}`
-}
-
-const firmaSrc = (f?: string | null): string => (!f ? '' : f.startsWith('data:') ? f : `data:image/png;base64,${f}`)
+const firmaSrc = (f?: string | null): string =>
+  !f ? '' : f.startsWith('data:') ? f : `data:image/pngbase64,${f}`
 
 function parsePiezas(json: unknown): Pieza[] {
   if (typeof json !== 'string' || !json) return []
@@ -102,41 +104,48 @@ function parseDocs(json: unknown): Array<{ name: string; file: string }> {
   }
 }
 
+function parseTarimas(json: unknown): Tarima[] {
+  if (typeof json !== 'string' || !json) return []
+
+  try {
+    const obj = JSON.parse(json) as Record<string, string>
+    const nums = new Set<number>()
+
+    for (const k of Object.keys(obj)) {
+      const m = k.match(/_(\d+)$/)
+
+      if (m) nums.add(Number(m[1]))
+    }
+
+    return [...nums].sort((a, b) => a - b).map(n => ({
+      n,
+      tarima: obj[`tarima_${n}`] ?? null,
+      papeleta: obj[`papeleta_${n}`] ?? null,
+    }))
+  } catch {
+    return []
+  }
+}
+
 // Campo etiqueta/valor de solo lectura
 const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-    <Typography variant='body2' color='text.secondary'>
-      {label}
-    </Typography>
+    <Typography variant='body2' color='text.secondary'>{label}</Typography>
     <Typography variant='body1'>{value ?? '—'}</Typography>
   </Grid>
 )
 
 const PiezasTable = ({ titulo, piezas, claveLabel }: { titulo: string; piezas: Pieza[]; claveLabel: string }) => (
   <>
-    <Typography variant='subtitle2' className='mbe-2'>
-      {titulo}
-    </Typography>
+    <Typography variant='subtitle2' className='mbe-2'>{titulo}</Typography>
     {piezas.length === 0 ? (
-      <Typography variant='body2' color='text.secondary' className='mbe-4'>
-        Sin piezas
-      </Typography>
+      <Typography variant='body2' color='text.secondary' className='mbe-4'>Sin piezas</Typography>
     ) : (
       <div className='overflow-x-auto mbe-4'>
         <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>{claveLabel}</th>
-              <th>Piezas</th>
-            </tr>
-          </thead>
+          <thead><tr><th>{claveLabel}</th><th>Piezas</th></tr></thead>
           <tbody>
-            {piezas.map(p => (
-              <tr key={p.id}>
-                <td>{p.clt}</td>
-                <td>{p.pzs}</td>
-              </tr>
-            ))}
+            {piezas.map(p => <tr key={p.id}><td>{p.clt}</td><td>{p.pzs}</td></tr>)}
           </tbody>
         </table>
       </div>
@@ -146,16 +155,12 @@ const PiezasTable = ({ titulo, piezas, claveLabel }: { titulo: string; piezas: P
 
 const Foto = ({ label, url }: { label: string; url: string }) => (
   <Grid size={{ xs: 6, md: 3 }}>
-    <Typography variant='body2' color='text.secondary' className='mbe-1'>
-      {label}
-    </Typography>
+    <Typography variant='body2' color='text.secondary' className='mbe-1'>{label}</Typography>
     {url ? (
       // eslint-disable-next-line @next/next/no-img-element
       <img src={url} alt={label} style={{ width: '100%', borderRadius: 8, objectFit: 'cover', aspectRatio: '4/3' }} />
     ) : (
-      <Typography variant='caption' color='text.secondary'>
-        Sin imagen
-      </Typography>
+      <Typography variant='caption' color='text.secondary'>Sin imagen</Typography>
     )}
   </Grid>
 )
@@ -176,9 +181,10 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
       setError(null)
 
       try {
-        const res = await fetch(`/api/warehouses/material-validation/${encodeURIComponent(folio)}`, {
-          signal: controller.signal
-        })
+        const res = await fetch(
+          `/api/warehouses/material-validation/${encodeURIComponent(folio)}`,
+          { signal: controller.signal },
+        )
 
         if (res.status === 403) throw new Error('No tienes permiso para ver este registro.')
         if (res.status === 404) throw new Error('Registro no encontrado.')
@@ -203,35 +209,24 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
   const piezasMotivo = useMemo(() => parsePiezas(data?.PiezasMotivo), [data])
   const piezasEstadoF = useMemo(() => parsePiezas(data?.PiezasEstadoF), [data])
   const documentos = useMemo(() => parseDocs(data?.MaterialDocumentos), [data])
+  const tarimas = useMemo(() => parseTarimas(data?.Tarimas), [data])
 
   if (loading) {
     return (
-      <Card>
-        <CardContent>
-          <div className='flex items-center justify-center min-bs-[240px]'>
-            <CircularProgress />
-          </div>
-        </CardContent>
-      </Card>
+      <Card><CardContent>
+        <div className='flex items-center justify-center min-bs-[240px]'><CircularProgress /></div>
+      </CardContent></Card>
     )
   }
 
   if (error || !data) {
     return (
-      <Card>
-        <CardContent>
-          <Alert severity='error' className='mbe-4'>
-            {error ?? 'Sin datos'}
-          </Alert>
-          <Button
-            variant='outlined'
-            color='secondary'
-            onClick={() => router.push(`/${lang}/warehouses/material-validation`)}
-          >
-            Volver al listado
-          </Button>
-        </CardContent>
-      </Card>
+      <Card><CardContent>
+        <Alert severity='error' className='mbe-4'>{error ?? 'Sin datos'}</Alert>
+        <Button variant='outlined' color='secondary' onClick={() => router.push(`/${lang}/warehouses/material-validation`)}>
+          Volver al listado
+        </Button>
+      </CardContent></Card>
     )
   }
 
@@ -243,39 +238,29 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
         title={
           <div className='flex items-center gap-2'>
             <span>{data.Folio}</span>
-            <Chip
-              size='small'
-              variant='tonal'
-              color={data.ES ? 'info' : 'secondary'}
-              label={data.ES ? 'Entrada' : 'Salida'}
-            />
-            <Chip
-              size='small'
-              variant='tonal'
-              color={data.Status === 0 ? 'warning' : 'success'}
-              label={data.Status === 0 ? 'Pendiente' : 'Revisado'}
-            />
+            <Chip size='small' variant='tonal' color={data.ES ? 'info' : 'secondary'} label={data.ES ? 'Entrada' : 'Salida'} />
+            <Chip size='small' variant='tonal' color={data.Status === 0 ? 'warning' : 'success'} label={data.Status === 0 ? 'Pendiente' : 'Revisado'} />
             {data.Cancelada && <Chip size='small' variant='tonal' color='error' label='Cancelada' />}
             {data.Vinculado && <Chip size='small' variant='tonal' color='info' label='Vinculado' />}
           </div>
         }
         action={
           <div className='flex gap-2'>
-            <Button
-              variant='outlined'
-              color='secondary'
-              onClick={() => router.push(`/${lang}/warehouses/material-validation`)}
-            >
-              Volver
-            </Button>
-            {canEdit && data.Status === 0 && (
-              <Button
-                variant='contained'
-                startIcon={<i className='ri-edit-line' />}
-                onClick={() =>
-                  router.push(`/${lang}/warehouses/material-validation/${encodeURIComponent(folio)}/editar`)
-                }
-              >
+            {data.FolioOrigen && (
+              <Button size='small' variant='outlined' color='info' component='a'
+                href={`/${lang}/warehouses/material-validation/${encodeURIComponent(data.FolioOrigen)}`}>
+                Entrada: {data.FolioOrigen}
+              </Button>
+            )}
+            {data.FolioSalida && (
+              <Button size='small' variant='outlined' color='secondary' component='a'
+                href={`/${lang}/warehouses/material-validation/${encodeURIComponent(data.FolioSalida)}`}>
+                Salida: {data.FolioSalida}
+              </Button>
+            )}
+            {canEdit && data.Status === 0 && data.FolioSalida == null && data.FolioOrigen == null && (
+              <Button variant='contained' startIcon={<i className='ri-edit-line' />}
+                onClick={() => router.push(`/${lang}/warehouses/material-validation/${encodeURIComponent(folio)}/editar`)}>
                 Editar
               </Button>
             )}
@@ -309,9 +294,7 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
         <Divider className='mlb-6' />
 
         {/* Fotos */}
-        <Typography variant='h6' className='mbe-4'>
-          Evidencia fotográfica
-        </Typography>
+        <Typography variant='h6' className='mbe-4'>Evidencia fotográfica</Typography>
         <Grid container spacing={4}>
           <Foto label='Material en transporte' url={photoUrl(data.MaterialEnTransporteFoto)} />
           <Foto label='Transporte' url={photoUrl(data.TransporteFoto)} />
@@ -322,9 +305,7 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
         <Divider className='mlb-6' />
 
         {/* Piezas */}
-        <Typography variant='h6' className='mbe-4'>
-          Piezas
-        </Typography>
+        <Typography variant='h6' className='mbe-4'>Piezas</Typography>
         <Grid container spacing={6}>
           <Grid size={{ xs: 12, md: 6 }}>
             <PiezasTable titulo='Por motivo' piezas={piezasMotivo} claveLabel='Motivo' />
@@ -337,16 +318,30 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
         {documentos.length > 0 && (
           <>
             <Divider className='mlb-6' />
-            <Typography variant='h6' className='mbe-4'>
-              Documentos
-            </Typography>
+            <Typography variant='h6' className='mbe-4'>Documentos</Typography>
             <div className='flex flex-col gap-1'>
               {documentos.map((d, i) => (
-                <a key={i} href={photoUrl(d.file)} target='_blank' rel='noreferrer'>
-                  {d.name || `Documento ${i + 1}`}
-                </a>
+                <a key={i} href={photoUrl(d.file)} target='_blank' rel='noreferrer'>{d.name || `Documento ${i + 1}`}</a>
               ))}
             </div>
+          </>
+        )}
+
+        {tarimas.length > 0 && (
+          <>
+            <Divider className='mlb-6' />
+            <Typography variant='h6' className='mbe-4'>Tarimas ({data.NumTarimas})</Typography>
+            <Grid container spacing={4}>
+              {tarimas.map(t => (
+                <Grid key={t.n} size={{ xs: 12, md: 6 }}>
+                  <Typography variant='subtitle2' className='mbe-2'>Tarima {t.n}</Typography>
+                  <Grid container spacing={4}>
+                    <Foto label='Tarima' url={photoUrl(t.tarima)} />
+                    <Foto label='Papeleta' url={photoUrl(t.papeleta)} />
+                  </Grid>
+                </Grid>
+              ))}
+            </Grid>
           </>
         )}
 
@@ -354,23 +349,17 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
 
         <Grid container spacing={6}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant='h6' className='mbe-4'>
-              Firma ({data.AspNombre})
-            </Typography>
+            <Typography variant='h6' className='mbe-4'>Firma ({data.AspNombre})</Typography>
             {firmaSrc(data.AspFirma) ? (
               <div style={{ width: '60%', padding: '1em', borderRadius: 8, backgroundColor: '#FFF' }}>
                 <img src={firmaSrc(data.AspFirma)} alt='Firma' style={{ width: '100%', minWidth: 300 }} />
               </div>
             ) : (
-              <Typography variant='body2' color='text.secondary'>
-                Sin firma
-              </Typography>
+              <Typography variant='body2' color='text.secondary'>Sin firma</Typography>
             )}
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant='h6' className='mbe-4'>
-              Código QR
-            </Typography>
+            <Typography variant='h6' className='mbe-4'>Código QR</Typography>
             {data.Qr && (
               <div style={{ width: '40%', padding: '1em', borderRadius: 8, backgroundColor: '#FFF' }}>
                 <img src={photoUrl(data.Qr)} alt='QR' style={{ width: '100%', minWidth: 200 }} />
@@ -378,6 +367,7 @@ const MaterialValidationDetail = ({ folio, canEdit }: { folio: string; canEdit: 
             )}
           </Grid>
         </Grid>
+
       </CardContent>
     </Card>
   )

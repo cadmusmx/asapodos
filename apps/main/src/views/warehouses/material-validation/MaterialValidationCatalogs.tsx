@@ -33,7 +33,7 @@ const BASE = '/api/warehouses/material-validation/catalogs'
 const CATALOG_TABS = [
   { key: 'almacenes', label: 'Almacenes', singular: 'almacén' },
   { key: 'proyectos', label: 'Proyectos', singular: 'proyecto' },
-  { key: 'tipos-material', label: 'Tipos de material', singular: 'tipo de material' }
+  { key: 'tipos-material', label: 'Tipos de material', singular: 'tipo de material' },
 ] as const
 
 type CatalogKey = (typeof CATALOG_TABS)[number]['key']
@@ -127,7 +127,7 @@ const MaterialValidationCatalogs = ({ canCreate, canEdit, canDelete }: Props) =>
       const res = await fetch(isCreate ? `${BASE}/${tab}` : `${BASE}/${tab}/${dialog.id}`, {
         method: isCreate ? 'POST' : 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre })
+        body: JSON.stringify({ nombre }),
       })
 
       const payload = await res.json().catch(() => ({}))
@@ -158,10 +158,10 @@ const MaterialValidationCatalogs = ({ canCreate, canEdit, canDelete }: Props) =>
     try {
       const res = activo
         ? await fetch(`${BASE}/${tab}/${row.Id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ activo: true })
-          })
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ activo: true }),
+        })
         : await fetch(`${BASE}/${tab}/${row.Id}`, { method: 'DELETE' })
 
       if (!res.ok) {
@@ -203,21 +203,13 @@ const MaterialValidationCatalogs = ({ canCreate, canEdit, canDelete }: Props) =>
       />
       <CardContent>
         <Tabs value={tab} onChange={(_, v) => setTab(v as CatalogKey)} className='mbe-4'>
-          {CATALOG_TABS.map(t => (
-            <Tab key={t.key} value={t.key} label={t.label} />
-          ))}
+          {CATALOG_TABS.map(t => <Tab key={t.key} value={t.key} label={t.label} />)}
         </Tabs>
 
-        {error && (
-          <Alert severity='error' className='mbe-4'>
-            {error}
-          </Alert>
-        )}
+        {error && <Alert severity='error' className='mbe-4'>{error}</Alert>}
 
         {loading ? (
-          <div className='flex items-center justify-center min-bs-[200px]'>
-            <CircularProgress />
-          </div>
+          <div className='flex items-center justify-center min-bs-[200px]'><CircularProgress /></div>
         ) : (
           <div className='overflow-x-auto'>
             <table className={styles.table}>
@@ -231,27 +223,21 @@ const MaterialValidationCatalogs = ({ canCreate, canEdit, canDelete }: Props) =>
               </thead>
               <tbody>
                 {rows.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className='text-center'>
-                      Sin registros
-                    </td>
-                  </tr>
+                  <tr><td colSpan={4} className='text-center'>Sin registros</td></tr>
                 ) : (
                   rows.map(row => (
                     <tr key={row.Id} style={{ opacity: row.Activo ? 1 : 0.55 }}>
                       <td>{row.Nombre}</td>
                       <td>
                         <Chip
-                          size='small'
-                          variant='tonal'
+                          size='small' variant='tonal'
                           color={row.EsGlobal ? 'secondary' : 'info'}
                           label={row.EsGlobal ? 'Global' : 'Propio'}
                         />
                       </td>
                       <td>
                         <Chip
-                          size='small'
-                          variant='tonal'
+                          size='small' variant='tonal'
                           color={row.Activo ? 'success' : 'secondary'}
                           label={row.Activo ? 'Activo' : 'Inactivo'}
                         />
@@ -259,11 +245,7 @@ const MaterialValidationCatalogs = ({ canCreate, canEdit, canDelete }: Props) =>
                       <td>
                         {row.EsGlobal ? (
                           <Tooltip title='Catálogo global: solo lectura'>
-                            <span>
-                              <IconButton size='small' disabled>
-                                <i className='ri-lock-line' />
-                              </IconButton>
-                            </span>
+                            <span><IconButton size='small' disabled><i className='ri-lock-line' /></IconButton></span>
                           </Tooltip>
                         ) : (
                           <div className='flex gap-1'>
@@ -276,29 +258,19 @@ const MaterialValidationCatalogs = ({ canCreate, canEdit, canDelete }: Props) =>
                             )}
                             {row.Activo
                               ? canDelete && (
-                                  <Tooltip title='Desactivar'>
-                                    <IconButton
-                                      size='small'
-                                      color='error'
-                                      onClick={() => setActivo(row, false)}
-                                      disabled={saving}
-                                    >
-                                      <i className='ri-forbid-2-line' />
-                                    </IconButton>
-                                  </Tooltip>
-                                )
+                                <Tooltip title='Desactivar'>
+                                  <IconButton size='small' color='error' onClick={() => setActivo(row, false)} disabled={saving}>
+                                    <i className='ri-forbid-2-line' />
+                                  </IconButton>
+                                </Tooltip>
+                              )
                               : canEdit && (
-                                  <Tooltip title='Reactivar'>
-                                    <IconButton
-                                      size='small'
-                                      color='success'
-                                      onClick={() => setActivo(row, true)}
-                                      disabled={saving}
-                                    >
-                                      <i className='ri-check-line' />
-                                    </IconButton>
-                                  </Tooltip>
-                                )}
+                                <Tooltip title='Reactivar'>
+                                  <IconButton size='small' color='success' onClick={() => setActivo(row, true)} disabled={saving}>
+                                    <i className='ri-check-line' />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
                           </div>
                         )}
                       </td>
@@ -318,25 +290,16 @@ const MaterialValidationCatalogs = ({ canCreate, canEdit, canDelete }: Props) =>
         </DialogTitle>
         <DialogContent>
           <TextField
-            autoFocus
-            fullWidth
-            label='Nombre'
-            className='mbs-2'
+            autoFocus fullWidth label='Nombre' className='mbs-2'
             value={dialog.nombre}
             onChange={e => setDialog(d => ({ ...d, nombre: e.target.value }))}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && !saving) submitDialog()
-            }}
+            onKeyDown={e => { if (e.key === 'Enter' && !saving) submitDialog() }}
           />
         </DialogContent>
         <DialogActions>
-          <Button color='secondary' onClick={closeDialog} disabled={saving}>
-            Cancelar
-          </Button>
+          <Button color='secondary' onClick={closeDialog} disabled={saving}>Cancelar</Button>
           <Button
-            variant='contained'
-            onClick={submitDialog}
-            disabled={saving}
+            variant='contained' onClick={submitDialog} disabled={saving}
             startIcon={saving ? <CircularProgress size={16} /> : undefined}
           >
             Guardar
@@ -349,17 +312,13 @@ const MaterialValidationCatalogs = ({ canCreate, canEdit, canDelete }: Props) =>
         <DialogTitle>Ya existe inactivo</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Ya hay un {current.singular} inactivo con el nombre «{reactivar?.nombre}». ¿Quieres reactivarlo en lugar de
-            crear uno nuevo?
+            Ya hay un {current.singular} inactivo con el nombre «{reactivar?.nombre}». ¿Quieres reactivarlo
+            en lugar de crear uno nuevo?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button color='secondary' onClick={() => setReactivar(null)}>
-            Cancelar
-          </Button>
-          <Button variant='contained' onClick={confirmReactivar} disabled={!canEdit}>
-            Reactivar
-          </Button>
+          <Button color='secondary' onClick={() => setReactivar(null)}>Cancelar</Button>
+          <Button variant='contained' onClick={confirmReactivar} disabled={!canEdit}>Reactivar</Button>
         </DialogActions>
       </Dialog>
     </Card>

@@ -9,7 +9,7 @@ interface SearchBody {
   es?: boolean | string
   fechaInicio?: string
   fechaFin?: string
-  fechaInicioFin?: string // compat legacy: "inicio - fin"
+  fechaInicioFin?: string   // compat legacy: "inicio - fin"
   idUsuario?: number
   proyecto?: number
   tipoMaterial?: number
@@ -49,7 +49,10 @@ export const POST = withPermission(
       }
 
       // Condiciones parametrizadas (ES ya NO interpolado).
-      const conds: Prisma.Sql[] = [Prisma.sql`VM.TenantID = ${tenantId}`, Prisma.sql`VM.ES = ${entradas ? 1 : 0}`]
+      const conds: Prisma.Sql[] = [
+        Prisma.sql`VM.TenantID = ${tenantId}`,
+        Prisma.sql`VM.ES = ${entradas ? 1 : 0}`,
+      ]
 
       if (fInicio && fFin) conds.push(Prisma.sql`VM.FechaCaptura BETWEEN ${fInicio} AND ${fFin}`)
       if (body.idUsuario != null) conds.push(Prisma.sql`VM.IdUsuario = ${body.idUsuario}`)
@@ -65,9 +68,7 @@ export const POST = withPermission(
 
       type Row = Record<string, unknown> & { TotalRows?: number | bigint }
 
-      const rows = await withTenantContext(
-        tenantId,
-        tx => tx.$queryRaw<Row[]>`
+      const rows = await withTenantContext(tenantId, tx => tx.$queryRaw<Row[]>`
         SELECT VM.*, LTRIM(RTRIM(UE.FirstName + ' ' + UE.LastName)) AS Responsable, pro.Proyecto, tm.Tipo AS TipoMaterial,
                al.Nombre AS AlmacenDestino, ca.Carrier,
                ( SELECT pm.Id AS id, pm.Clave AS cl, cm.Motivo AS clt, pm.Piezas AS pzs
@@ -85,8 +86,11 @@ export const POST = withPermission(
                    WHERE VM.Folio = VFV.FolioEntrada
                       OR VM.Folio = VFV.FolioSalida
                       OR VM.Folio = VFV.FolioValidacion ) AS Vinculado,
-               COUNT(*) OVER() AS TotalRows
+               COUNT(*) OVER() AS TotalRows,
+               voOut.FolioIN AS FolioOrigen, voIn.FolioOut AS FolioSalida
           FROM dbo.GASOAL_VMES VM
+          LEFT JOIN dbo.GASOAL_VMOut voOut ON voOut.TenantID = VM.TenantID AND voOut.IdOut  = VM.Id
+          LEFT JOIN dbo.GASOAL_VMOut voIn  ON voIn.TenantID  = VM.TenantID AND voIn.FolioIN = VM.Folio
           INNER JOIN dbo.GASOAL_VMAlmacenes al ON VM.IdAlmacenDestino = al.Id
           INNER JOIN dbo.Cat_VMProyecto pro ON VM.IdProyecto = pro.Id
           INNER JOIN dbo.Cat_VMTiposMaterial tm ON VM.IdTipoMaterial = tm.Id
@@ -96,14 +100,10 @@ export const POST = withPermission(
           WHERE ${where}
           ORDER BY VM.FechaCaptura ${ordenSql}
           OFFSET (${pagina} - 1) * ${limite} ROWS FETCH NEXT ${limite} ROWS ONLY
-      `
-      )
+      `)
 
       // COUNT(*) OVER() = total del set filtrado ANTES del OFFSET/FETCH.
-      const total = rows.length
-        ? ((typeof rows[0].TotalRows === 'bigint' ? Number(rows[0].TotalRows) : rows[0].TotalRows) ?? 0)
-        : 0
-
+      const total = rows.length ? ((typeof rows[0].TotalRows === 'bigint' ? Number(rows[0].TotalRows) : rows[0].TotalRows) ?? 0) : 0
       const items = rows.map(({ TotalRows, ...rest }) => rest)
 
       return NextResponse.json({ rows: items, total, pagina, limite })

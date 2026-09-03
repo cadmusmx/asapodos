@@ -7,9 +7,9 @@
  * es seguro porque SIEMPRE salen de este registro, nunca del cliente.
  */
 export const CATALOG_REGISTRY = {
-  almacenes: { table: 'GASOAL_VMAlmacenes', nameCol: 'Nombre', label: 'Almacén' },
-  proyectos: { table: 'Cat_VMProyecto', nameCol: 'Proyecto', label: 'Proyecto' },
-  'tipos-material': { table: 'Cat_VMTiposMaterial', nameCol: 'Tipo', label: 'Tipo de material' }
+  'almacenes': { table: 'GASOAL_VMAlmacenes', nameCol: 'Nombre', label: 'Almacén' },
+  'proyectos': { table: 'Cat_VMProyecto', nameCol: 'Proyecto', label: 'Proyecto' },
+  'tipos-material': { table: 'Cat_VMTiposMaterial', nameCol: 'Tipo', label: 'Tipo de material' },
 } as const
 
 export type CatalogKey = keyof typeof CATALOG_REGISTRY

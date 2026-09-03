@@ -107,8 +107,7 @@ export function validateSitio(s: unknown): string | null {
   if (isMissing(site.descripcionMaterial)) return 'Requiere descripción de material'
   if (site.materialFaltante === undefined || site.materialFaltante === null) return 'Indique material faltante'
   if (site.materialFaltante && isMissing(site.descripcionFaltantes)) return 'Describa los faltantes'
-  if (!Array.isArray(site.tiposMaterial) || site.tiposMaterial.length === 0)
-    return 'Requiere al menos un tipo de material'
+  if (!Array.isArray(site.tiposMaterial) || site.tiposMaterial.length === 0) return 'Requiere al menos un tipo de material'
   if (!Array.isArray(site.evidencias) || site.evidencias.length === 0) return 'Requiere al menos una evidencia'
 
   return validateTarimas(site.tarimas)
@@ -130,9 +129,7 @@ export function validateSitioEdit(s: unknown): string | null {
 // Rechaza (idSitio + nombreSitio) repetido en el mismo arribo; compara en minúsculas.
 // Respeta UQ(IdLogistica, IdSitio, NombreSitio).
 export function checkSitiosDuplicados(sitios: Array<{ idSitio?: string; nombreSitio?: string }>): boolean {
-  const keys = sitios.map(
-    s => `${(s?.idSitio ?? '').trim().toLowerCase()}|${(s?.nombreSitio ?? '').trim().toLowerCase()}`
-  )
+  const keys = sitios.map(s => `${(s?.idSitio ?? '').trim().toLowerCase()}|${(s?.nombreSitio ?? '').trim().toLowerCase()}`)
 
   return new Set(keys).size !== keys.length
 }
@@ -158,7 +155,11 @@ export function parseSitios<T = unknown>(raw: unknown): T[] {
 
 // materialFaltante llega como bit (0/1) desde SQL Server -> boolean.
 export function normalizeResumenSitio(s: Record<string, unknown>): Record<string, unknown> {
-  return { ...s, materialFaltante: s.materialFaltante === true || s.materialFaltante === 1 }
+  return {
+    ...s,
+    materialFaltante: s.materialFaltante === true || s.materialFaltante === 1,
+    entregado: s.entregado === true || s.entregado === 1, // [S1] estado por sitio
+  }
 }
 
 // SQL Server acepta `EXEC sp @Param = value`. Cada valor va como parámetro real de Prisma (${...}), nunca interpolado.

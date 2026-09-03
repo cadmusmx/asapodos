@@ -45,33 +45,16 @@ export const POST = withPermission('material_validation', async (req, { auth, te
 
     const es = b.es === true || b.es === 'true'
 
-    // Requeridos (equivalente al .some(isMissing) del legacy; IdUsuario ya no va aquí).
+    // Requeridos (equivalente al .some(isMissing) del legacy IdUsuario ya no va aquí).
     const required = [
-      b.es,
-      b.folio,
-      b.idProyecto,
-      b.idTipoMaterial,
-      b.nombreSitio,
-      b.idSitio,
-      b.cuentaCliente,
-      b.fecha,
-      b.aspNombre,
-      b.nombreContacto,
-      b.idCarrier,
-      b.idRegion,
-      b.idAlmacenDestino,
-      b.placasTransporte,
-      b.fotoTransporte,
-      b.fotoPlacas,
-      b.fotoMaterialTransporte,
-      b.firmaBase64,
-      b.qr
+      b.es, b.folio, b.idProyecto, b.idTipoMaterial, b.nombreSitio, b.idSitio, b.cuentaCliente,
+      b.fecha, b.aspNombre, b.nombreContacto, b.idCarrier, b.idRegion, b.idAlmacenDestino,
+      b.placasTransporte, b.fotoTransporte, b.fotoPlacas, b.fotoMaterialTransporte, b.firmaBase64, b.qr,
     ]
 
     if (required.some(isMissing)) return NextResponse.json({ message: 'Faltan datos' }, { status: 400 })
 
-    if (Number(b.idCarrier) === 4 && !b.carrier) {
-      // Alinear con EsOtro
+    if (Number(b.idCarrier) === 4 && !b.carrier) { // Alinear con EsOtro
       return NextResponse.json({ message: 'Falta el carrier' }, { status: 400 })
     }
 

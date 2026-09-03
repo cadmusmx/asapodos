@@ -2,13 +2,8 @@
 
 import { Prisma } from '@prisma/client'
 
-export interface Pieza {
-  cl: number | string
-  pzs: string
-}
-export interface PiezaEdit extends Pieza {
-  id: number | string
-}
+export interface Pieza { cl: number | string; pzs: string }
+export interface PiezaEdit extends Pieza { id: number | string }
 
 export const isMissing = (v: unknown): boolean => v === undefined || v === null || v === ''
 
@@ -16,7 +11,7 @@ export const isMissing = (v: unknown): boolean => v === undefined || v === null 
 export function piezasValues(idVM: number, lista: Pieza[], claveIsChar: boolean): Prisma.Sql {
   return Prisma.join(
     lista.map(p => Prisma.sql`(${idVM}, ${claveIsChar ? String(p.cl) : Number(p.cl)}, ${String(p.pzs)})`),
-    ', '
+    ', ',
   )
 }
 

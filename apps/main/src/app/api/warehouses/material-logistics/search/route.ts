@@ -48,21 +48,23 @@ export const POST = withPermission(
         p('@IdCarrier', body.idCarrier ?? null),
         p('@Pagina', pagina),
         p('@Limite', limite),
-        p('@Orden', orden)
+        p('@Orden', orden),
       ]
 
       type Row = Record<string, unknown> & { TotalRows?: number | bigint; Sitios?: unknown }
 
-      const rows = await withTenantContext(tenantId, tx => tx.$queryRaw<Row[]>(execSp('dbo.usp_LM_GetList', params)))
+      const rows = await withTenantContext(tenantId, tx =>
+        tx.$queryRaw<Row[]>(execSp('dbo.usp_LM_GetList', params)),
+      )
 
       // COUNT(*) OVER() = total del set filtrado ANTES del OFFSET/FETCH.
       const total = rows.length
-        ? ((typeof rows[0].TotalRows === 'bigint' ? Number(rows[0].TotalRows) : rows[0].TotalRows) ?? 0)
+        ? (typeof rows[0].TotalRows === 'bigint' ? Number(rows[0].TotalRows) : rows[0].TotalRows) ?? 0
         : 0
 
       const items = rows.map(({ TotalRows, Sitios, ...rest }) => ({
         ...rest,
-        sitios: parseSitios<Record<string, unknown>>(Sitios).map(normalizeResumenSitio)
+        sitios: parseSitios<Record<string, unknown>>(Sitios).map(normalizeResumenSitio),
       }))
 
       return NextResponse.json({ rows: items, total, pagina, limite })
@@ -72,5 +74,5 @@ export const POST = withPermission(
       return NextResponse.json({ message: 'Ha ocurrido un error inesperado' }, { status: 500 })
     }
   },
-  { bit: PERM.R }
+  { bit: PERM.R },
 )

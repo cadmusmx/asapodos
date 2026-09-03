@@ -13,15 +13,13 @@ export const GET = withPermission('material_validation', async (req, { tenantId 
       return NextResponse.json({ message: 'El folio es requerido' }, { status: 400 })
     }
 
-    const rows = await withTenantContext(
-      tenantId,
-      tx =>
-        tx.$queryRaw<Array<{ count: number | bigint }>>`
+    const rows = await withTenantContext(tenantId, tx =>
+      tx.$queryRaw<Array<{ count: number | bigint }>>`
         SELECT COUNT(*) AS count
         FROM dbo.GASOAL_VinculosFolioValidacion
         WHERE TenantID = ${tenantId}
           AND (FolioEntrada = ${folio} OR FolioSalida = ${folio} OR FolioValidacion = ${folio})
-      `
+      `,
     )
 
     const vinculado = Number(rows[0]?.count ?? 0) > 0

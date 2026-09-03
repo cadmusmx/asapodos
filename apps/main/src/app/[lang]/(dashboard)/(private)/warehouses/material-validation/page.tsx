@@ -19,8 +19,9 @@ const MaterialValidationPage = async (props: { params: Promise<{ lang: Locale }>
   }
 
   const canEdit = (access.mask & PERM.U) === PERM.U
+  const canCreate = (access.mask & PERM.W) === PERM.W
 
-  return <MaterialValidationList canEdit={canEdit} />
+  return <MaterialValidationList canEdit={canEdit} canCreate={canCreate} />
 }
 
 export default MaterialValidationPage

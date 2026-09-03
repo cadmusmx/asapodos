@@ -19,6 +19,6 @@ const MaterialValidationEditPage = async (props: { params: Promise<{ lang: Local
   }
 
   return <MaterialValidationEditForm folio={decodeURIComponent(folio)} />
-}
+};
 
 export default MaterialValidationEditPage

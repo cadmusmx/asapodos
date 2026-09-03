@@ -117,7 +117,7 @@ const MaterialLogisticsCatalogs = ({ canCreate, canEdit, canDelete }: Props) => 
       const res = await fetch(isCreate ? `${BASE}/${TIPO}` : `${BASE}/${TIPO}/${dialog.id}`, {
         method: isCreate ? 'POST' : 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre })
+        body: JSON.stringify({ nombre }),
       })
 
       const payload = await res.json().catch(() => ({}))
@@ -149,10 +149,10 @@ const MaterialLogisticsCatalogs = ({ canCreate, canEdit, canDelete }: Props) => 
     try {
       const res = activo
         ? await fetch(`${BASE}/${TIPO}/${row.Id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ activo: true })
-          })
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ activo: true }),
+        })
         : await fetch(`${BASE}/${TIPO}/${row.Id}`, { method: 'DELETE' })
 
       if (!res.ok) {
@@ -260,29 +260,19 @@ const MaterialLogisticsCatalogs = ({ canCreate, canEdit, canDelete }: Props) => 
                             )}
                             {row.Activo
                               ? canDelete && (
-                                  <Tooltip title='Desactivar'>
-                                    <IconButton
-                                      size='small'
-                                      color='error'
-                                      onClick={() => setActivo(row, false)}
-                                      disabled={saving}
-                                    >
-                                      <i className='ri-forbid-2-line' />
-                                    </IconButton>
-                                  </Tooltip>
-                                )
+                                <Tooltip title='Desactivar'>
+                                  <IconButton size='small' color='error' onClick={() => setActivo(row, false)} disabled={saving}>
+                                    <i className='ri-forbid-2-line' />
+                                  </IconButton>
+                                </Tooltip>
+                              )
                               : canEdit && (
-                                  <Tooltip title='Reactivar'>
-                                    <IconButton
-                                      size='small'
-                                      color='success'
-                                      onClick={() => setActivo(row, true)}
-                                      disabled={saving}
-                                    >
-                                      <i className='ri-check-line' />
-                                    </IconButton>
-                                  </Tooltip>
-                                )}
+                                <Tooltip title='Reactivar'>
+                                  <IconButton size='small' color='success' onClick={() => setActivo(row, true)} disabled={saving}>
+                                    <i className='ri-check-line' />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
                           </div>
                         )}
                       </td>

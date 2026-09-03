@@ -55,36 +55,40 @@ const FIELD_MAP_WEB: Record<string, string> = {
 }
 
 // GET · detalle
-export const GET = withPermission<RouteCtx>('material_validation', async (_req, { tenantId }, routeCtx) => {
-  try {
-    const { folio } = await routeCtx.params
+export const GET = withPermission<RouteCtx>(
+  'material_validation',
+  async (_req, { tenantId }, routeCtx) => {
+    try {
+      const { folio } = await routeCtx.params
 
-    if (!folio || !folio.trim()) {
-      return NextResponse.json({ message: 'El folio es requerido' }, { status: 400 })
-    }
+      if (!folio || !folio.trim()) {
+        return NextResponse.json({ message: 'El folio es requerido' }, { status: 400 })
+      }
 
-    const rows = await withTenantContext(
-      tenantId,
-      tx =>
+      const rows = await withTenantContext(tenantId, tx =>
         tx.$queryRaw<Array<Record<string, unknown>>>`
           SELECT VM.*, LTRIM(RTRIM(UE.FirstName + ' ' + UE.LastName)) AS Responsable, pro.Proyecto, tm.Tipo AS TipoMaterial,
                  al.Nombre AS AlmacenDestino, LTRIM(RTRIM(UEW.FirstName + ' ' + UEW.LastName)) AS UsuarioEditor, ca.Carrier,
                  ( SELECT pm.Id AS id, pm.Clave AS cl, cm.Motivo AS clt, pm.Piezas AS pzs
                      FROM dbo.GASOAL_VMPiezasMotivo pm
                      LEFT JOIN dbo.Cat_VMMotivo cm ON pm.Clave = cm.Id
-                     WHERE pm.IdVM = VM.Id
+                     WHERE pm.IdVM = COALESCE(voOut.IdIN, VM.Id)
                      FOR JSON PATH ) AS PiezasMotivo,
                  ( SELECT pe.Id AS id, pe.Clave AS cl, ce.Estado AS clt, pe.Piezas AS pzs
                      FROM dbo.GASOAL_VMPiezasEstadoF pe
                      LEFT JOIN dbo.Cat_VMEFisico ce ON pe.Clave = ce.Clave
-                     WHERE pe.IdVM = VM.Id
+                     WHERE pe.IdVM = COALESCE(voOut.IdIN, VM.Id)
                      FOR JSON PATH ) AS PiezasEstadoF,
                  ( SELECT TOP 1 VFV.Id
                      FROM dbo.GASOAL_VinculosFolioValidacion VFV
                      WHERE VM.Folio = VFV.FolioEntrada
                         OR VM.Folio = VFV.FolioSalida
-                        OR VM.Folio = VFV.FolioValidacion ) AS Vinculado
+                        OR VM.Folio = VFV.FolioValidacion ) AS Vinculado,
+                  voOut.FolioIN  AS FolioOrigen,    -- este OUT salió de este IN
+                  voIn.FolioOut  AS FolioSalida     -- este IN ya tiene esta salida
             FROM dbo.GASOAL_VMES VM
+            LEFT JOIN dbo.GASOAL_VMOut voOut ON voOut.TenantID = VM.TenantID AND voOut.IdOut  = VM.Id
+            LEFT JOIN dbo.GASOAL_VMOut voIn  ON voIn.TenantID  = VM.TenantID AND voIn.FolioIN = VM.Folio
             INNER JOIN dbo.GASOAL_VMAlmacenes al ON VM.IdAlmacenDestino = al.Id
             INNER JOIN dbo.Cat_VMProyecto pro ON VM.IdProyecto = pro.Id
             INNER JOIN dbo.Cat_VMTiposMaterial tm ON VM.IdTipoMaterial = tm.Id
@@ -93,20 +97,21 @@ export const GET = withPermission<RouteCtx>('material_validation', async (_req, 
             INNER JOIN HumanCapital.Employees UE ON UE.TenantID = U.TenantID AND UE.EmployeeID = U.EmployeeID
             LEFT JOIN HumanCapital.Employees UEW ON UEW.EmployeeID = VM.IdUsuarioEditorWeb
             WHERE VM.TenantID = ${tenantId} AND VM.Folio = ${folio}
-        `
-    )
+        `,
+      )
 
-    if (rows.length === 0) {
-      return NextResponse.json({ message: 'Registro no encontrado' }, { status: 404 })
+      if (rows.length === 0) {
+        return NextResponse.json({ message: 'Registro no encontrado' }, { status: 404 })
+      }
+
+      return NextResponse.json(rows[0])
+    } catch (e) {
+      console.error('[material-validation/[folio] GET]', e)
+
+      return NextResponse.json({ message: 'Ha ocurrido un error inesperado' }, { status: 500 })
     }
-
-    return NextResponse.json(rows[0])
-  } catch (e) {
-    console.error('[material-validation/[folio] GET]', e)
-
-    return NextResponse.json({ message: 'Ha ocurrido un error inesperado' }, { status: 500 })
-  }
-})
+  },
+)
 
 // PUT · edición (bit U)
 // Modo por pertenencia: DUEÑO -> edición completa (campos + piezas).
@@ -138,15 +143,23 @@ export const PUT = withPermission<RouteCtx>(
       }
 
       const outcome = await withTenantContext(tenantId, async tx => {
-        // 1) Resolver registro por tenant+folio y autorizar (dueño + editable).
-        const found = await tx.$queryRaw<Array<{ Id: number; IdUsuario: number; Status: number }>>`
-          SELECT Id, IdUsuario, Status FROM dbo.GASOAL_VMES
-          WHERE TenantID = ${tenantId} AND Folio = ${folio}`
+        const found = await tx.$queryRaw<Array<{ Id: number; IdUsuario: number; Status: number; Extended: number; Derived: number }>>`
+          SELECT VMES.Id, VMES.IdUsuario, VMES.Status,
+                (CASE WHEN EXISTS (
+                    SELECT 1 FROM dbo.GASOAL_VMOut WHERE TenantID = ${tenantId} AND FolioIN = ${folio}
+                  ) THEN 1 ELSE 0 END) AS Extended,
+                (CASE WHEN EXISTS (
+                    SELECT 1 FROM dbo.GASOAL_VMOut vo WHERE vo.TenantID = ${tenantId} AND vo.IdOut = VMES.Id
+                  ) THEN 1 ELSE 0 END) AS Derived
+            FROM dbo.GASOAL_VMES VMES
+          WHERE VMES.TenantID = ${tenantId} AND VMES.Folio = ${folio}`
 
         if (found.length === 0) return { status: 404, message: 'Registro no encontrado' }
         const rec = found[0]
 
         if (rec.Status !== 0) return { status: 409, message: 'El registro no es editable' }
+        if (rec.Extended) return { status: 409, message: 'No se puede editar una entrada que ya tiene salida' }
+        if (rec.Derived) return { status: 409, message: 'No se puede editar una salida generada desde una entrada' }
         const idVM = rec.Id
         const isOwner = rec.IdUsuario === auth.userId
 

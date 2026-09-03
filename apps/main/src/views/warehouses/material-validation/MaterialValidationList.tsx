@@ -26,14 +26,10 @@ import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '
 // Style Imports
 import styles from '@core/styles/table.module.css'
 
-import type {
-  AlmacenRow,
-  ProyectoRow,
-  TipoMaterialRow,
-  CarrierRow,
-  MotivoRow,
-  EstadoFisicoRow
-} from '@/app/api/warehouses/material-validation/catalogs/route'
+import type { AlmacenRow, ProyectoRow, TipoMaterialRow, CarrierRow, MotivoRow, EstadoFisicoRow } from '@/app/api/warehouses/material-validation/catalogs/route'
+import ExportDialog from '@/components/export/ExportDialog'
+import OutFolioModal from './components/OutFolioModal'
+
 
 interface Catalogs {
   almacenes: Array<AlmacenRow>
@@ -57,27 +53,22 @@ interface VMRow {
   Status: number
   Vinculado: number | null
   ES: boolean
+  FolioSalida: string | null
+  FolioOrigen: string | null
 }
 
 const EMPTY_CATALOGS: Catalogs = {
-  almacenes: [],
-  proyectos: [],
-  tiposMaterial: [],
-  carriers: [],
-  motivos: [],
-  estadosFisicos: []
+  almacenes: [], proyectos: [], tiposMaterial: [], carriers: [], motivos: [], estadosFisicos: [],
 }
 
 const columnHelper = createColumnHelper<VMRow>()
 
-const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
+const MaterialValidationList = ({ canEdit, canCreate }: { canEdit: boolean, canCreate: boolean }) => {
   const router = useRouter()
   const { lang } = useParams()
 
-  const goToDetail = (folio: string) =>
-    router.push(`/${lang}/warehouses/material-validation/${encodeURIComponent(folio)}`)
-
   const goCatalogs = () => router.push(`/${lang}/warehouses/material-validation/catalogos`)
+
 
   // Filtros (cada cambio vuelve a la primera página)
   const [es, setEs] = useState(true) // true = entradas, false = salidas
@@ -88,9 +79,12 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
   const [almacen, setAlmacen] = useState('')
   const [carrier, setCarrier] = useState('')
 
-  // Paginación (0-indexed como TanStack; la API es 1-indexed)
+  // Paginación (0-indexed como TanStack la API es 1-indexed)
   const [pageIndex, setPageIndex] = useState(0)
   const [pageSize, setPageSize] = useState(10)
+
+  const [exportOpen, setExportOpen] = useState(false)
+  const [outModalOpen, setOutModalOpen] = useState(false)
 
   // Datos
   const [catalogs, setCatalogs] = useState<Catalogs>(EMPTY_CATALOGS)
@@ -127,7 +121,7 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
         const params = new URLSearchParams({
           pagina: String(pageIndex + 1),
           limite: String(pageSize),
-          orden: 'DESC'
+          orden: 'DESC',
         })
 
         const body: Record<string, unknown> = { es }
@@ -143,7 +137,7 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
-          signal: controller.signal
+          signal: controller.signal,
         })
 
         if (res.status === 403) throw new Error('No tienes permiso para ver este módulo.')
@@ -173,7 +167,7 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
       columnHelper.accessor('Folio', { header: 'Folio' }),
       columnHelper.accessor('Fecha', {
         header: 'Fecha',
-        cell: info => new Date(info.getValue()).toLocaleDateString()
+        cell: info => new Date(info.getValue()).toLocaleDateString(),
       }),
       columnHelper.accessor('Proyecto', { header: 'Proyecto' }),
       columnHelper.accessor('TipoMaterial', { header: 'Tipo' }),
@@ -190,24 +184,56 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
             color={info.getValue() === 0 ? 'warning' : 'success'}
             label={info.getValue() === 0 ? 'Pendiente' : 'Revisado'}
           />
-        )
+        ),
       }),
       columnHelper.accessor('Vinculado', {
         header: 'Vínculo',
-        cell: info => (info.getValue() ? <Chip size='small' variant='tonal' color='info' label='Vinculado' /> : '—')
+        cell: info => (info.getValue() ? <Chip size='small' variant='tonal' color='info' label='Vinculado' /> : '—'),
       }),
       columnHelper.display({
         id: 'actions',
         header: '',
-        cell: ({ row }) => (
-          <Button size='small' variant='outlined' color='info' onClick={() => goToDetail(row.original.Folio)}>
-            {canEdit ? 'Ver / Editar' : 'Ver'}
-          </Button>
-        )
-      })
+        cell: ({ row }) => {
+          const r = row.original
+          const detail = (f: string) => `/${lang}/warehouses/material-validation/${encodeURIComponent(f)}`
+
+          return (
+            <div className='flex gap-2'>
+              <Button size='small' variant='contained' component='a'
+                href={detail(r.Folio)} target='_blank' rel='noopener noreferrer'>
+                {(canEdit && r.FolioSalida == null && r.FolioOrigen == null) ? 'Ver / Editar' : 'Ver'}
+              </Button>
+
+              {/* Entrada sin salida → dar salida */}
+              {r.ES && !r.FolioSalida && (
+                <Button size='small' variant='outlined' component='a'
+                  href={`${detail(r.Folio)}/out`} target='_blank' rel='noopener noreferrer'>
+                  Dar salida
+                </Button>
+              )}
+
+              {/* Entrada extendida → ver su salida */}
+              {r.ES && r.FolioSalida && (
+                <Button size='small' variant='outlined' color='secondary' component='a'
+                  href={detail(r.FolioSalida)} target='_blank' rel='noopener noreferrer'>
+                  Ver Salida
+                </Button>
+              )}
+
+              {/* Salida derivada → ver IN de origen */}
+              {!r.ES && r.FolioOrigen && (
+                <Button size='small' variant='outlined' color='info' component='a'
+                  href={detail(r.FolioOrigen)} target='_blank' rel='noopener noreferrer'>
+                  Ver Entrada
+                </Button>
+              )}
+            </div>
+          )
+        },
+      }),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [canEdit, lang]
+    [canEdit, lang],
   )
 
   const table = useReactTable({
@@ -216,8 +242,24 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
     rowCount: total,
-    state: { pagination: { pageIndex, pageSize } }
+    state: { pagination: { pageIndex, pageSize } },
   })
+
+  const exportParams: Record<string, string> = {
+    es: String(es),
+    ...(proyecto ? { proyecto: String(proyecto) } : {}),
+    ...(tipoMaterial ? { tipoMaterial: String(tipoMaterial) } : {}),
+    ...(almacen ? { almacen: String(almacen) } : {}),
+    ...(carrier ? { carrier: String(carrier) } : {}),
+  }
+
+  const exportChips = [
+    es ? 'Entradas' : 'Salidas',
+    proyecto && `Proyecto: ${catalogs.proyectos.find(p => p.Id === Number(proyecto))?.Proyecto}`,
+    tipoMaterial && `Tipo: ${catalogs.tiposMaterial.find(t => t.Id === Number(tipoMaterial))?.Tipo}`,
+    almacen && `Almacén: ${catalogs.almacenes.find(a => a.Id === Number(almacen))?.Nombre}`,
+    carrier && `Carrier: ${catalogs.carriers.find(c => c.Id === Number(carrier))?.Carrier}`,
+  ].filter(Boolean) as string[]
 
   return (
     <Card>
@@ -226,9 +268,17 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
         subheader='Un Sitio, proyecto, tipo de material, ASP'
         action={
           <div className='flex gap-4'>
+            {canCreate && (
+              <Button size='small' variant='contained' onClick={() => setOutModalOpen(true)} startIcon={<i className='ri-qr-scan-2-line' />}>
+                Salida por folio
+              </Button>
+            )}
+            <Button size='small' variant='outlined' color='secondary' onClick={goCatalogs}>Catálogos</Button>
+            <Button size='small' variant='outlined' color='success' startIcon={<i className='ri-file-excel-2-line' />} onClick={() => setExportOpen(true)}>
+              Exportar
+            </Button>
             <ToggleButtonGroup
               exclusive
-              fullWidth
               size='small'
               value={es}
               onChange={(_, v) => {
@@ -241,9 +291,6 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
               <ToggleButton value={true}>Entradas</ToggleButton>
               <ToggleButton value={false}>Salidas</ToggleButton>
             </ToggleButtonGroup>
-            <Button fullWidth size='small' variant='outlined' color='secondary' onClick={goCatalogs}>
-              Catálogos
-            </Button>
           </div>
         }
       />
@@ -252,11 +299,7 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
         <Grid container spacing={2} className='mbe-4'>
           <Grid size={{ xs: 6, sm: 3, md: 2 }}>
             <TextField
-              fullWidth
-              size='small'
-              type='date'
-              label='Desde'
-              slotProps={{ inputLabel: { shrink: true } }}
+              fullWidth size='small' type='date' label='Desde' slotProps={{ inputLabel: { shrink: true } }}
               value={fechaInicio}
               onChange={e => {
                 setFechaInicio(e.target.value)
@@ -266,11 +309,7 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
           </Grid>
           <Grid size={{ xs: 6, sm: 3, md: 2 }}>
             <TextField
-              fullWidth
-              size='small'
-              type='date'
-              label='Hasta'
-              slotProps={{ inputLabel: { shrink: true } }}
+              fullWidth size='small' type='date' label='Hasta' slotProps={{ inputLabel: { shrink: true } }}
               value={fechaFin}
               onChange={e => {
                 setFechaFin(e.target.value)
@@ -279,92 +318,48 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
             />
           </Grid>
           <Grid size={{ xs: 6, sm: 3, md: 2 }}>
-            <TextField
-              fullWidth
-              select
-              size='small'
-              label='Proyecto'
-              value={proyecto}
+            <TextField fullWidth select size='small' label='Proyecto' value={proyecto}
               onChange={e => {
                 setProyecto(e.target.value)
                 resetToFirst()
-              }}
-            >
+              }}>
               <MenuItem value=''>Todos</MenuItem>
-              {catalogs.proyectos.map(p => (
-                <MenuItem key={p.Id} value={p.Id}>
-                  {p.Proyecto}
-                </MenuItem>
-              ))}
+              {catalogs.proyectos.map(p => <MenuItem key={p.Id} value={p.Id}>{p.Proyecto}</MenuItem>)}
             </TextField>
           </Grid>
           <Grid size={{ xs: 6, sm: 3, md: 2 }}>
-            <TextField
-              fullWidth
-              select
-              size='small'
-              label='Tipo'
-              value={tipoMaterial}
+            <TextField fullWidth select size='small' label='Tipo' value={tipoMaterial}
               onChange={e => {
                 setTipoMaterial(e.target.value)
                 resetToFirst()
-              }}
-            >
+              }}>
               <MenuItem value=''>Todos</MenuItem>
-              {catalogs.tiposMaterial.map(t => (
-                <MenuItem key={t.Id} value={t.Id}>
-                  {t.Tipo}
-                </MenuItem>
-              ))}
+              {catalogs.tiposMaterial.map(t => <MenuItem key={t.Id} value={t.Id}>{t.Tipo}</MenuItem>)}
             </TextField>
           </Grid>
           <Grid size={{ xs: 6, sm: 3, md: 2 }}>
-            <TextField
-              fullWidth
-              select
-              size='small'
-              label='Almacén'
-              value={almacen}
+            <TextField fullWidth select size='small' label='Almacén' value={almacen}
               onChange={e => {
                 setAlmacen(e.target.value)
                 resetToFirst()
-              }}
-            >
+              }}>
               <MenuItem value=''>Todos</MenuItem>
-              {catalogs.almacenes.map(a => (
-                <MenuItem key={a.Id} value={a.Id}>
-                  {a.Nombre}
-                </MenuItem>
-              ))}
+              {catalogs.almacenes.map(a => <MenuItem key={a.Id} value={a.Id}>{a.Nombre}</MenuItem>)}
             </TextField>
           </Grid>
           <Grid size={{ xs: 6, sm: 3, md: 2 }}>
-            <TextField
-              fullWidth
-              select
-              size='small'
-              label='Carrier'
-              value={carrier}
+            <TextField fullWidth select size='small' label='Carrier' value={carrier}
               onChange={e => {
                 setCarrier(e.target.value)
                 resetToFirst()
-              }}
-            >
+              }}>
               <MenuItem value=''>Todos</MenuItem>
-              {catalogs.carriers.map(c => (
-                <MenuItem key={c.Id} value={c.Id}>
-                  {c.Carrier}
-                </MenuItem>
-              ))}
+              {catalogs.carriers.map(c => <MenuItem key={c.Id} value={c.Id}>{c.Carrier}</MenuItem>)}
             </TextField>
           </Grid>
         </Grid>
 
-        {error && (
-          <Alert severity='error' className='mbe-4'>
-            {error}
-          </Alert>
-        )}
+        {error && <Alert severity='error' className='mbe-4'>{error}</Alert>}
 
         <div className='overflow-x-auto'>
           <table className={styles.table}>
@@ -412,6 +407,16 @@ const MaterialValidationList = ({ canEdit }: { canEdit: boolean }) => {
           }}
         />
       </CardContent>
+      <ExportDialog
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        exportBaseUrl='/api/warehouses/material-validation/export/xlsx'
+        baseParams={exportParams}
+        filterChips={exportChips}
+        initialFechaInicio={fechaInicio}
+        initialFechaFin={fechaFin}
+      />
+      <OutFolioModal open={outModalOpen} onClose={() => setOutModalOpen(false)} lang={lang as string} />
     </Card>
   )
 }

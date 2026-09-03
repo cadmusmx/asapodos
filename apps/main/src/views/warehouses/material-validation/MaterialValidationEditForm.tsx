@@ -24,20 +24,14 @@ import Alert from '@mui/material/Alert'
 import { toast } from 'react-toastify'
 import { Controller, useForm } from 'react-hook-form'
 
-import type {
-  AlmacenRow,
-  CarrierRow,
-  EstadoFisicoRow,
-  MotivoRow,
-  ProyectoRow,
-  TipoMaterialRow
-} from '@/app/api/warehouses/material-validation/catalogs/route'
+import type { AlmacenRow, CarrierRow, EstadoFisicoRow, MotivoRow, ProyectoRow, TipoMaterialRow } from '@/app/api/warehouses/material-validation/catalogs/route'
 
 // Base pública S3 (misma que el detalle) para enlazar documentos existentes.
 const S3_BASE = process.env.NEXT_PUBLIC_S3_PUBLIC_BASE_URL ?? ''
 
 const fileUrl = (key?: string | null): string => {
   if (!key) return ''
+  if (/^https?:\/\//i.test(key)) return key
   if (!S3_BASE) return key
 
   return `${S3_BASE.replace(/\/+$/, '')}/${String(key).replace(/^\/+/, '')}`
@@ -72,12 +66,7 @@ interface FormValues {
 }
 
 const EMPTY_CATALOGS: Catalogs = {
-  almacenes: [],
-  proyectos: [],
-  tiposMaterial: [],
-  carriers: [],
-  motivos: [],
-  estadosFisicos: []
+  almacenes: [], proyectos: [], tiposMaterial: [], carriers: [], motivos: [], estadosFisicos: [],
 }
 
 const toDateInput = (iso?: string): string => {
@@ -101,7 +90,7 @@ const parseDocs = (json: unknown): Documento[] => {
   }
 }
 
-/** Conserva el id solo si sigue vigente (activo) en el catálogo; si no, '' para forzar reselección. */
+/** Conserva el id solo si sigue vigente (activo) en el catálogo si no, '' para forzar reselección. */
 const idSiVigente = (list: Array<{ Id: number }>, id: unknown): number | '' =>
   list.some(x => x.Id === Number(id)) ? Number(id) : ''
 
@@ -119,18 +108,9 @@ const MaterialValidationEditForm = ({ folio }: { folio: string }) => {
 
   const { control, handleSubmit, reset, watch } = useForm<FormValues>({
     defaultValues: {
-      idProyecto: '',
-      idTipoMaterial: '',
-      fecha: '',
-      nombreSitio: '',
-      idSitio: '',
-      cuentaCliente: '',
-      nombreContacto: '',
-      idCarrier: '',
-      carrier: '',
-      idAlmacenDestino: '',
-      notas: ''
-    }
+      idProyecto: '', idTipoMaterial: '', fecha: '', nombreSitio: '', idSitio: '',
+      cuentaCliente: '', nombreContacto: '', idCarrier: '', carrier: '', idAlmacenDestino: '', notas: '',
+    },
   })
 
   const idCarrier = watch('idCarrier')
@@ -149,7 +129,7 @@ const MaterialValidationEditForm = ({ folio }: { folio: string }) => {
       try {
         const [catRes, recRes] = await Promise.all([
           fetch('/api/warehouses/material-validation/catalogs', { signal: controller.signal }),
-          fetch(`/api/warehouses/material-validation/${encodeURIComponent(folio)}`, { signal: controller.signal })
+          fetch(`/api/warehouses/material-validation/${encodeURIComponent(folio)}`, { signal: controller.signal }),
         ])
 
         if (!catRes.ok) throw new Error('No se pudieron cargar los catálogos.')
@@ -175,7 +155,7 @@ const MaterialValidationEditForm = ({ folio }: { folio: string }) => {
           nombreContacto: rec.NombreContacto ?? '',
           idCarrier: rec.IdCarrier ?? '',
           carrier: rec.OtroCarrier ?? '',
-          notas: rec.Notas ?? ''
+          notas: rec.Notas ?? '',
         })
       } catch (e) {
         if ((e as Error).name === 'AbortError') return
@@ -242,13 +222,13 @@ const MaterialValidationEditForm = ({ folio }: { folio: string }) => {
         carrier: carrierEsOtro ? values.carrier : null,
         idAlmacenDestino: values.idAlmacenDestino === '' ? undefined : Number(values.idAlmacenDestino),
         notas: values.notas,
-        materialDocumentos: JSON.stringify(docs)
+        materialDocumentos: JSON.stringify(docs),
       }
 
       const res = await fetch(`/api/warehouses/material-validation/${encodeURIComponent(folio)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       })
 
       if (res.status === 403) throw new Error('No tienes permiso para editar este registro.')
@@ -274,28 +254,18 @@ const MaterialValidationEditForm = ({ folio }: { folio: string }) => {
 
   if (loading) {
     return (
-      <Card>
-        <CardContent>
-          <div className='flex items-center justify-center min-bs-[240px]'>
-            <CircularProgress />
-          </div>
-        </CardContent>
-      </Card>
+      <Card><CardContent>
+        <div className='flex items-center justify-center min-bs-[240px]'><CircularProgress /></div>
+      </CardContent></Card>
     )
   }
 
   if (loadError) {
     return (
-      <Card>
-        <CardContent>
-          <Alert severity='error' className='mbe-4'>
-            {loadError}
-          </Alert>
-          <Button variant='outlined' onClick={backToDetail}>
-            Volver
-          </Button>
-        </CardContent>
-      </Card>
+      <Card><CardContent>
+        <Alert severity='error' className='mbe-4'>{loadError}</Alert>
+        <Button variant='outlined' onClick={backToDetail}>Volver</Button>
+      </CardContent></Card>
     )
   }
 
@@ -307,40 +277,27 @@ const MaterialValidationEditForm = ({ folio }: { folio: string }) => {
           <Grid container spacing={5}>
             <Grid size={{ xs: 12, md: 4 }}>
               <Controller
-                name='idProyecto'
-                control={control}
-                rules={{ required: true }}
+                name='idProyecto' control={control} rules={{ required: true }}
                 render={({ field, fieldState }) => (
                   <TextField {...field} select fullWidth label='Proyecto' error={!!fieldState.error}>
-                    {catalogs.proyectos.map(p => (
-                      <MenuItem key={p.Id} value={p.Id}>
-                        {p.Proyecto}
-                      </MenuItem>
-                    ))}
+                    {catalogs.proyectos.map(p => <MenuItem key={p.Id} value={p.Id}>{p.Proyecto}</MenuItem>)}
                   </TextField>
                 )}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
               <Controller
-                name='idTipoMaterial'
-                control={control}
-                rules={{ required: true }}
+                name='idTipoMaterial' control={control} rules={{ required: true }}
                 render={({ field, fieldState }) => (
                   <TextField {...field} select fullWidth label='Tipo de material' error={!!fieldState.error}>
-                    {catalogs.tiposMaterial.map(t => (
-                      <MenuItem key={t.Id} value={t.Id}>
-                        {t.Tipo}
-                      </MenuItem>
-                    ))}
+                    {catalogs.tiposMaterial.map(t => <MenuItem key={t.Id} value={t.Id}>{t.Tipo}</MenuItem>)}
                   </TextField>
                 )}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
               <Controller
-                name='fecha'
-                control={control}
+                name='fecha' control={control}
                 render={({ field }) => (
                   <TextField {...field} type='date' fullWidth label='Fecha' InputLabelProps={{ shrink: true }} />
                 )}
@@ -348,98 +305,53 @@ const MaterialValidationEditForm = ({ folio }: { folio: string }) => {
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Controller
-                name='nombreSitio'
-                control={control}
-                rules={{ required: true }}
-                render={({ field, fieldState }) => (
-                  <TextField {...field} fullWidth label='Nombre del sitio' error={!!fieldState.error} />
-                )}
-              />
+              <Controller name='nombreSitio' control={control} rules={{ required: true }}
+                render={({ field, fieldState }) => <TextField {...field} fullWidth label='Nombre del sitio' error={!!fieldState.error} />} />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Controller
-                name='idSitio'
-                control={control}
-                rules={{ required: true }}
-                render={({ field, fieldState }) => (
-                  <TextField {...field} fullWidth label='ID del sitio' error={!!fieldState.error} />
-                )}
-              />
+              <Controller name='idSitio' control={control} rules={{ required: true }}
+                render={({ field, fieldState }) => <TextField {...field} fullWidth label='ID del sitio' error={!!fieldState.error} />} />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Controller
-                name='cuentaCliente'
-                control={control}
-                rules={{ required: true }}
-                render={({ field, fieldState }) => (
-                  <TextField {...field} fullWidth label='Cuenta cliente' error={!!fieldState.error} />
-                )}
-              />
+              <Controller name='cuentaCliente' control={control} rules={{ required: true }}
+                render={({ field, fieldState }) => <TextField {...field} fullWidth label='Cuenta cliente' error={!!fieldState.error} />} />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Controller
-                name='nombreContacto'
-                control={control}
-                rules={{ required: true }}
-                render={({ field, fieldState }) => (
-                  <TextField {...field} fullWidth label='Contacto' error={!!fieldState.error} />
-                )}
-              />
+              <Controller name='nombreContacto' control={control} rules={{ required: true }}
+                render={({ field, fieldState }) => <TextField {...field} fullWidth label='Contacto' error={!!fieldState.error} />} />
             </Grid>
 
             <Grid size={{ xs: 12, md: 4 }}>
               <Controller
-                name='idCarrier'
-                control={control}
-                rules={{ required: true }}
+                name='idCarrier' control={control} rules={{ required: true }}
                 render={({ field, fieldState }) => (
                   <TextField {...field} select fullWidth label='Carrier' error={!!fieldState.error}>
-                    {catalogs.carriers.map(c => (
-                      <MenuItem key={c.Id} value={c.Id}>
-                        {c.Carrier}
-                      </MenuItem>
-                    ))}
+                    {catalogs.carriers.map(c => <MenuItem key={c.Id} value={c.Id}>{c.Carrier}</MenuItem>)}
                   </TextField>
                 )}
               />
             </Grid>
             {carrierEsOtro && (
               <Grid size={{ xs: 12, md: 4 }}>
-                <Controller
-                  name='carrier'
-                  control={control}
-                  rules={{ required: carrierEsOtro }}
-                  render={({ field, fieldState }) => (
-                    <TextField {...field} fullWidth label='Otro carrier' error={!!fieldState.error} />
-                  )}
-                />
+                <Controller name='carrier' control={control} rules={{ required: carrierEsOtro }}
+                  render={({ field, fieldState }) => <TextField {...field} fullWidth label='Otro carrier' error={!!fieldState.error} />} />
               </Grid>
             )}
             <Grid size={{ xs: 12, md: 4 }}>
               <Controller
-                name='idAlmacenDestino'
-                control={control}
-                rules={{ required: true }}
+                name='idAlmacenDestino' control={control} rules={{ required: true }}
                 render={({ field, fieldState }) => (
                   <TextField {...field} select fullWidth label='Almacén destino' error={!!fieldState.error}>
-                    {catalogs.almacenes.map(a => (
-                      <MenuItem key={a.Id} value={a.Id}>
-                        {a.Nombre}
-                      </MenuItem>
-                    ))}
+                    {catalogs.almacenes.map(a => <MenuItem key={a.Id} value={a.Id}>{a.Nombre}</MenuItem>)}
                   </TextField>
                 )}
               />
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <Controller
-                name='notas'
-                control={control}
-                render={({ field }) => <TextField {...field} fullWidth multiline minRows={2} label='Notas' />}
-              />
+              <Controller name='notas' control={control}
+                render={({ field }) => <TextField {...field} fullWidth multiline minRows={2} label='Notas' />} />
             </Grid>
           </Grid>
 
@@ -449,28 +361,22 @@ const MaterialValidationEditForm = ({ folio }: { folio: string }) => {
           <div className='flex items-center justify-between mbe-4'>
             <Typography variant='h6'>Documentos</Typography>
             <Button
-              variant='outlined'
-              color='secondary'
-              size='small'
-              onClick={onPickFile}
-              disabled={uploading}
+              variant='outlined' color='secondary' size='small' onClick={onPickFile} disabled={uploading}
               startIcon={uploading ? <CircularProgress size={16} /> : <i className='ri-upload-2-line' />}
             >
               Subir documento
             </Button>
-            <input ref={fileInputRef} type='file' hidden accept='.jpg,.jpeg,.png,.pdf' onChange={onFileSelected} />
+            <input
+              ref={fileInputRef} type='file' hidden accept='.jpg,.jpeg,.png,.pdf' onChange={onFileSelected}
+            />
           </div>
           {documentos.length === 0 ? (
-            <Typography variant='body2' color='text.secondary'>
-              Sin documentos
-            </Typography>
+            <Typography variant='body2' color='text.secondary'>Sin documentos</Typography>
           ) : (
             <div className='flex flex-col gap-2'>
               {documentos.map((d, i) => (
                 <div key={i} className='flex items-center justify-between'>
-                  <a href={fileUrl(d.file)} target='_blank' rel='noreferrer'>
-                    {d.name || `Documento ${i + 1}`}
-                  </a>
+                  <a href={fileUrl(d.file)} target='_blank' rel='noreferrer'>{d.name || `Documento ${i + 1}`}</a>
                   <IconButton size='small' color='error' onClick={() => removeDoc(i)}>
                     <i className='ri-delete-bin-7-line' />
                   </IconButton>
@@ -482,13 +388,9 @@ const MaterialValidationEditForm = ({ folio }: { folio: string }) => {
           <Divider className='mlb-6' />
 
           <div className='flex gap-3 justify-end'>
-            <Button variant='contained' color='inherit' onClick={backToDetail} disabled={saving}>
-              Cancelar
-            </Button>
+            <Button variant='contained' color='inherit' onClick={backToDetail} disabled={saving}>Cancelar</Button>
             <Button
-              type='submit'
-              variant='contained'
-              disabled={saving}
+              type='submit' variant='contained' disabled={saving}
               startIcon={saving ? <CircularProgress size={16} /> : undefined}
             >
               Guardar cambios

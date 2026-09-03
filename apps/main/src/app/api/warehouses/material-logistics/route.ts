@@ -23,6 +23,8 @@ interface CreateBody {
   otroCarrier?: string
   sitios?: Sitio[]
   documentos?: Documento[]
+  folio?: string
+  qr?: string
 }
 
 // POST / — crear (bit W). IdUsuario y TenantID salen del token/contexto, NO del body.
@@ -35,16 +37,8 @@ export const POST = withPermission('material_logistics', async (req, { auth, ten
 
     // Requeridos de cabecera (IdUsuario ya no va aquí).
     const required = [
-      b.fecha,
-      b.idXdock,
-      b.unidadPlaca,
-      b.nombreOperador,
-      b.horaLlegada,
-      b.horaInicioDescarga,
-      b.horaSalida,
-      b.confirmado,
-      b.re,
-      b.idCarrier
+      b.fecha, b.idXdock, b.unidadPlaca, b.nombreOperador,
+      b.horaLlegada, b.horaInicioDescarga, b.horaSalida, b.confirmado, b.re, b.idCarrier,
     ]
 
     if (required.some(isMissing)) return NextResponse.json({ message: 'Faltan datos' }, { status: 400 })
@@ -102,11 +96,13 @@ export const POST = withPermission('material_logistics', async (req, { auth, ten
         p('@IdCarrier', b.idCarrier),
         p('@OtroCarrier', esOtro ? b.otroCarrier : null),
         p('@Sitios', JSON.stringify(sitios)),
-        p('@Documentos', documentos.length ? JSON.stringify(documentos) : null)
+        p('@Documentos', documentos.length ? JSON.stringify(documentos) : null),
+        p('@Folio', b.folio ? b.folio : null), // Client App
+        p('@Qr', b.qr ? b.qr : null), // Client App
       ]
 
       const result = await withTenantContext(tenantId, tx =>
-        tx.$queryRaw<Array<{ Id: number; Folio: string }>>(execSp('dbo.usp_LM_Create', params))
+        tx.$queryRaw<Array<{ Id: number; Folio: string }>>(execSp('dbo.usp_LM_Create', params)),
       )
 
       const created = result[0]
@@ -126,8 +122,7 @@ export const POST = withPermission('material_logistics', async (req, { auth, ten
 function mapSpError(e: unknown): NextResponse {
   const msg = e instanceof Prisma.PrismaClientKnownRequestError || e instanceof Error ? e.message : String(e)
 
-  if (msg.includes('50021'))
-    return NextResponse.json({ message: 'El XDOCK no existe o no pertenece al tenant' }, { status: 400 })
+  if (msg.includes('50021')) return NextResponse.json({ message: 'El XDOCK no existe o no pertenece al tenant' }, { status: 400 })
   if (msg.includes('50022')) return NextResponse.json({ message: 'El carrier no existe' }, { status: 400 })
   if (msg.includes('50023')) return NextResponse.json({ message: 'Falta el carrier (Otro)' }, { status: 400 })
   if (msg.includes('50024')) return NextResponse.json({ message: 'Documentos no es un JSON válido' }, { status: 400 })
