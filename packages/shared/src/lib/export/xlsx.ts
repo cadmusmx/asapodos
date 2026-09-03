@@ -1,5 +1,3 @@
-// packages/shared/src/lib/export/xlsx.ts
-//
 // Motor XLSX transversal. Escrito UNA vez; no sabe de dominio. Recibe hojas con
 // filas YA planas (el módulo desanida antes) y devuelve el Buffer del .xlsx.
 // El límite de filas NO vive aquí: es parte del ExportConfig de cada módulo
