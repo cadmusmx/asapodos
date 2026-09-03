@@ -6,7 +6,7 @@ import { withTenantContext } from '@/lib/tenant-context'
 import type { Sitio, SitioEdit, Documento } from '../_shared'
 import {
   execSp, isMissing, p, parseSitios,
-  validateSitio, validateSitioEdit, validateDocumentos, checkSitiosDuplicados,
+  validateSitio, validateSitioEdit, validateDocumentos, checkSitiosDuplicados
 } from '../_shared'
 
 type RouteCtx = { params: Promise<{ folio: string }> }

@@ -19,6 +19,6 @@ const MaterialValidationOutPage = async (props: { params: Promise<{ lang: Locale
   }
 
   return <MaterialValidationOut folio={decodeURIComponent(folio)} />
-};
+}
 
 export default MaterialValidationOutPage
