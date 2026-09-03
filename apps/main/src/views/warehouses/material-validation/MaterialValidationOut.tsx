@@ -30,10 +30,9 @@ import { toast } from 'react-toastify';
 // Style Imports
 import styles from '@core/styles/table.module.css';
 
-import FirmaCapture from './components/FirmaCapture';
+import { resolveAssetUrl as photoUrl } from '@/utils/assetUrl';
 
-// Base pública de S3 para construir URLs de fotos/documentos (llaves en BD).
-const S3_BASE = process.env.NEXT_PUBLIC_S3_PUBLIC_BASE_URL ?? '';
+import FirmaCapture from './components/FirmaCapture';
 
 interface Pieza { id: number; cl: number | string; clt: string; pzs: string }
 
@@ -50,14 +49,6 @@ interface VMDetail {
   FechaCaptura: string; FechaEdicion: string | null;
   PiezasMotivo: string; PiezasEstadoF: string;
 }
-
-const photoUrl = (key?: string | null): string => {
-  if (!key) return '';
-  if (/^https?:\/\//i.test(key)) return key;
-  if (!S3_BASE) return key;
-
-  return `${S3_BASE.replace(/\/+$/, '')}/${String(key).replace(/^\/+/, '')}`;
-};
 
 function parsePiezas(json: unknown): Pieza[] {
   if (typeof json !== 'string' || !json) return [];

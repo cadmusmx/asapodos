@@ -21,8 +21,7 @@ import Alert from '@mui/material/Alert';
 // Style Imports
 import styles from '@core/styles/table.module.css';
 
-// Base pública de S3 para construir URLs de fotos/QR/documentos (llaves en BD).
-const S3_BASE = process.env.NEXT_PUBLIC_S3_PUBLIC_BASE_URL ?? '';
+import { resolveAssetUrl as photoUrl } from '@/utils/assetUrl';
 
 interface Pieza { id: number; cl: number | string; clt: string; pzs: string };
 
@@ -40,14 +39,6 @@ interface VMDetail {
   PiezasMotivo: string; PiezasEstadoF: string;
   FolioOrigen: string | null; FolioSalida: string | null;
 }
-
-const photoUrl = (key?: string | null): string => {
-  if (!key) return '';
-  if (/^https?:\/\//i.test(key)) return key;        // ya es absoluta (algunos docs)
-  if (!S3_BASE) return key;
-
-  return `${S3_BASE.replace(/\/+$/, '')}/${String(key).replace(/^\/+/, '')}`;
-};
 
 const firmaSrc = (f?: string | null): string =>
   !f ? '' : f.startsWith('data:') ? f : `data:image/png;base64,${f}`

@@ -19,16 +19,7 @@ import Divider from '@mui/material/Divider';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 
-// Base pública de S3 (llaves en BD; URL = base + llave). Igual que VM.
-const S3_BASE = process.env.NEXT_PUBLIC_S3_PUBLIC_BASE_URL ?? '';
-
-const photoUrl = (key?: string | null): string => {
-  if (!key) return '';
-  if (/^https?:\/\//i.test(key)) return key; // [backlog] migrados: URL absoluta tal cual
-  if (!S3_BASE) return key;
-
-  return `${S3_BASE.replace(/\/+$/, '')}/${String(key).replace(/^\/+/, '')}`;
-};
+import { resolveAssetUrl as photoUrl } from '@/utils/assetUrl';
 
 const isPdf = (mimeType?: string, archivo?: string): boolean =>
   (mimeType ?? '').toLowerCase().includes('pdf') || (archivo ?? '').toLowerCase().endsWith('.pdf');

@@ -24,6 +24,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import { toast } from 'react-toastify';
 
+import { resolveAssetUrl as assetUrl } from '@/utils/assetUrl';
+
 // Tipos del detalle (solo lo que usa el form)
 interface DocItem {
   nombre: string;
@@ -72,18 +74,6 @@ interface LMDetail {
   sitios: SitioDetalle[];
   documentos: DocItem[];
 }
-
-// Key S3 → URL. Si ya es absoluta (http, docs migrados de otro bucket) se usa tal cual.
-const assetUrl = (v?: string): string => {
-  const s = (v ?? '').trim();
-
-  if (!s) return '';
-  if (/^https?:\/\//i.test(s)) return s;
-
-  const base = process.env.NEXT_PUBLIC_S3_PUBLIC_BASE_URL ?? '';
-
-  return base ? `${base.replace(/\/+$/, '')}/${s.replace(/^\/+/, '')}` : s;
-};
 
 // Enlace a archivo (nueva pestaña). No renderiza imagen (regla acordada).
 const FileLink = ({ href, label }: { href: string; label: string }) =>
