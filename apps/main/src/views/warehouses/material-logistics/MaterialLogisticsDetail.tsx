@@ -91,6 +91,7 @@ interface LMDetail {
   Correo: string
   documentos: Documento[]
   sitios: Sitio[]
+  Qr: string | null
   Extended: boolean      // [S1]
   Closed: boolean        // [S1]
   EsDerivada: boolean    // [S1]
@@ -383,6 +384,15 @@ const MaterialLogisticsDetail = ({ folio }: { folio: string }) => {
           <Field label='Salida de la unidad' value={data.HoraSalida} />
           <Field label='Fecha de captura' value={data.FechaCreacion ? new Date(data.FechaCreacion).toLocaleString('es-MX') : '—'} />
           <Field label='Última edición' value={data.FechaEdicion ? new Date(data.FechaEdicion).toLocaleString('es-MX') : '—'} />
+
+          {data.Qr && (
+            <div>
+              <Typography variant='h6' className='mbe-4'>Código QR</Typography>
+              <div style={{ width: 200, padding: '1em', borderRadius: 8, backgroundColor: '#FFF' }}>
+                <img src={photoUrl(data.Qr)} alt='QR' style={{ width: '100%' }} />
+              </div>
+            </div>
+          )}
         </Grid>
 
         {/* Documentos de cabecera */}
@@ -400,18 +410,6 @@ const MaterialLogisticsDetail = ({ folio }: { folio: string }) => {
               <Archivo key={`${d.archivo}-${i}`} label={d.nombre || `Documento ${i + 1}`} archivo={d.archivo} mimeType={d.mimeType} />
             ))}
           </Grid>
-        )}
-        {/* Sitios */}
-        <Divider className='mlb-6' />
-        <Typography variant='h6' className='mbe-4'>
-          Sitios ({data.sitios.length})
-        </Typography>
-        {data.sitios.length === 0 ? (
-          <Typography variant='body2' color='text.secondary'>
-            Sin sitios
-          </Typography>
-        ) : (
-          data.sitios.map((s, i) => <SitioCard key={s.id} sitio={s} indice={i + 1} />)
         )}
 
         {/* Entregas */}
@@ -441,6 +439,19 @@ const MaterialLogisticsDetail = ({ folio }: { folio: string }) => {
               ))}
             </div>
           </>
+        )}
+
+        {/* Sitios */}
+        <Divider className='mlb-6' />
+        <Typography variant='h6' className='mbe-4'>
+          Sitios ({data.sitios.length})
+        </Typography>
+        {data.sitios.length === 0 ? (
+          <Typography variant='body2' color='text.secondary'>
+            Sin sitios
+          </Typography>
+        ) : (
+          data.sitios.map((s, i) => <SitioCard key={s.id} sitio={s} indice={i + 1} />)
         )}
       </CardContent>
     </Card>
