@@ -3,7 +3,7 @@
 // Portado verbatim del legacy (sin cambios de comportamiento). Agnósticas del
 // módulo: reciben datos ya resueltos (texto o base64) y devuelven nodos pdfmake.
 
-import type { Content } from 'pdfmake/interfaces'
+import type { Content, StyleDictionary } from 'pdfmake/interfaces'
 
 // Ancho útil de A4 con márgenes de 36pt: 595.28 - 72 ≈ 523.
 export const CONTENT_WIDTH = 523
@@ -22,7 +22,7 @@ export const COLORS = {
 } as const
 
 // Estilos base compartidos por ambos documentos. Un builder puede expandir/override.
-export const BASE_STYLES = {
+export const BASE_STYLES: StyleDictionary = {
   docTitle: { fontSize: 16, bold: true, alignment: 'center', color: COLORS.ink },
   docSubtitle: { fontSize: 12, alignment: 'center', color: COLORS.muted },
   sectionTitle: { fontSize: 12, bold: true, color: '#ffffff' },
