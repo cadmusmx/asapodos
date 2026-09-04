@@ -8,48 +8,7 @@
 
 import { urlToBase64, base64ToDataUrl, asList, asObject, formatDate } from './common/image-utils'
 import { resolveFileUrl } from '../export/url'
-
-import type { ValidacionViewModel } from './validacion-builder'
-
-interface Foto { dataUrl: string | null; url: string | null }
-
-// Registro de detalle que consume el PDF (subconjunto de lo que devuelve getVMDetail).
-export interface VMDetailForPdf {
-  Folio: string
-  ES: boolean | number
-  Fecha: unknown
-  Cancelada: boolean | number
-  Proyecto?: string
-  TipoMaterial?: string
-  NombreSitio?: string
-  IdSitio?: string
-  CuentaCliente?: string
-  IdRegion?: number | string | null
-  IdCarrier?: number | string | null
-  Carrier?: string
-  OtroCarrier?: string | null
-  AlmacenDestino?: string
-  Responsable?: string
-  Correo?: string
-  AspNombre?: string
-  NombreContacto?: string
-  PlacasTransporte?: string
-  TotalPiezas?: number | null
-  NumTarimas?: number | null
-  Notas?: string | null
-  FechaCaptura?: unknown
-  FechaEdicion?: unknown
-  UsuarioEditor?: string | null
-  TransporteFoto?: string | null
-  PlacasFoto?: string | null
-  MaterialEnTransporteFoto?: string | null
-  MaterialDescargadoFoto?: string | null
-  AspFirma?: string | null
-  Tarimas?: unknown
-  MaterialDocumentos?: unknown
-  PiezasMotivo?: unknown
-  PiezasEstadoF?: unknown
-}
+import { Foto, VMDetailForPdf, ValidacionViewModel } from './types'
 
 // Resuelve una foto (key S3 o URL absoluta) a { dataUrl base64, url }.
 async function resolveFoto(key: string | null | undefined): Promise<Foto | null> {

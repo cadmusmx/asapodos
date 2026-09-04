@@ -11,51 +11,8 @@ import type { Content, TDocumentDefinitions } from 'pdfmake/interfaces'
 import {
   COLORS, BASE_STYLES, sectionTitle, field, fieldFull, fieldRow, photoCell, imageGrid, groupLabel,
 } from './common/pdf-primitives'
+import { Pieza, ValidacionViewModel, Foto, Tarima } from './types'
 
-interface Foto {
-  dataUrl: string | null
-  url: string | null
-}
-interface Tarima {
-  orden: number
-  tarima: Foto | null
-  papeleta: Foto | null
-}
-interface Pieza {
-  etiqueta?: string
-  piezas?: string
-}
-
-export interface ValidacionViewModel {
-  folio: string
-  tipoTxt: string
-  fechaTxt: string
-  cancelada: boolean
-  proyecto: string
-  tipoMaterial: string
-  idSitio: string
-  nombreSitio: string
-  cuentaCliente: string
-  regionTxt: string
-  carrierTxt: string
-  almacenDestino: string
-  responsable: string
-  correo: string
-  placasTransporte: string
-  totalPiezas: string | number
-  numTarimas: string | number
-  fechaCapturaTxt: string
-  fechaEdicionTxt: string
-  aspNombre: string
-  nombreContacto: string
-  piezasMotivo: Pieza[]
-  piezasEstadoF: Pieza[]
-  notas: string | null
-  fotos: { transporte?: Foto; placas?: Foto; materialEnTransporte?: Foto; materialDescargado?: Foto }
-  tarimas: Tarima[]
-  documentos: Array<{ name: string; url: string }>
-  firmaDataUrl: string | null
-}
 
 // Tabla simple para piezas (motivo o estado físico).
 function piezasTable(rows: Pieza[], etiquetaCol: string): Content {

@@ -9,57 +9,8 @@ import {
   COLORS, BASE_STYLES, sectionTitle, field, fieldFull, fieldRow,
   chipsValue, faltanteBadge, siNoCell, photoCell, imageGrid, groupLabel,
 } from './common/pdf-primitives'
+import { SitioVM, Tarima, LogisticaViewModel } from './types'
 
-interface Foto {
-  dataUrl: string | null
-  url: string | null
-}
-interface Tarima {
-  orden: number
-  tarima: Foto | null
-  papeleta: Foto | null
-}
-interface EvidenciaImg {
-  dataUrl: string | null
-  url: string | null
-  tipo: string
-}
-interface EvidenciaDoc {
-  tipo: string
-  url: string
-}
-
-interface SitioVM {
-  titulo: string
-  faltante: boolean
-  tiposMaterialTxt: string[]
-  descripcionMaterial: string
-  descripcionFaltantes: string
-  incidenciasTxt: string[]
-  descripcionIncidencias: string
-  evidencias: { imagenes: EvidenciaImg[]; documentos: EvidenciaDoc[] }
-  tarimas: Tarima[]
-}
-
-export interface LogisticaViewModel {
-  folio: string
-  tipoTxt: string
-  fechaTxt: string
-  xdock: string
-  carrierTxt: string
-  responsable: string
-  correo: string
-  unidadPlaca: string
-  nombreOperador: string
-  fechaCreacionTxt: string
-  fechaEdicionTxt: string
-  llegadaTxt: string
-  inicioDescargaTxt: string
-  salidaTxt: string
-  estadiaTxt: string
-  descargaTxt: string
-  sitios: SitioVM[]
-}
 
 // Página 1: tabla resumen de sitios.
 function sitiosResumenTable(sitios: SitioVM[]): Content {
