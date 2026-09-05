@@ -1,10 +1,12 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 
 import { withPermission } from '@gaso/shared'
 
 import { withTenantContext } from '@/lib/tenant-context'
 import type { Pieza } from './_shared'
 import { isMissing, piezasValues } from './_shared'
+
+import { onValidacionGuardada } from './_notify'
 
 interface CreateBody {
   es?: boolean | string
@@ -117,6 +119,8 @@ export const POST = withPermission('material_validation', async (req, { auth, te
 
       return id
     })
+
+    after(() => onValidacionGuardada(tenantId, b.folio ?? ''))
 
     return NextResponse.json({ success: true, id: idVM })
   } catch (e) {

@@ -1,9 +1,10 @@
-import { NextResponse } from 'next/server'
+import { after, NextResponse } from 'next/server'
 
 import { withPermission } from '@gaso/shared'
 
 import { isMissing } from '../_shared'
 import { submitOut } from '../_out-service'
+import { onValidacionGuardada } from '../_notify'
 
 interface OutBody {
   folioIn?: string
@@ -77,6 +78,8 @@ export const POST = withPermission('material_validation', async (req, { auth, te
       // El folio IN no existe o no es IN del tenant (p.ej. se canceló entre verify y submit).
       return NextResponse.json({ message: 'El folio IN no es válido' }, { status: 404 })
     }
+
+    after(() => onValidacionGuardada(tenantId, result.folioOut))
 
     return NextResponse.json({ success: true, idOut: result.idOut, folioOut: result.folioOut })
   } catch (e) {

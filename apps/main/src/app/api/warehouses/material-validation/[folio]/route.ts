@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { after, NextResponse } from 'next/server'
 
 import { Prisma } from '@prisma/client'
 
@@ -6,6 +6,7 @@ import { withPermission, PERM } from '@gaso/shared'
 
 import { withTenantContext } from '@/lib/tenant-context'
 import { piezasValues, safeIds, type Pieza, type PiezaEdit } from '../_shared'
+import { onValidacionGuardada } from '../_notify'
 
 type RouteCtx = { params: Promise<{ folio: string }> }
 
@@ -234,6 +235,8 @@ export const PUT = withPermission<RouteCtx>(
       if (outcome.status !== 200) {
         return NextResponse.json({ message: outcome.message }, { status: outcome.status })
       }
+
+      after(() => onValidacionGuardada(tenantId, folio))
 
       return NextResponse.json({ success: true })
     } catch (e) {

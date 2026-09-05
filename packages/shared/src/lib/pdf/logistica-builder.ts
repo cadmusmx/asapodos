@@ -45,7 +45,7 @@ function evidenciasContent(ev: SitioVM['evidencias']): Content[] {
   if (documentos.length) {
     blocks.push({
       stack: documentos.map(d => ({
-        text: [{ text: `${d.tipo}: `, bold: true }, { text: 'Abrir PDF', link: d.url, style: 'link' }],
+        text: [{ text: `${d.tipo}: `, bold: true }, { text: 'Abrir archivo', link: d.url, style: 'link' }],
         margin: [0, 1, 0, 1],
       })),
     })

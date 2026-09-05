@@ -74,7 +74,7 @@ function documentosContent(documentos: Array<{ name: string; url: string }>): Co
 
   return [{
     stack: documentos.map(d => ({
-      text: [{ text: `${d.name}: `, bold: true }, { text: 'Abrir PDF', link: d.url, style: 'link' }],
+      text: [{ text: `${d.name}: `, bold: true }, { text: 'Abrir archivo', link: d.url, style: 'link' }],
       margin: [0, 1, 0, 1],
     })),
   }]
