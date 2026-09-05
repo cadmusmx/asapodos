@@ -6,13 +6,19 @@ import type { VMDetailForPdf } from '@gaso/shared/lib/pdf/types'
 
 import { withTenantContext } from '@/lib/tenant-context'
 
-// Ajusta el path según dónde quedó el módulo pdf (no está en el barrel).
+// Ajusta el path según dónde quedó el módulo pdf (no está en el barrel).\
+
+export type VMDetailRecord = VMDetailForPdf & {
+  FolioOrigen?: string | null
+  FolioSalida?: string | null
+  Vinculado?: number | null
+}
 
 // El registro trae VM.* + joins; se tipa como VMDetailForPdf (subconjunto que
 // consume el PDF). El route de detalle puede ampliar el tipo con FolioOrigen /
 // FolioSalida / Vinculado si lo adopta.
-export async function getVMDetail(tenantId: string, folio: string): Promise<VMDetailForPdf | null> {
-  const rows = await withTenantContext(tenantId, tx => tx.$queryRaw<VMDetailForPdf[]>`
+export async function getVMDetail(tenantId: string, folio: string): Promise<VMDetailRecord | null> {
+  const rows = await withTenantContext(tenantId, tx => tx.$queryRaw<VMDetailRecord[]>`
     SELECT VM.*, LTRIM(RTRIM(UE.FirstName + ' ' + UE.LastName)) AS Responsable, pro.Proyecto, tm.Tipo AS TipoMaterial,
            al.Nombre AS AlmacenDestino, LTRIM(RTRIM(UEW.FirstName + ' ' + UEW.LastName)) AS UsuarioEditor, ca.Carrier,
            ( SELECT pm.Id AS id, pm.Clave AS cl, cm.Motivo AS clt, pm.Piezas AS pzs

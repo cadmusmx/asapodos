@@ -7,6 +7,7 @@ import { withPermission, PERM } from '@gaso/shared'
 import { withTenantContext } from '@/lib/tenant-context'
 import { piezasValues, safeIds, type Pieza, type PiezaEdit } from '../_shared'
 import { onValidacionGuardada } from '../_notify'
+import { getVMDetail } from '../_detail'
 
 type RouteCtx = { params: Promise<{ folio: string }> }
 
@@ -56,63 +57,21 @@ const FIELD_MAP_WEB: Record<string, string> = {
 }
 
 // GET · detalle
-export const GET = withPermission<RouteCtx>(
-  'material_validation',
-  async (_req, { tenantId }, routeCtx) => {
-    try {
-      const { folio } = await routeCtx.params
+export const GET = withPermission<RouteCtx>('material_validation', async (req, { tenantId }, routeCtx) => {
+  try {
+    const { folio } = await routeCtx.params // conserva tu extracción actual del param
 
-      if (!folio || !folio.trim()) {
-        return NextResponse.json({ message: 'El folio es requerido' }, { status: 400 })
-      }
+    const record = await getVMDetail(tenantId, folio)
 
-      const rows = await withTenantContext(tenantId, tx =>
-        tx.$queryRaw<Array<Record<string, unknown>>>`
-          SELECT VM.*, LTRIM(RTRIM(UE.FirstName + ' ' + UE.LastName)) AS Responsable, pro.Proyecto, tm.Tipo AS TipoMaterial,
-                 al.Nombre AS AlmacenDestino, LTRIM(RTRIM(UEW.FirstName + ' ' + UEW.LastName)) AS UsuarioEditor, ca.Carrier,
-                 ( SELECT pm.Id AS id, pm.Clave AS cl, cm.Motivo AS clt, pm.Piezas AS pzs
-                     FROM dbo.GASOAL_VMPiezasMotivo pm
-                     LEFT JOIN dbo.Cat_VMMotivo cm ON pm.Clave = cm.Id
-                     WHERE pm.IdVM = COALESCE(voOut.IdIN, VM.Id)
-                     FOR JSON PATH ) AS PiezasMotivo,
-                 ( SELECT pe.Id AS id, pe.Clave AS cl, ce.Estado AS clt, pe.Piezas AS pzs
-                     FROM dbo.GASOAL_VMPiezasEstadoF pe
-                     LEFT JOIN dbo.Cat_VMEFisico ce ON pe.Clave = ce.Clave
-                     WHERE pe.IdVM = COALESCE(voOut.IdIN, VM.Id)
-                     FOR JSON PATH ) AS PiezasEstadoF,
-                 ( SELECT TOP 1 VFV.Id
-                     FROM dbo.GASOAL_VinculosFolioValidacion VFV
-                     WHERE VM.Folio = VFV.FolioEntrada
-                        OR VM.Folio = VFV.FolioSalida
-                        OR VM.Folio = VFV.FolioValidacion ) AS Vinculado,
-                  voOut.FolioIN  AS FolioOrigen,    -- este OUT salió de este IN
-                  voIn.FolioOut  AS FolioSalida     -- este IN ya tiene esta salida
-            FROM dbo.GASOAL_VMES VM
-            LEFT JOIN dbo.GASOAL_VMOut voOut ON voOut.TenantID = VM.TenantID AND voOut.IdOut  = VM.Id
-            LEFT JOIN dbo.GASOAL_VMOut voIn  ON voIn.TenantID  = VM.TenantID AND voIn.FolioIN = VM.Folio
-            INNER JOIN dbo.GASOAL_VMAlmacenes al ON VM.IdAlmacenDestino = al.Id
-            INNER JOIN dbo.Cat_VMProyecto pro ON VM.IdProyecto = pro.Id
-            INNER JOIN dbo.Cat_VMTiposMaterial tm ON VM.IdTipoMaterial = tm.Id
-            INNER JOIN dbo.Cat_Carriers ca ON VM.IdCarrier = ca.Id
-            INNER JOIN dbo.GASOCO_Cat_Usuarios U ON VM.IdUsuario = U.IdUsuario
-            INNER JOIN HumanCapital.Employees UE ON UE.TenantID = U.TenantID AND UE.EmployeeID = U.EmployeeID
-            LEFT JOIN HumanCapital.Employees UEW ON UEW.EmployeeID = VM.IdUsuarioEditorWeb
-            WHERE VM.TenantID = ${tenantId} AND VM.Folio = ${folio}
-        `,
-      )
+    if (!record) return NextResponse.json({ message: 'Registro no encontrado' }, { status: 404 })
 
-      if (rows.length === 0) {
-        return NextResponse.json({ message: 'Registro no encontrado' }, { status: 404 })
-      }
+    return NextResponse.json(record)
+  } catch (e) {
+    console.error('[material-validation/[folio] GET]', e)
 
-      return NextResponse.json(rows[0])
-    } catch (e) {
-      console.error('[material-validation/[folio] GET]', e)
-
-      return NextResponse.json({ message: 'Ha ocurrido un error inesperado' }, { status: 500 })
-    }
-  },
-)
+    return NextResponse.json({ message: 'Ha ocurrido un error inesperado' }, { status: 500 })
+  }
+})
 
 // PUT · edición (bit U)
 // Modo por pertenencia: DUEÑO -> edición completa (campos + piezas).
