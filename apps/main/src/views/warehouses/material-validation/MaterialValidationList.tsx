@@ -19,6 +19,8 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import ToggleButton from '@mui/material/ToggleButton'
 import TablePagination from '@mui/material/TablePagination'
 import Alert from '@mui/material/Alert'
+import Tooltip from '@mui/material/Tooltip'
+import IconButton from '@mui/material/IconButton'
 
 // Third-party Imports
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
@@ -199,34 +201,49 @@ const MaterialValidationList = ({ canEdit, canCreate }: { canEdit: boolean, canC
 
           return (
             <div className='flex gap-2'>
-              <Button size='small' variant='contained' component='a'
-                href={detail(r.Folio)} target='_blank' rel='noopener noreferrer'>
-                {(canEdit && r.FolioSalida == null && r.FolioOrigen == null) ? 'Ver / Editar' : 'Ver'}
-              </Button>
+              <Tooltip title={(canEdit && r.FolioSalida == null && r.FolioOrigen == null) ? 'Ver / Editar' : 'Ver'} >
+                <IconButton size='small' component='a'
+                  href={detail(r.Folio)} target='_blank' rel='noopener noreferrer'>
+                  <i className='ri-eye-line' />
+                </IconButton>
+              </Tooltip>
 
               {/* Entrada sin salida → dar salida */}
-              {r.ES && !r.FolioSalida && (
-                <Button size='small' variant='outlined' component='a'
-                  href={`${detail(r.Folio)}/out`} target='_blank' rel='noopener noreferrer'>
-                  Dar salida
-                </Button>
+              {canCreate && r.ES && !r.FolioSalida && (
+                <Tooltip title='Dar Salida' >
+                  <IconButton size='small' color='primary' component='a'
+                    href={`${detail(r.Folio)}/out`} target='_blank' rel='noopener noreferrer'>
+                    <i className='ri-logout-box-r-line' />
+                  </IconButton>
+                </Tooltip>
               )}
 
               {/* Entrada extendida → ver su salida */}
               {r.ES && r.FolioSalida && (
-                <Button size='small' variant='outlined' color='secondary' component='a'
-                  href={detail(r.FolioSalida)} target='_blank' rel='noopener noreferrer'>
-                  Ver Salida
-                </Button>
+                <Tooltip title='Ver Salida' >
+                  <IconButton size='small' color='info' component='a'
+                    href={detail(r.FolioSalida)} target='_blank' rel='noopener noreferrer'>
+                    <i className='ri-arrow-right-up-box-line' />
+                  </IconButton>
+                </Tooltip>
               )}
 
               {/* Salida derivada → ver IN de origen */}
               {!r.ES && r.FolioOrigen && (
-                <Button size='small' variant='outlined' color='info' component='a'
-                  href={detail(r.FolioOrigen)} target='_blank' rel='noopener noreferrer'>
-                  Ver Entrada
-                </Button>
+                <Tooltip title='Ver Entrada' >
+                  <IconButton size='small' color='info' component='a'
+                    href={detail(r.FolioOrigen)} target='_blank' rel='noopener noreferrer'>
+                    <i className='ri-arrow-left-down-box-line' />
+                  </IconButton>
+                </Tooltip>
               )}
+
+              <Tooltip title='PDF' >
+                <IconButton size='small' color='inherit' component='a'
+                  href={`/api/warehouses/material-validation/${r.Folio}/pdf`} target='_blank' rel='noopener noreferrer'>
+                  <i className='ri-file-pdf-line' />
+                </IconButton>
+              </Tooltip>
             </div>
           )
         },

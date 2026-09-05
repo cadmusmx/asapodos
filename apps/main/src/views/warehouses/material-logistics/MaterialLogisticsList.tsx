@@ -15,6 +15,7 @@ import TextField from '@mui/material/TextField'
 import MenuItem from '@mui/material/MenuItem'
 import Chip from '@mui/material/Chip'
 import Tooltip from '@mui/material/Tooltip'
+import IconButton from '@mui/material/IconButton'
 import Button from '@mui/material/Button'
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import ToggleButton from '@mui/material/ToggleButton'
@@ -289,46 +290,39 @@ const MaterialLogisticsList = ({ canCreate }: { canCreate: boolean }) => {
 
           return (
             <div className='flex items-center gap-2'>
-              <Button
-                size='small'
-                variant='outlined'
-                color='info'
-                component='a'
-                href={detailHref(r.Folio)}
-                target='_blank'
-                rel='noopener noreferrer'
-              >
-                Detalle
-              </Button>
+              <Tooltip title='Detalle' >
+                <IconButton size='small' component='a'
+                  href={detailHref(r.Folio)} target='_blank' rel='noopener noreferrer'>
+                  <i className='ri-eye-line' />
+                </IconButton>
+              </Tooltip>
 
               {/* Recepción con sitios pendientes → entregar (bit W) */}
               {canCreate && r.RE && !r.Closed && (
-                <Button
-                  size='small'
-                  variant='outlined'
-                  component='a'
-                  href={`${detailHref(r.Folio)}/out`}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  Entregar
-                </Button>
+                <Tooltip title='Entregar' >
+                  <IconButton size='small' color='primary' component='a'
+                    href={`${detailHref(r.Folio)}/out`} target='_blank' rel='noopener noreferrer'>
+                    <i className='ri-logout-box-r-line' />
+                  </IconButton>
+                </Tooltip>
               )}
 
               {/* Entrega derivada → ver recepción de origen */}
               {r.EsDerivada && r.FolioIN && (
-                <Button
-                  size='small'
-                  variant='outlined'
-                  color='secondary'
-                  component='a'
-                  href={detailHref(r.FolioIN)}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  Ver recepción
-                </Button>
+                <Tooltip title='Ver Recepción' >
+                  <IconButton size='small' color='info' component='a'
+                    href={detailHref(r.FolioIN)} target='_blank' rel='noopener noreferrer'>
+                    <i className='ri-arrow-left-down-box-line' />
+                  </IconButton>
+                </Tooltip>
               )}
+
+              <Tooltip title='PDF' >
+                <IconButton size='small' color='inherit' component='a'
+                  href={`/api/warehouses/material-logistics/${r.Folio}/pdf`} target='_blank' rel='noopener noreferrer'>
+                  <i className='ri-file-pdf-line' />
+                </IconButton>
+              </Tooltip>
             </div>
           )
         },
@@ -369,7 +363,7 @@ const MaterialLogisticsList = ({ canCreate }: { canCreate: boolean }) => {
           action={
             <div className='flex gap-4'>
               {canCreate && (
-                <Button size='small' variant='contained' onClick={() => setOutModalOpen(true)}>
+                <Button size='small' variant='contained' onClick={() => setOutModalOpen(true)} startIcon={<i className='ri-qr-scan-2-line' />}>
                   Entrega por folio
                 </Button>
               )}

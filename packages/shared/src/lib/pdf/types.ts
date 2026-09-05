@@ -132,3 +132,36 @@ export interface LogisticaViewModel {
   descargaTxt: string
   sitios: SitioVM[]
 }
+
+export interface LMSitioRaw {
+  idSitio?: string
+  nombreSitio?: string
+  descripcionMaterial?: string | null
+  materialFaltante?: boolean | number
+  descripcionFaltantes?: string | null
+  descripcionIncidencias?: string | null
+  tiposMaterial?: Array<{ tipo?: string }>
+  incidencias?: Array<{ tipo?: string }>
+  evidencias?: Array<{ tipo?: string; archivo?: string; mimeType?: string }>
+  tarimas?: Array<{ orden?: number; tarimaFoto?: string; papeletaFoto?: string }>
+}
+
+export interface LMDetailForPdf {
+  Folio: string
+  RE: boolean | number
+  Fecha?: unknown
+  Xdock?: string
+  Carrier?: string
+  EsOtro?: boolean | number
+  OtroCarrier?: string | null
+  Responsable?: string
+  Correo?: string
+  UnidadPlaca?: string
+  NombreOperador?: string
+  HoraLlegada?: unknown
+  HoraInicioDescarga?: unknown
+  HoraSalida?: unknown
+  FechaCreacion?: unknown
+  FechaEdicion?: unknown
+  sitios?: LMSitioRaw[]
+}
