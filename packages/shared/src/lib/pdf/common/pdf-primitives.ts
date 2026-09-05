@@ -90,14 +90,14 @@ export function faltanteBadge(flag: boolean): Content {
     : { text: '\u00A0No\u00A0', background: COLORS.badgeNoBg, color: COLORS.ok, bold: true }
 }
 
-// Celda Sí/No coloreada para tablas resumen. "No" = bueno (verde) "Sí" = alerta (rojo).
+// Celda Sí/No coloreada para tablas resumen. "No" = bueno (verde); "Sí" = alerta (rojo).
 export function siNoCell(flag: boolean): Content {
   return flag
     ? { text: 'Sí', color: COLORS.danger, bold: true, alignment: 'center', style: 'tdCell' }
     : { text: 'No', color: COLORS.ok, bold: true, alignment: 'center', style: 'tdCell' }
 }
 
-// Celda de foto: imagen embebida si hay base64 si falló la descarga, enlace real.
+// Celda de foto: imagen embebida si hay base64; si falló la descarga, enlace real.
 export function photoCell(dataUrl: string | null, url: string | null, label: string, fit?: [number, number]): Content {
   const box = fit || [155, 120]
   const media: Content = dataUrl

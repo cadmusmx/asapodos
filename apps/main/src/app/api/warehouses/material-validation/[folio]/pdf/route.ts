@@ -14,9 +14,8 @@ import { getVMDetail } from '../../_detail'
 export const runtime = 'nodejs'
 
 export const GET = withPermission('material_validation',
-  async (req, { tenantId }, routeCtx: { params: { folio: string } }) => {
+  async (req, { tenantId }, routeCtx: { params: Promise<{ folio: string }> }) => {
     try {
-      // Extrae `folio` como tus otras rutas [folio] (3er arg routeCtx.params).
       const { folio } = await routeCtx.params
 
       const record = await getVMDetail(tenantId, folio)

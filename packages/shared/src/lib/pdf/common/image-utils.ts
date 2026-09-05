@@ -28,7 +28,7 @@ export async function urlToBase64(url: string): Promise<string | null> {
       .jpeg({ quality: 60 })
       .toBuffer()
 
-    return `data:image/jpegbase64,${compressed.toString('base64')}`
+    return `data:image/jpeg;base64,${compressed.toString('base64')}`
   } catch {
     return null
   }
@@ -36,7 +36,7 @@ export async function urlToBase64(url: string): Promise<string | null> {
 
 /**
  * Normaliza una firma/imagen ya en base64 (sin descarga) a data-URI. VM guarda
- * AspFirma como base64 PNG crudo si ya viene con prefijo `data:`, se respeta.
+ * AspFirma como base64 PNG crudo; si ya viene con prefijo `data:`, se respeta.
  */
 export function base64ToDataUrl(b64: unknown, mime = 'image/png'): string | null {
   if (!b64) return null
@@ -45,7 +45,7 @@ export function base64ToDataUrl(b64: unknown, mime = 'image/png'): string | null
 
   if (!s) return null
 
-  return s.startsWith('data:') ? s : `data:${mime}base64,${s}`
+  return s.startsWith('data:') ? s : `data:${mime};base64,${s}`
 }
 
 // ¿La evidencia es un PDF? Misma heurística que el front.
@@ -112,7 +112,7 @@ export function toMinutes(t: unknown): number | null {
   return h * 60 + m
 }
 
-// Diferencia legible entre dos horas tolera cruce de medianoche.
+// Diferencia legible entre dos horas; tolera cruce de medianoche.
 export function diffHoras(ini: unknown, fin: unknown): string {
   const a = toMinutes(ini)
   const b = toMinutes(fin)

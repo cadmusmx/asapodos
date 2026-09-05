@@ -1,16 +1,15 @@
 // Builder pdfmake del PDF de Logística de Material (LM). Estructura: página 1
 // (info general + control de arribo + resumen de sitios) + una página por sitio.
-// Portado verbatim del legacy consume las primitivas compartidas. El Buffer se
+// Portado verbatim del legacy; consume las primitivas compartidas. El Buffer se
 // genera fuera: renderToBuffer(buildLogisticaPdf(vm)).
 
 import type { Content, TDocumentDefinitions } from 'pdfmake/interfaces'
 
 import {
   COLORS, BASE_STYLES, sectionTitle, field, fieldFull, fieldRow,
-  chipsValue, faltanteBadge, siNoCell, photoCell, imageGrid, groupLabel,
+  chipsValue, faltanteBadge, siNoCell, photoCell, imageGrid, groupLabel
 } from './common/pdf-primitives'
 import { SitioVM, Tarima, LogisticaViewModel } from './types'
-
 
 // Página 1: tabla resumen de sitios.
 function sitiosResumenTable(sitios: SitioVM[]): Content {

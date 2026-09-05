@@ -36,6 +36,5 @@ export function renderToBuffer(docDefinition: TDocumentDefinitions): Promise<Buf
     }
   })
 }
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export { pdfMake }

@@ -1,5 +1,5 @@
 // Builder pdfmake del PDF de Validación de Material (VM). Registro plano (sin
-// jerarquía de sitios). Portado verbatim del legacy solo arma el docDefinition
+// jerarquía de sitios). Portado verbatim del legacy; solo arma el docDefinition
 // a partir del view-model de `prepareValidacionData`. El Buffer se genera fuera:
 //   renderToBuffer(buildValidacionPdf(vm))
 //
@@ -9,10 +9,9 @@
 import type { Content, TDocumentDefinitions } from 'pdfmake/interfaces'
 
 import {
-  COLORS, BASE_STYLES, sectionTitle, field, fieldFull, fieldRow, photoCell, imageGrid, groupLabel,
+  COLORS, BASE_STYLES, sectionTitle, field, fieldFull, fieldRow, photoCell, imageGrid, groupLabel
 } from './common/pdf-primitives'
 import { Pieza, ValidacionViewModel, Foto, Tarima } from './types'
-
 
 // Tabla simple para piezas (motivo o estado físico).
 function piezasTable(rows: Pieza[], etiquetaCol: string): Content {

@@ -50,7 +50,7 @@ export const transporter: Transporter = nodemailer.createTransport({
 })
 
 // Verificación no bloqueante (solo con credenciales). En serverless corre por
-// cold start es opcional y puede quitarse si molesta en el log.
+// cold start; es opcional y puede quitarse si molesta en el log.
 if (!InvalidZohoEnv) {
   transporter.verify()
     .then(() => console.log('[correo] SMTP Zoho listo.'))
@@ -61,8 +61,8 @@ if (!InvalidZohoEnv) {
 
 /**
  * Ensambla To/CC desde las filas de un SP de destinatarios.
- *  - Tipo 1 ⇒ To Tipo 2 ⇒ CC.
- *  - Se deduplican un correo en To se excluye de CC.
+ *  - Tipo 1 ⇒ To; Tipo 2 ⇒ CC.
+ *  - Se deduplican; un correo en To se excluye de CC.
  *  - Si no hay Tipo 1 pero sí Tipo 2, el primer CC se promueve a To.
  *  - Sin correos (o envío deshabilitado) ⇒ null (no se genera PDF ni se envía).
  */
@@ -97,7 +97,7 @@ export interface EnviarCorreoOpts {
 /**
  * Envía un correo vía Zoho SMTP. NO lanza: captura el error de `sendMail` y lo
  * reporta en el retorno, para no romper el hook fire-and-forget. El `from` se
- * fija a la cuenta autenticada (ZOHO_USER) otra dirección daría "Relay not permitted".
+ * fija a la cuenta autenticada (ZOHO_USER); otra dirección daría "Relay not permitted".
  */
 export async function enviarCorreo({
   to, cc, subject, html, attachments, fromName, logTag = '[correo]', logRef = '',
@@ -125,7 +125,7 @@ export async function enviarCorreo({
   }
 }
 
-/** Capitaliza la primera letra string vacío ante entrada no-string. */
+/** Capitaliza la primera letra; string vacío ante entrada no-string. */
 export function capitalize(str: unknown): string {
   if (typeof str !== 'string') return ''
 
