@@ -1,13 +1,6 @@
 // Setup único de pdfmake para el SaaS. A diferencia del legacy (paquete server
 // `require('pdfmake')` con .ttf en disco), aquí se usa el bundle con vfs_fonts
 // EMBEBIDO (Roboto base64) → sin archivos de fuente en el bundle.
-//
-// Requiere runtime Node (no edge). En Next puede necesitar declarar 'pdfmake'
-// en serverExternalPackages si el bundler se queja.
-//
-// Fallback si el bundle diera guerra en Amplify: cambiar a `pdfmake` (paquete
-// server) + setFonts a 4 Roboto-*.ttf empaquetados. Los builders NO cambian:
-// solo consumen `renderToBuffer` de aquí.
 
 import pdfMake from 'pdfmake/build/pdfmake'
 import vfs from 'pdfmake/build/vfs_fonts'
