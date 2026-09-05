@@ -78,7 +78,7 @@ interface VMDetail {
 }
 
 const firmaSrc = (f?: string | null): string =>
-  !f ? '' : f.startsWith('data:') ? f : `data:image/pngbase64,${f}`
+  !f ? '' : f.startsWith('data:') ? f : `data:image/png;base64,${f}`
 
 function parsePiezas(json: unknown): Pieza[] {
   if (typeof json !== 'string' || !json) return []

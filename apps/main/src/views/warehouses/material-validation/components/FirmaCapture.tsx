@@ -135,7 +135,7 @@ const FirmaCapture = ({ value, onChange }: Props) => {
           </Button>
           {value ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={`data:image/pngbase64,${value}`} alt='Firma' style={{ display: 'block', marginTop: 12, maxWidth: 300, border: '1px solid #eee', borderRadius: 8, background: '#fff' }} />
+            <img src={`data:image/png;base64,${value}`} alt='Firma' style={{ display: 'block', marginTop: 12, maxWidth: 300, border: '1px solid #eee', borderRadius: 8, background: '#fff' }} />
           ) : (
             <Typography variant='caption' color='text.secondary' className='mbs-2 block'>Sin firma</Typography>
           )}
