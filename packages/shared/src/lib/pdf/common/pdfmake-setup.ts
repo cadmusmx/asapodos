@@ -7,21 +7,9 @@ import vfs from 'pdfmake/build/vfs_fonts'
 
 import type { TDocumentDefinitions } from 'pdfmake/interfaces'
 
-/**
- * Genera el PDF y devuelve el Buffer. Envuelve el `getBuffer` (callback en el
- * bundle) en una Promise. Fuente por defecto Roboto (embebida en el vfs).
- */
-export function renderToBuffer(docDefinition: TDocumentDefinitions): Promise<Buffer> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      pdfMake.addVirtualFileSystem(vfs);
-
-      const buffer = await pdfMake.createPdf(docDefinition).getBuffer()
-      resolve(buffer)
-    } catch (e) {
-      reject(e)
-    }
-  })
+export async function renderToBuffer(docDefinition: TDocumentDefinitions): Promise<Buffer> {
+  pdfMake.addVirtualFileSystem(vfs)
+  return pdfMake.createPdf(docDefinition).getBuffer()
 }
 
 export { pdfMake }
